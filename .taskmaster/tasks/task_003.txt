@@ -1,0 +1,11 @@
+# Task ID: 3
+# Title: Implement Basic Component Model
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Implement the basic single-file component model, allowing developers to use `<template>`, `<script>`, and `<style>` tags within a `.egh` file. This task focuses on parsing and compiling these sections into a functional component.
+# Details:
+Extend the compiler (Task 2) to handle the three sections of an Eghact component. The `<template>` will be parsed into DOM creation logic. The `<script>` section will be processed for reactive bindings. The `<style>` section will be scoped to the component and prepared for critical CSS extraction. The compiler should produce a single JavaScript module per component.
+
+# Test Strategy:
+Unit test the compiler's ability to correctly parse and separate the three sections. Create an integration test with a simple component (like the counter example) and verify that it renders and functions correctly in a browser. Test style scoping by ensuring CSS rules from one component do not leak to another.

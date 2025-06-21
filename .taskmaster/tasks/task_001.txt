@@ -1,0 +1,11 @@
+# Task ID: 1
+# Title: Core Runtime Development (Rust & WASM)
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Set up the core Eghact runtime library in Rust. This foundational module will handle the minimal client-side logic, DOM manipulations, and provide the WebAssembly entry points for the compiled component code. It must have zero production dependencies and be extremely lightweight (<10KB).
+# Details:
+Initialize a new Rust project. The primary goal is to create a minimal, tree-shakeable runtime. Use wasm-pack to compile Rust code to WebAssembly. Define a lean API for DOM node creation, updates, and event handling that the Eghact compiler will target. For example: `eghact.createElement('div')`, `eghact.setText(node, 'new text')`, `eghact.listen(node, 'click', handler)`. This runtime will be the only piece of 'framework' code that ships to the browser.
+
+# Test Strategy:
+Unit test all Rust functions for DOM manipulation and lifecycle hooks. Create a benchmark test to ensure the compiled WASM runtime size is under 10KB and that Time to First Byte (TTFB) is minimal (<50ms). Validate that it runs in all target modern browsers.

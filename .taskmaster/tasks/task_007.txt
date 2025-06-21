@@ -1,0 +1,11 @@
+# Task ID: 7
+# Title: Server-Side Data Loading & Error Handling
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Develop a data loading strategy that allows components to fetch data on the server before rendering. This includes support for parallel data fetching, loading states, and error boundaries.
+# Details:
+Define a special function (e.g., `load`) that can be exported from a route component (`.egh` file). The server will execute this function during a server-side render (SSR) or on a client-side navigation. The function's return value will be passed as props to the component. Implement mechanisms for displaying loading indicators while data is being fetched on the client. Wrap route components in automatic error boundaries to handle failures in data fetching.
+
+# Test Strategy:
+Test various data loading scenarios: successful fetch, slow fetch (to verify loading states), and failed fetch (to verify error boundaries). Write tests to ensure that data is fetched in parallel for different layout levels. Verify that request deduplication works during rapid navigation.

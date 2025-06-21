@@ -1,0 +1,139 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Core Runtime Development (Rust & WASM)",
+        "description": "Set up the core Eghact runtime library in Rust. This foundational module will handle the minimal client-side logic, DOM manipulations, and provide the WebAssembly entry points for the compiled component code. It must have zero production dependencies and be extremely lightweight (<10KB).",
+        "details": "Initialize a new Rust project. The primary goal is to create a minimal, tree-shakeable runtime. Use wasm-pack to compile Rust code to WebAssembly. Define a lean API for DOM node creation, updates, and event handling that the Eghact compiler will target. For example: `eghact.createElement('div')`, `eghact.setText(node, 'new text')`, `eghact.listen(node, 'click', handler)`. This runtime will be the only piece of 'framework' code that ships to the browser.",
+        "testStrategy": "Unit test all Rust functions for DOM manipulation and lifecycle hooks. Create a benchmark test to ensure the compiled WASM runtime size is under 10KB and that Time to First Byte (TTFB) is minimal (<50ms). Validate that it runs in all target modern browsers.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "AST-based Compiler Pipeline",
+        "description": "Develop the Eghact compiler using Rust. This compiler will parse `.egh` files, transform the reactive syntax into efficient, vanilla JavaScript, and manage the component lifecycle. It will be built with an AST-based pipeline for accuracy and extensibility.",
+        "details": "Use a Rust-based parser like `swc` to create an Abstract Syntax Tree (AST) from `.egh` file content. Traverse the AST to identify reactive variables (`let`), reactive statements (`$:`), and event bindings (`@click`). Transform these into direct DOM manipulation calls that interface with the Core Runtime (Task 1). For example, `count++` becomes a call to update the specific text node, like `eghact.setText(textNode, \f`Count: ${count}\f`)`. Implement incremental compilation to ensure fast rebuilds.",
+        "testStrategy": "Create a suite of `.egh` file examples covering all syntax features. Write snapshot tests that compare the compiler's JS output against expected, optimized vanilla JS. Test error recovery by feeding the compiler malformed components and verifying that it produces clear, actionable error messages.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement Basic Component Model",
+        "description": "Implement the basic single-file component model, allowing developers to use `<template>`, `<script>`, and `<style>` tags within a `.egh` file. This task focuses on parsing and compiling these sections into a functional component.",
+        "details": "Extend the compiler (Task 2) to handle the three sections of an Eghact component. The `<template>` will be parsed into DOM creation logic. The `<script>` section will be processed for reactive bindings. The `<style>` section will be scoped to the component and prepared for critical CSS extraction. The compiler should produce a single JavaScript module per component.",
+        "testStrategy": "Unit test the compiler's ability to correctly parse and separate the three sections. Create an integration test with a simple component (like the counter example) and verify that it renders and functions correctly in a browser. Test style scoping by ensuring CSS rules from one component do not leak to another.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Signals-based Compile-Time Reactivity",
+        "description": "Build the core reactivity system based on signals. This involves compiling reactive variable declarations and statements into fine-grained, direct DOM updates, eliminating the need for a virtual DOM.",
+        "details": "Within the compiler (Task 2), implement the logic for automatic dependency tracking. When a variable is declared with `let`, the compiler tracks where it's used in the template. Any update to that variable will trigger a targeted update to only the affected DOM nodes. For reactive statements (`$:`), the compiler will generate code that re-executes the statement whenever its dependencies change. This is the core of the 'no VDOM' approach.",
+        "testStrategy": "Write extensive unit tests for the compiler's dependency tracking logic. Create complex components with multiple reactive variables and derived computations to ensure only the necessary parts of the DOM are updated. Use browser performance tools to verify that updates are fine-grained and do not cause full component re-renders.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Development Server with HMR",
+        "description": "Create a high-performance development server with instant startup and state-preserving Hot Module Replacement (HMR). The server will compile `.egh` files on the fly and manage the WebSocket connection for HMR.",
+        "details": "Use a fast, modern web server framework in Node.js (like Fastify or a custom Rust-based server via Node's N-API). On startup, build a module graph of the application. Use a WebSocket server to push compiled module updates to the client. The client-side HMR code will intelligently swap out the updated module and re-run relevant logic without losing component state. Implement automatic HTTPS with local certificate generation for a better developer experience.",
+        "testStrategy": "Benchmark the server's startup time to ensure it's under 100ms for a medium-sized project. Test HMR by making various changes to `.egh` files (template, script, style) and confirming that the browser updates instantly without a full page reload and that component state is preserved.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "File-Based Routing System",
+        "description": "Implement a file-based routing system similar to SvelteKit or Next.js. This includes support for static routes, dynamic routes with parameters, catch-all routes, and nested layouts.",
+        "details": "The development server (Task 5) and build system will be responsible for mapping the file structure in the `src/routes` directory to application routes. A folder `src/routes/users/[id].egh` will map to `/users/:id`. Create a client-side router that handles navigation, prefetching, and integrates with the browser's History API. Implement a layout system where `_layout.egh` files apply a consistent structure to nested routes.",
+        "testStrategy": "Create a test project with a complex file-based routing structure, including static, dynamic, catch-all, and nested routes. Write integration tests to verify that all routes render the correct component and that parameters are correctly extracted. Test client-side navigation to ensure smooth transitions and correct history state.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Server-Side Data Loading & Error Handling",
+        "description": "Develop a data loading strategy that allows components to fetch data on the server before rendering. This includes support for parallel data fetching, loading states, and error boundaries.",
+        "details": "Define a special function (e.g., `load`) that can be exported from a route component (`.egh` file). The server will execute this function during a server-side render (SSR) or on a client-side navigation. The function's return value will be passed as props to the component. Implement mechanisms for displaying loading indicators while data is being fetched on the client. Wrap route components in automatic error boundaries to handle failures in data fetching.",
+        "testStrategy": "Test various data loading scenarios: successful fetch, slow fetch (to verify loading states), and failed fetch (to verify error boundaries). Write tests to ensure that data is fetched in parallel for different layout levels. Verify that request deduplication works during rapid navigation.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Production Build & Optimization System",
+        "description": "Create the production build system. This system will perform critical optimizations like code splitting, tree-shaking, critical CSS extraction, and asset optimization to ensure the final output is highly performant and scores well on Lighthouse.",
+        "details": "Develop a build command that uses the Eghact compiler to generate a production-ready output. Implement automatic route-based code splitting. Integrate a tool like `esbuild` for fast and efficient bundling and minification. Analyze component styles to extract only the critical CSS needed for the initial render and inline it. Optimize images and fonts automatically. The build process must be parallelized and deterministic.",
+        "testStrategy": "Run the build process on a sample application and deploy it. Measure the output against the success metrics: bundle size < 10KB for 'hello world', and 100/100 Lighthouse scores. Verify that code splitting is working by inspecting the network tab in browser dev tools during navigation.",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Built-in Global State Management (Stores)",
+        "description": "Implement a built-in global state management solution using stores. This should support shared state between components, server-side state hydration, and be integrated with the developer tools for time-travel debugging.",
+        "details": "Create a simple `store` API. A store is a reactive object that can be imported and used by any component. When a store's value changes, any component subscribed to it will automatically update. For SSR, the final state of all stores should be serialized into the HTML and then hydrated on the client to ensure consistency. This builds upon the same signal-based reactivity from Task 4.",
+        "testStrategy": "Create tests where multiple, independent components import and interact with the same store. Verify that updates in one component are reflected in all others. Test the SSR hydration process to ensure there is no flicker or state mismatch on page load. Implement a basic time-travel debugging prototype in the DevTools.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Zero-Config Deployment Adapters",
+        "description": "Create zero-configuration deployment adapters for major platforms like Vercel, Netlify, and Cloudflare Workers. These adapters will generate the necessary configuration and output structure for each specific platform.",
+        "details": "For each target platform, create an adapter package (e.g., `@eghact/adapter-vercel`). The adapter, when added to the project, will modify the build output (Task 8) to match the platform's expected format. For Vercel/Netlify, this might mean generating a specific serverless function structure. For Cloudflare Workers, it would output a single script compatible with the Workers runtime. For static export, it would generate plain HTML/CSS/JS files.",
+        "testStrategy": "For each adapter, create a sample application, build it using the adapter, and deploy it to the target platform. Write an end-to-end test script that verifies the deployment is successful and the application is fully functional on the public URL. The process should require no manual configuration from the user.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-21T16:14:45.726Z",
+      "updated": "2025-06-21T16:20:55.532Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

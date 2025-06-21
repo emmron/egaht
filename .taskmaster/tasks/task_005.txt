@@ -1,0 +1,11 @@
+# Task ID: 5
+# Title: Development Server with HMR
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Create a high-performance development server with instant startup and state-preserving Hot Module Replacement (HMR). The server will compile `.egh` files on the fly and manage the WebSocket connection for HMR.
+# Details:
+Use a fast, modern web server framework in Node.js (like Fastify or a custom Rust-based server via Node's N-API). On startup, build a module graph of the application. Use a WebSocket server to push compiled module updates to the client. The client-side HMR code will intelligently swap out the updated module and re-run relevant logic without losing component state. Implement automatic HTTPS with local certificate generation for a better developer experience.
+
+# Test Strategy:
+Benchmark the server's startup time to ensure it's under 100ms for a medium-sized project. Test HMR by making various changes to `.egh` files (template, script, style) and confirming that the browser updates instantly without a full page reload and that component state is preserved.

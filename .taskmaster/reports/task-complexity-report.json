@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-21T16:16:26.286Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Core Runtime Development (Rust & WASM)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the 'Core Runtime Development' task into subtasks. Focus on the distinct stages: defining the JavaScript-facing API, implementing the core Rust functions for DOM manipulation (element creation, text updates, attribute setting), setting up event listener handling, configuring the `wasm-pack` build process for optimization, and creating benchmark tests for size and performance.",
+			"reasoning": "High complexity due to the combination of a low-level language (Rust), a specific compilation target (WASM), and strict performance/size constraints (<10KB). This foundational piece requires careful, low-level implementation and API design."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "AST-based Compiler Pipeline",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand the 'AST-based Compiler Pipeline' task. Create subtasks for setting up the Rust project with the `swc` parser, implementing the initial AST generation for `.egh` files, creating an AST visitor/walker to traverse the nodes, developing the transformation logic for reactive syntax into runtime calls, designing the mechanism for incremental compilation, and implementing robust error reporting.",
+			"reasoning": "Extremely high complexity. Compiler development, especially involving Abstract Syntax Tree manipulation and performance features like incremental compilation, is one of the most challenging areas of software engineering and is central to the project's success."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Basic Component Model",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Generate subtasks for 'Implement Basic Component Model'. The subtasks should cover parsing the `.egh` file to isolate `<template>`, `<script>`, and `<style>` blocks; compiling the `<template>` content into DOM creation instructions; processing the `<script>` content for reactive logic; and implementing scoped styling for the `<style>` block.",
+			"reasoning": "Medium complexity. While it builds on the complex compiler, the core challenge is orchestrating the parsing and compilation of three distinct languages (HTML, JS, CSS) within a single pipeline and ensuring they integrate correctly, especially with style scoping."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Signals-based Compile-Time Reactivity",
+			"complexityScore": 10,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the 'Signals-based Compile-Time Reactivity' task. Create subtasks for implementing compile-time dependency analysis to map variables to their usage in the template, generating code for fine-grained DOM updates when a variable changes, handling derived reactive statements (`$:`), optimizing the generated code to avoid unnecessary computations, and handling complex dependency graphs.",
+			"reasoning": "Highest complexity. This is the core innovation and the most technically challenging part of the compiler. It requires advanced static analysis and data flow analysis, moving beyond simple AST transformations to achieve the 'no VDOM' goal."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Development Server with HMR",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Development Server with HMR' task. Subtasks should include setting up the core server (Node.js or Rust), integrating the Eghact compiler to handle requests for `.egh` files, implementing a WebSocket server for HMR communication, writing the client-side HMR script to apply updates without a full reload, and ensuring component state is preserved across updates.",
+			"reasoning": "High complexity due to the combination of server-side processing, real-time communication (WebSockets), and complex client-side logic. Getting state-preserving HMR to be reliable and fast is a significant engineering challenge."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "File-Based Routing System",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Generate subtasks for the 'File-Based Routing System'. These should cover creating the build-time logic to scan the `src/routes` directory and generate a route manifest, developing the client-side router to handle navigation using the History API, implementing support for dynamic routes and parameter extraction, building the nested layout system, and adding prefetching logic.",
+			"reasoning": "Medium-high complexity. This feature requires tight integration between the build system (to generate the route map) and a non-trivial client-side library for navigation, prefetching, and state management. The layout system adds another layer of complexity."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Server-Side Data Loading & Error Handling",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the 'Server-Side Data Loading & Error Handling' task. Create subtasks for defining and implementing the `load` function convention in route components, building the server-side logic to execute `load` functions and serialize data, developing the client-side hydration mechanism, and implementing automatic error boundaries and loading state indicators.",
+			"reasoning": "High complexity in terms of orchestration. It requires coordinating logic between the server and client for data fetching, serialization, hydration, and error handling, touching many parts of the framework's architecture."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Production Build & Optimization System",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Expand the 'Production Build & Optimization System' task. Subtasks should cover creating the main build command script, implementing route-based code splitting based on the file-based router, integrating a bundler like `esbuild` for minification, developing the critical CSS extraction logic, and adding a pipeline for asset optimization.",
+			"reasoning": "High complexity. Production build systems are intricate. Performance optimizations like critical CSS extraction and perfect route-based code-splitting are non-trivial to implement correctly and require deep integration with the compiler and router."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Built-in Global State Management (Stores)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Generate subtasks for 'Built-in Global State Management (Stores)'. These should include designing and implementing the core `store` API based on the existing signal system, integrating store updates with the component reactivity graph, developing the server-side mechanism to serialize store state for SSR, and creating the client-side logic to hydrate the stores on initial load.",
+			"reasoning": "Medium complexity. The core reactive store can leverage the existing signal system (Task 4). The main difficulty lies in the server-client state transfer (SSR hydration), which requires careful implementation to ensure consistency and avoid race conditions."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Zero-Config Deployment Adapters",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the 'Zero-Config Deployment Adapters' task. Create a separate subtask for developing each adapter: one for Vercel, one for Netlify, one for Cloudflare Workers, and one for a static site generator (SSG) export. Each subtask should cover generating the platform-specific entry points and configuration files.",
+			"reasoning": "Medium-high complexity. While not algorithmically deep, this task requires significant research, integration work, and maintenance for multiple external platforms. The 'zero-config' goal means the adapters must be robust and handle many edge cases automatically."
+		}
+	]
+}

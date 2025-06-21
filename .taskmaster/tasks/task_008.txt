@@ -1,0 +1,11 @@
+# Task ID: 8
+# Title: Production Build & Optimization System
+# Status: pending
+# Dependencies: 7
+# Priority: high
+# Description: Create the production build system. This system will perform critical optimizations like code splitting, tree-shaking, critical CSS extraction, and asset optimization to ensure the final output is highly performant and scores well on Lighthouse.
+# Details:
+Develop a build command that uses the Eghact compiler to generate a production-ready output. Implement automatic route-based code splitting. Integrate a tool like `esbuild` for fast and efficient bundling and minification. Analyze component styles to extract only the critical CSS needed for the initial render and inline it. Optimize images and fonts automatically. The build process must be parallelized and deterministic.
+
+# Test Strategy:
+Run the build process on a sample application and deploy it. Measure the output against the success metrics: bundle size < 10KB for 'hello world', and 100/100 Lighthouse scores. Verify that code splitting is working by inspecting the network tab in browser dev tools during navigation.

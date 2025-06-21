@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Built-in Global State Management (Stores)
+# Status: pending
+# Dependencies: 4
+# Priority: medium
+# Description: Implement a built-in global state management solution using stores. This should support shared state between components, server-side state hydration, and be integrated with the developer tools for time-travel debugging.
+# Details:
+Create a simple `store` API. A store is a reactive object that can be imported and used by any component. When a store's value changes, any component subscribed to it will automatically update. For SSR, the final state of all stores should be serialized into the HTML and then hydrated on the client to ensure consistency. This builds upon the same signal-based reactivity from Task 4.
+
+# Test Strategy:
+Create tests where multiple, independent components import and interact with the same store. Verify that updates in one component are reflected in all others. Test the SSR hydration process to ensure there is no flicker or state mismatch on page load. Implement a basic time-travel debugging prototype in the DevTools.

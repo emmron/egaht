@@ -1,0 +1,11 @@
+# Task ID: 4
+# Title: Signals-based Compile-Time Reactivity
+# Status: pending
+# Dependencies: 3
+# Priority: high
+# Description: Build the core reactivity system based on signals. This involves compiling reactive variable declarations and statements into fine-grained, direct DOM updates, eliminating the need for a virtual DOM.
+# Details:
+Within the compiler (Task 2), implement the logic for automatic dependency tracking. When a variable is declared with `let`, the compiler tracks where it's used in the template. Any update to that variable will trigger a targeted update to only the affected DOM nodes. For reactive statements (`$:`), the compiler will generate code that re-executes the statement whenever its dependencies change. This is the core of the 'no VDOM' approach.
+
+# Test Strategy:
+Write extensive unit tests for the compiler's dependency tracking logic. Create complex components with multiple reactive variables and derived computations to ensure only the necessary parts of the DOM are updated. Use browser performance tools to verify that updates are fine-grained and do not cause full component re-renders.

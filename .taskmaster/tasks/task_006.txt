@@ -1,0 +1,11 @@
+# Task ID: 6
+# Title: File-Based Routing System
+# Status: pending
+# Dependencies: 5
+# Priority: medium
+# Description: Implement a file-based routing system similar to SvelteKit or Next.js. This includes support for static routes, dynamic routes with parameters, catch-all routes, and nested layouts.
+# Details:
+The development server (Task 5) and build system will be responsible for mapping the file structure in the `src/routes` directory to application routes. A folder `src/routes/users/[id].egh` will map to `/users/:id`. Create a client-side router that handles navigation, prefetching, and integrates with the browser's History API. Implement a layout system where `_layout.egh` files apply a consistent structure to nested routes.
+
+# Test Strategy:
+Create a test project with a complex file-based routing structure, including static, dynamic, catch-all, and nested routes. Write integration tests to verify that all routes render the correct component and that parameters are correctly extracted. Test client-side navigation to ensure smooth transitions and correct history state.

@@ -1,0 +1,11 @@
+# Task ID: 2
+# Title: AST-based Compiler Pipeline
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Develop the Eghact compiler using Rust. This compiler will parse `.egh` files, transform the reactive syntax into efficient, vanilla JavaScript, and manage the component lifecycle. It will be built with an AST-based pipeline for accuracy and extensibility.
+# Details:
+Use a Rust-based parser like `swc` to create an Abstract Syntax Tree (AST) from `.egh` file content. Traverse the AST to identify reactive variables (`let`), reactive statements (`$:`), and event bindings (`@click`). Transform these into direct DOM manipulation calls that interface with the Core Runtime (Task 1). For example, `count++` becomes a call to update the specific text node, like `eghact.setText(textNode, `Count: ${count}`)`. Implement incremental compilation to ensure fast rebuilds.
+
+# Test Strategy:
+Create a suite of `.egh` file examples covering all syntax features. Write snapshot tests that compare the compiler's JS output against expected, optimized vanilla JS. Test error recovery by feeding the compiler malformed components and verifying that it produces clear, actionable error messages.
