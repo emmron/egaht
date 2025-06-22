@@ -1,0 +1,33 @@
+{
+  "name": "eghact-git-plugin",
+  "version": "1.0.0",
+  "description": "Git integration plugin for Eghact CLI",
+  "main": "index.js",
+  "eghact": {
+    "type": "cli-extension",
+    "commands": [
+      {
+        "name": "git-stats",
+        "description": "Show git statistics for Eghact project"
+      },
+      {
+        "name": "git-hooks",
+        "description": "Install Eghact git hooks"
+      },
+      {
+        "name": "git-flow",
+        "description": "Initialize git flow for Eghact project"
+      }
+    ],
+    "requiredVersion": "^3.0.0"
+  },
+  "keywords": ["eghact", "plugin", "git", "cli"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "@eghact/cli": "^3.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.0.0"
+  }
+}
