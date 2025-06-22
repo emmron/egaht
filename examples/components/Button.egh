@@ -1,0 +1,58 @@
+<template>
+  <button 
+    class="egh-button {variant}" 
+    @click={handleClick}
+    disabled={disabled}
+  >
+    <slot />
+  </button>
+</template>
+
+<script lang="ts">
+  export let variant: 'primary' | 'secondary' | 'danger' = 'primary';
+  export let disabled: boolean = false;
+  export let onClick: (event: MouseEvent) => void = () => {};
+  
+  function handleClick(event: MouseEvent) {
+    if (!disabled) {
+      onClick(event);
+      dispatch('click', { timestamp: Date.now() });
+    }
+  }
+  
+  import { createEventDispatcher } from '@eghact/core';
+  const dispatch = createEventDispatcher<{
+    click: { timestamp: number };
+  }>();
+</script>
+
+<style>
+  .egh-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  
+  .egh-button.primary {
+    background: #007bff;
+    color: white;
+  }
+  
+  .egh-button.secondary {
+    background: #6c757d;
+    color: white;
+  }
+  
+  .egh-button.danger {
+    background: #dc3545;
+    color: white;
+  }
+  
+  .egh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+</style>

@@ -1,0 +1,395 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Eghact",
+  "scopeName": "source.eghact",
+  "patterns": [
+    {
+      "include": "#template-section"
+    },
+    {
+      "include": "#script-section"
+    },
+    {
+      "include": "#style-section"
+    },
+    {
+      "include": "#comments"
+    }
+  ],
+  "repository": {
+    "template-section": {
+      "begin": "(<)(template)\\s*(>)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.template.eghact"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "end": "(</)(template)\\s*(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.template.eghact"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "contentName": "meta.template.eghact",
+      "patterns": [
+        {
+          "include": "#template-content"
+        }
+      ]
+    },
+    "template-content": {
+      "patterns": [
+        {
+          "include": "#template-interpolation"
+        },
+        {
+          "include": "#reactive-statements"
+        },
+        {
+          "include": "#control-flow"
+        },
+        {
+          "include": "#event-handlers"
+        },
+        {
+          "include": "#component-props"
+        },
+        {
+          "include": "#html-tags"
+        },
+        {
+          "include": "#html-attributes"
+        },
+        {
+          "include": "#html-entities"
+        },
+        {
+          "include": "#comments"
+        }
+      ]
+    },
+    "template-interpolation": {
+      "begin": "\\{",
+      "end": "\\}",
+      "name": "meta.embedded.expression.eghact",
+      "contentName": "source.js.embedded.eghact",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.begin.eghact"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.embedded.end.eghact"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.js"
+        }
+      ]
+    },
+    "reactive-statements": {
+      "match": "\\$:\\s*",
+      "name": "keyword.control.reactive.eghact"
+    },
+    "control-flow": {
+      "patterns": [
+        {
+          "begin": "\\{#(if|each|await)\\b",
+          "end": "\\}",
+          "name": "meta.control-flow.eghact",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.embedded.begin.eghact"
+            },
+            "1": {
+              "name": "keyword.control.conditional.eghact"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.embedded.end.eghact"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        },
+        {
+          "begin": "\\{:(else|elseif)\\b",
+          "end": "\\}",
+          "name": "meta.control-flow.eghact",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.embedded.begin.eghact"
+            },
+            "1": {
+              "name": "keyword.control.conditional.eghact"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.embedded.end.eghact"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        },
+        {
+          "match": "\\{/(if|each|await)\\}",
+          "name": "meta.control-flow.end.eghact",
+          "captures": {
+            "0": {
+              "name": "punctuation.section.embedded.eghact"
+            },
+            "1": {
+              "name": "keyword.control.conditional.eghact"
+            }
+          }
+        }
+      ]
+    },
+    "event-handlers": {
+      "match": "(@|on:)(\\w+)",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.event.eghact"
+        },
+        "2": {
+          "name": "entity.other.attribute-name.event.eghact"
+        }
+      }
+    },
+    "component-props": {
+      "match": "(bind:|class:|style:)(\\w+)",
+      "captures": {
+        "1": {
+          "name": "keyword.operator.binding.eghact"
+        },
+        "2": {
+          "name": "variable.other.binding.eghact"
+        }
+      }
+    },
+    "script-section": {
+      "begin": "(<)(script)(?:\\s+(lang)\\s*=\\s*[\"']?(ts|typescript)[\"']?)?\\s*(>)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.eghact"
+        },
+        "3": {
+          "name": "entity.other.attribute-name.html"
+        },
+        "4": {
+          "name": "string.quoted.double.html"
+        },
+        "5": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "end": "(</)(script)\\s*(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.eghact"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "contentName": "meta.script.eghact",
+      "patterns": [
+        {
+          "include": "#script-content"
+        }
+      ]
+    },
+    "script-content": {
+      "patterns": [
+        {
+          "include": "#eghact-specific-keywords"
+        },
+        {
+          "include": "source.ts"
+        },
+        {
+          "include": "source.js"
+        }
+      ]
+    },
+    "eghact-specific-keywords": {
+      "patterns": [
+        {
+          "match": "\\b(export|let|const|var)\\s+(\\w+)\\s*(?::\\s*([^=;]+?))?\\s*(?:=|;)",
+          "captures": {
+            "1": {
+              "name": "storage.type.eghact"
+            },
+            "2": {
+              "name": "variable.other.property.eghact"
+            },
+            "3": {
+              "name": "entity.name.type.eghact"
+            }
+          }
+        },
+        {
+          "match": "\\$:\\s*",
+          "name": "keyword.control.reactive.eghact"
+        },
+        {
+          "match": "\\b(onMount|onDestroy|beforeUpdate|afterUpdate|tick|createEventDispatcher)\\b",
+          "name": "support.function.lifecycle.eghact"
+        }
+      ]
+    },
+    "style-section": {
+      "begin": "(<)(style)(?:\\s+(lang)\\s*=\\s*[\"']?(scss|sass|less|stylus)[\"']?)?(?:\\s+(scoped))?\\s*(>)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.style.eghact"
+        },
+        "3": {
+          "name": "entity.other.attribute-name.html"
+        },
+        "4": {
+          "name": "string.quoted.double.html"
+        },
+        "5": {
+          "name": "entity.other.attribute-name.html"
+        },
+        "6": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "end": "(</)(style)\\s*(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.style.eghact"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "contentName": "meta.style.eghact",
+      "patterns": [
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    "html-tags": {
+      "patterns": [
+        {
+          "begin": "(</?)(\\w+)",
+          "end": "(/?>)",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.begin.html"
+            },
+            "2": {
+              "name": "entity.name.tag.html"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#html-attributes"
+            }
+          ]
+        }
+      ]
+    },
+    "html-attributes": {
+      "patterns": [
+        {
+          "match": "\\s+(\\w+)\\s*=\\s*([\"'])([^\"']*?)\\2",
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.html"
+            },
+            "2": {
+              "name": "punctuation.definition.string.begin.html"
+            },
+            "3": {
+              "name": "string.quoted.double.html"
+            }
+          }
+        },
+        {
+          "match": "\\s+(\\w+)",
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.html"
+            }
+          }
+        }
+      ]
+    },
+    "html-entities": {
+      "match": "&[a-zA-Z0-9]+;",
+      "name": "constant.character.entity.html"
+    },
+    "comments": {
+      "patterns": [
+        {
+          "begin": "<!--",
+          "end": "-->",
+          "name": "comment.block.html",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.begin.html"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.comment.end.html"
+            }
+          }
+        },
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.js"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.js"
+        }
+      ]
+    }
+  }
+}

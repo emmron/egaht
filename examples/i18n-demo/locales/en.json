@@ -1,0 +1,41 @@
+{
+  "demo": {
+    "title": "Eghact I18n Demo",
+    "description": "This demo showcases the internationalization capabilities of the Eghact framework.",
+    "localeSwitch": "Language Switcher",
+    "examples": "Translation Examples"
+  },
+  "common": {
+    "hello": "Hello",
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "examples": {
+    "basic": {
+      "title": "Basic Translation"
+    },
+    "interpolation": {
+      "title": "Value Interpolation",
+      "placeholder": "Enter your name"
+    },
+    "pluralization": {
+      "title": "Pluralization"
+    },
+    "formatting": {
+      "title": "Number & Date Formatting",
+      "number": "Number",
+      "currency": "Currency",
+      "date": "Date"
+    }
+  },
+  "items": {
+    "count_zero": "No items",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items"
+  },
+  "messages": {
+    "userGreeting": "Hello, {{name}}!"
+  }
+}

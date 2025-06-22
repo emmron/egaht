@@ -1,38 +1,65 @@
-# Eghact
+# Eghact Framework
 
-A revolutionary web framework that replaces React with a cleaner, more efficient approach featuring compile-time reactivity, zero runtime overhead, and a new component syntax.
+A high-performance web framework that delivers compile-time reactivity with zero runtime overhead through innovative WebAssembly architecture.
 
-## Overview
+## Key Features
 
-Eghact is a modern web framework designed to address the limitations of existing solutions. It combines the developer experience of component-based frameworks with the performance of compiled languages through innovative architecture decisions:
-
-- **Compile-time reactivity**: All reactive transformations happen at build time
-- **Zero runtime overhead**: No virtual DOM, no reconciliation, just pure optimized code
-- **C-based runtime**: Core runtime compiled to WebAssembly for maximum performance
-- **New component syntax**: Cleaner than JSX with better separation of concerns
-- **File-based routing**: Automatic route generation from your file structure
-- **Built-in state management**: No need for external state libraries
+- Compile-time reactivity with zero runtime overhead
+- C-based runtime compiled to WebAssembly for maximum performance  
+- Component syntax cleaner than JSX with better separation of concerns
+- File-based automatic routing system
+- Built-in state management without external dependencies
+- TypeScript integration with automatic .d.ts generation
+- Enterprise-grade security with CSRF and XSS protection
+- Internationalization support with 50+ locales
+- Component testing framework with Jest integration
+- Browser DevTools extension for debugging
 
 ## Installation
 
+Install Eghact via npm:
+
 ```bash
-npm install eghact
+npm install -g eghact
 ```
 
 Or using Yarn:
 
 ```bash
-yarn add eghact
+yarn global add eghact
 ```
 
 ## Quick Start
 
-### Create a new Eghact project
+Create a new project:
 
 ```bash
-npx create-eghact-app my-app
-cd my-app
+eghact create my-project
+cd my-project
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start development server:
+
+```bash
 npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Deploy to production:
+
+```bash
+npm run deploy
 ```
 
 ### Basic Component

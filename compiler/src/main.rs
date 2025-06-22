@@ -7,8 +7,12 @@ mod parser;
 mod transformer;
 mod codegen;
 mod template;
+mod template_parser;
+mod template_codegen;
+mod csrf_protection;
 mod style;
 mod reactivity;
+mod typescript_transform;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

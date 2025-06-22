@@ -1,0 +1,42 @@
+{
+  "name": "@eghact/incremental-compilation",
+  "version": "0.1.0",
+  "description": "Incremental compilation system for Eghact with multi-level caching",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "clean": "rimraf dist",
+    "benchmark": "node benchmarks/cache-performance.js"
+  },
+  "keywords": [
+    "eghact",
+    "incremental",
+    "compilation",
+    "cache",
+    "ast",
+    "performance"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "xxhash-wasm": "^1.0.2",
+    "lru-cache": "^7.18.3",
+    "fs-extra": "^11.1.1",
+    "chalk": "^4.1.2",
+    "@types/node": "^18.15.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ]
+}

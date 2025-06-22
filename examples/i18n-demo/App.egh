@@ -1,0 +1,96 @@
+<template>
+  <I18nComponent {config}>
+    <div class="app">
+      <header>
+        <h1>{t('app.title')}</h1>
+        <LanguageSwitcher />
+      </header>
+      
+      <main>
+        <section>
+          <h2>{t('welcome.greeting', { name: userName })}</h2>
+          <p>{t('welcome.description')}</p>
+        </section>
+        
+        <section>
+          <h3>{t('numbers.title')}</h3>
+          <p>{t('numbers.count', { count: itemCount })}</p>
+          <p>{t('numbers.formatted')}: {formatNumber(1234.56)}</p>
+        </section>
+        
+        <section>
+          <h3>{t('dates.title')}</h3>
+          <p>{t('dates.now')}: {formatDate(new Date())}</p>
+          <p>{t('dates.custom')}: {formatDate(new Date(), { dateStyle: 'full' })}</p>
+        </section>
+        
+        <section>
+          <h3>{t('currency.title')}</h3>
+          <p>{formatCurrency(99.99, { currency: 'USD' })}</p>
+          <p>{formatCurrency(99.99, { currency: 'EUR' })}</p>
+        </section>
+        
+        {#if isLoading}
+          <div class="loading">{t('loading')}</div>
+        {/if}
+      </main>
+    </div>
+  </I18nComponent>
+</template>
+
+<script lang="ts">
+  import { I18nComponent, useI18n, formatNumber, formatDate, formatCurrency, type I18nConfig } from '../../i18n/src';
+  import LanguageSwitcher from './LanguageSwitcher.egh';
+  
+  // I18n configuration
+  const config: I18nConfig = {
+    defaultLocale: 'en',
+    fallbackLocale: 'en',
+    supportedLocales: ['en', 'es', 'fr', 'de'],
+    loadPath: '/locales/{{lng}}.json'
+  };
+  
+  // Component state
+  let userName = 'User';
+  let itemCount = 3;
+  
+  // Get i18n context
+  const { t, isLoading } = useI18n();
+</script>
+
+<style>
+  .app {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: system-ui, sans-serif;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  
+  section {
+    margin-bottom: 30px;
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  h2, h3 {
+    color: #666;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #888;
+  }
+</style>

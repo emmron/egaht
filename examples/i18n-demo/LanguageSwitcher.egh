@@ -1,0 +1,65 @@
+<template>
+  <div class="language-switcher">
+    <select bind:value={selectedLocale} @change={handleLocaleChange}>
+      {#each availableLocales as locale}
+        <option value={locale}>{getLocaleName(locale)}</option>
+      {/each}
+    </select>
+  </div>
+</template>
+
+<script lang="ts">
+  import { useI18n } from '../../i18n/src';
+  
+  const { locale, changeLocale, availableLocales } = useI18n();
+  
+  let selectedLocale = locale;
+  
+  // Map of locale codes to display names
+  const localeNames: Record<string, string> = {
+    'en': 'English',
+    'es': 'Español',
+    'fr': 'Français',
+    'de': 'Deutsch'
+  };
+  
+  function getLocaleName(locale: string): string {
+    return localeNames[locale] || locale;
+  }
+  
+  async function handleLocaleChange() {
+    if (selectedLocale !== locale) {
+      try {
+        await changeLocale(selectedLocale);
+      } catch (error) {
+        console.error('Failed to change locale:', error);
+        // Revert selection on error
+        selectedLocale = locale;
+      }
+    }
+  }
+  
+  // Update selected when locale changes externally
+  $: selectedLocale = locale;
+</script>
+
+<style>
+  .language-switcher {
+    position: relative;
+  }
+  
+  select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+</style>

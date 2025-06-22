@@ -1,0 +1,55 @@
+<template>
+  <div class="user-card" class:online={user.isOnline}>
+    <img src={user.avatar} alt={user.name} />
+    <div class="info">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      {#if user.isOnline}
+        <span class="status">Online</span>
+      {/if}
+    </div>
+    <slot name="actions" />
+  </div>
+</template>
+
+<script>
+  export let user = {
+    name: '',
+    email: '',
+    avatar: '',
+    isOnline: false
+  };
+  
+  // Reactive statement
+  $: displayName = user.name || 'Anonymous';
+</script>
+
+<style>
+  .user-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    gap: 12px;
+  }
+  
+  .user-card.online {
+    border-color: #4caf50;
+  }
+  
+  img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+  
+  .info {
+    flex: 1;
+  }
+  
+  .status {
+    color: #4caf50;
+    font-size: 12px;
+  }
+</style>

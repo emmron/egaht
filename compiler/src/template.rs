@@ -326,6 +326,53 @@ impl TemplateParser {
         }))
     }
     
+    fn create_safe_reactive_text_stmt(&self, var_name: &str, expr: &str, raw_html: bool) -> Result<Stmt> {
+        // For XSS protection: runtime.setText(text0, runtime.escapeHtml(count)) OR runtime.setTextRaw(text0, count)
+        let method_name = if raw_html { "setTextRaw" } else { "setText" };
+        let text_expr = if raw_html {
+            // Raw HTML - no escaping, use expression directly
+            Box::new(Expr::Ident(Ident::new(expr.into(), DUMMY_SP)))
+        } else {
+            // Escaped HTML - wrap expression in escapeHtml call
+            Box::new(Expr::Call(CallExpr {
+                span: DUMMY_SP,
+                callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+                    span: DUMMY_SP,
+                    obj: Box::new(Expr::Ident(quote_ident!("runtime"))),
+                    prop: MemberProp::Ident(quote_ident!("escapeHtml")),
+                }))),
+                args: vec![ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Ident(Ident::new(expr.into(), DUMMY_SP))),
+                }],
+                type_args: None,
+            }))
+        };
+        
+        Ok(Stmt::Expr(ExprStmt {
+            span: DUMMY_SP,
+            expr: Box::new(Expr::Call(CallExpr {
+                span: DUMMY_SP,
+                callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+                    span: DUMMY_SP,
+                    obj: Box::new(Expr::Ident(quote_ident!("runtime"))),
+                    prop: MemberProp::Ident(Ident::new(method_name.into(), DUMMY_SP)),
+                }))),
+                args: vec![
+                    ExprOrSpread {
+                        spread: None,
+                        expr: Box::new(Expr::Ident(Ident::new(var_name.into(), DUMMY_SP))),
+                    },
+                    ExprOrSpread {
+                        spread: None,
+                        expr: text_expr,
+                    },
+                ],
+                type_args: None,
+            })),
+        }))
+    }
+    
     fn create_comment_stmt(&self, var_name: &str, text: &str) -> Stmt {
         // const comment0 = document.createComment('if: count > 10');
         Stmt::Decl(Decl::Var(Box::new(VarDecl {

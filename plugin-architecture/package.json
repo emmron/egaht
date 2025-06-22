@@ -1,0 +1,44 @@
+{
+  "name": "@eghact/plugin-architecture",
+  "version": "1.0.0",
+  "description": "Secure plugin architecture for the Eghact framework with compilation and runtime hooks",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": [
+    "eghact",
+    "plugin",
+    "architecture",
+    "extensibility",
+    "framework"
+  ],
+  "author": "Agent 3 v2.0",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^5.0.0",
+    "chalk": "^5.0.0",
+    "glob": "^10.0.0",
+    "semver": "^7.5.0",
+    "vm2": "^3.9.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/semver": "^7.5.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.ts"]
+  }
+}

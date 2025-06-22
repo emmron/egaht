@@ -1,0 +1,202 @@
+{
+  "Basic Component": {
+    "prefix": "egh-component",
+    "body": [
+      "<template>",
+      "\t<div class=\"${1:component-name}\">",
+      "\t\t${2:<!-- Template content -->}",
+      "\t</div>",
+      "</template>",
+      "",
+      "<script>",
+      "\t${3:// Component logic}",
+      "</script>",
+      "",
+      "<style>",
+      "\t.${1:component-name} {",
+      "\t\t${4:/* Component styles */}",
+      "\t}",
+      "</style>"
+    ],
+    "description": "Create a basic Eghact component structure"
+  },
+  "TypeScript Component": {
+    "prefix": "egh-ts-component",
+    "body": [
+      "<template>",
+      "\t<div class=\"${1:component-name}\">",
+      "\t\t${2:<!-- Template content -->}",
+      "\t</div>",
+      "</template>",
+      "",
+      "<script lang=\"ts\">",
+      "\texport let ${3:propName}: ${4:string};",
+      "\t",
+      "\t${5:// Component logic}",
+      "</script>",
+      "",
+      "<style>",
+      "\t.${1:component-name} {",
+      "\t\t${6:/* Component styles */}",
+      "\t}",
+      "</style>"
+    ],
+    "description": "Create a TypeScript Eghact component"
+  },
+  "Reactive Statement": {
+    "prefix": "reactive",
+    "body": [
+      "$: ${1:derivedValue} = ${2:someValue} ${3:* 2};"
+    ],
+    "description": "Create a reactive statement"
+  },
+  "Event Handler": {
+    "prefix": "@click",
+    "body": [
+      "@click={${1:handleClick}}"
+    ],
+    "description": "Add click event handler"
+  },
+  "If Block": {
+    "prefix": "if-block",
+    "body": [
+      "{#if ${1:condition}}",
+      "\t${2:<!-- Content when true -->}",
+      "{/if}"
+    ],
+    "description": "Create conditional if block"
+  },
+  "If-Else Block": {
+    "prefix": "if-else-block",
+    "body": [
+      "{#if ${1:condition}}",
+      "\t${2:<!-- Content when true -->}",
+      "{:else}",
+      "\t${3:<!-- Content when false -->}",
+      "{/if}"
+    ],
+    "description": "Create conditional if-else block"
+  },
+  "Each Block": {
+    "prefix": "each-block",
+    "body": [
+      "{#each ${1:items} as ${2:item}}",
+      "\t${3:<!-- Template for each item -->}",
+      "{/each}"
+    ],
+    "description": "Create each iteration block"
+  },
+  "Each Block with Index": {
+    "prefix": "each-index-block",
+    "body": [
+      "{#each ${1:items} as ${2:item}, ${3:index}}",
+      "\t${4:<!-- Template for each item -->}",
+      "{/each}"
+    ],
+    "description": "Create each iteration block with index"
+  },
+  "Await Block": {
+    "prefix": "await-block",
+    "body": [
+      "{#await ${1:promise}}",
+      "\t${2:<!-- Loading state -->}",
+      "{:then ${3:result}}",
+      "\t${4:<!-- Success state -->}",
+      "{:catch ${5:error}}",
+      "\t${6:<!-- Error state -->}",
+      "{/await}"
+    ],
+    "description": "Create async await block"
+  },
+  "Component Props": {
+    "prefix": "props",
+    "body": [
+      "export let ${1:propName}${2:: ${3:PropType}}${4: = ${5:defaultValue}};"
+    ],
+    "description": "Export component prop"
+  },
+  "Event Dispatcher": {
+    "prefix": "dispatch",
+    "body": [
+      "import { createEventDispatcher } from 'eghact';",
+      "",
+      "const dispatch = createEventDispatcher${1:<${2:EventType}>}();",
+      "",
+      "function ${3:handleEvent}() {",
+      "\tdispatch('${4:eventName}', ${5:eventData});",
+      "}"
+    ],
+    "description": "Create event dispatcher"
+  },
+  "Lifecycle - onMount": {
+    "prefix": "onMount",
+    "body": [
+      "import { onMount } from 'eghact';",
+      "",
+      "onMount(() => {",
+      "\t${1:// Component mounted logic}",
+      "});"
+    ],
+    "description": "Add onMount lifecycle"
+  },
+  "Lifecycle - onDestroy": {
+    "prefix": "onDestroy",
+    "body": [
+      "import { onDestroy } from 'eghact';",
+      "",
+      "onDestroy(() => {",
+      "\t${1:// Cleanup logic}",
+      "});"
+    ],
+    "description": "Add onDestroy lifecycle"
+  },
+  "Store": {
+    "prefix": "store",
+    "body": [
+      "import { writable } from 'eghact/store';",
+      "",
+      "export const ${1:storeName} = writable(${2:initialValue});"
+    ],
+    "description": "Create a writable store"
+  },
+  "Derived Store": {
+    "prefix": "derived",
+    "body": [
+      "import { derived } from 'eghact/store';",
+      "",
+      "export const ${1:derivedStore} = derived(",
+      "\t${2:sourceStore},",
+      "\t$${2:sourceStore} => ${3:$${2:sourceStore}.someProperty}",
+      ");"
+    ],
+    "description": "Create a derived store"
+  },
+  "Class Binding": {
+    "prefix": "class:",
+    "body": [
+      "class:${1:className}={${2:condition}}"
+    ],
+    "description": "Add conditional class binding"
+  },
+  "Style Binding": {
+    "prefix": "style:",
+    "body": [
+      "style:${1:property}={${2:value}}"
+    ],
+    "description": "Add dynamic style binding"
+  },
+  "Two-way Binding": {
+    "prefix": "bind:",
+    "body": [
+      "bind:${1:property}={${2:variable}}"
+    ],
+    "description": "Add two-way data binding"
+  },
+  "Template with Slot": {
+    "prefix": "slot",
+    "body": [
+      "<slot${1: name=\"${2:slotName}\"}>${3:fallback content}</slot>"
+    ],
+    "description": "Add component slot"
+  }
+}

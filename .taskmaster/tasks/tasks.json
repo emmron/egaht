@@ -128,12 +128,918 @@
         ],
         "status": "done",
         "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "TypeScript Integration for .egh Components",
+        "description": "Introduce TypeScript support for `.egh` files by extending the compiler to parse `<script lang=\"ts\">` blocks. This will provide full type inference and validation for component props, reactive state, and custom events.",
+        "details": "The compiler pipeline (Task 2) will be updated to use a TypeScript parser for script blocks marked with `lang=\"ts\"`. It will generate a `.d.ts` declaration file for each component, defining the types for its props (inferred from `export let` statements). A new API, like `createEventDispatcher<T>()`, will be introduced for typed custom events. The build system (Task 8) will integrate `tsc --noEmit` to perform type checking as a build step. This integration will also extend to the global stores API (Task 9), allowing for the creation of fully typed, shared state.",
+        "testStrategy": "Create a suite of components using `<script lang=\"ts\">`. Test prop type validation by creating components that expect specific prop types and verifying that the build fails when incorrect types are passed from a parent. Write tests for custom event typing, ensuring the event payload type is correctly inferred in the event handler. Verify reactive state typing by declaring typed variables and ensuring type errors are caught within reactive blocks (`$:`) and template expressions. Add a test case for a typed global store to confirm that type safety is maintained across component boundaries. Ensure that running the build command on a project with type errors results in a non-zero exit code.",
+        "status": "done",
+        "dependencies": [
+          2,
+          3,
+          8,
+          9
+        ],
+        "priority": "high",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-21T16:14:45.726Z",
-      "updated": "2025-06-21T18:14:16.891Z",
+      "updated": "2025-06-22T07:18:12.074Z",
       "description": "Tasks for master context"
+    }
+  },
+  "phase3": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Core TypeScript Integration and Type Inference",
+        "description": "Integrate the TypeScript compiler to provide first-class TypeScript support within the Eghact framework, including type inference for component props and state.",
+        "details": "Use the TypeScript Compiler API (`ts.createProgram`, `ts.transpileModule`) to parse and type-check `.egh` files. The compiler needs to be adapted to understand the `.egh` syntax, potentially by transforming it into a TypeScript-compatible format in memory before type checking. This task will focus on establishing the core type inference for `props` and the component's internal `state`.",
+        "testStrategy": "Unit test the compiler integration with various component definitions, ensuring correct type errors are thrown for invalid prop/state usage. Create a sample project with TypeScript to verify end-to-end type checking during development.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up TypeScript compiler infrastructure",
+            "description": "Install TypeScript as a dependency and set up the basic compiler API integration to parse and transpile TypeScript code",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 2,
+            "title": "Create .egh file parser and transformer",
+            "description": "Build a parser that can read .egh files and transform them into TypeScript-compatible AST for type checking",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 3,
+            "title": "Implement props type inference",
+            "description": "Create type inference system for component props, extracting types from prop definitions in .egh files",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 4,
+            "title": "Implement state type inference",
+            "description": "Create type inference for component state, including reactive state declarations with $: syntax",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          },
+          {
+            "id": 5,
+            "title": "Integrate with build system",
+            "description": "Hook TypeScript type checking into the Eghact build pipeline for development and production builds",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Automatic .d.ts Generation for Components",
+        "description": "Automatically generate TypeScript declaration files (`.d.ts`) for Eghact components, enabling type-safe usage across different files and in other TypeScript projects.",
+        "details": "Extend the build process from Task 1. After type-checking, use the TypeScript compiler's emitter to generate `.d.ts` files. This process should extract prop types and custom event signatures from components and export them as a typed interface. The generator should also handle generic components.",
+        "testStrategy": "Verify that the build process creates accurate `.d.ts` files for a variety of components (with and without props, with events, with generics). Write an integration test where one component imports and uses another, relying on the generated declaration file for type safety.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create package.json for typescript-dts",
+            "description": "Set up npm package with required dependencies for CLI and .d.ts generation",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 2,
+            "title": "Create TypeScript configuration",
+            "description": "Set up tsconfig.json for compiling the typescript-dts module",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 3,
+            "title": "Create test .egh components",
+            "description": "Create example .egh component files to test the .d.ts generator",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 4,
+            "title": "Test .d.ts generation",
+            "description": "Run the DtsGenerator on test components and verify output",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Internationalization (i18n) System",
+        "description": "Implement a comprehensive internationalization (i18n) and localization (l10n) system, including lazy-loading of translation files and reactive language switching.",
+        "details": "Create a context-based i18n provider that holds the current locale and translation messages. Use the `Intl` object for date, number, and currency formatting. Implement a system to dynamically import JSON translation files based on the selected locale. The language switching mechanism must be reactive, updating the UI without a full page reload.",
+        "testStrategy": "Unit test the i18n functions for pluralization and formatting. Create an E2E test that loads a page, switches the language, and asserts that the displayed text and formatting are updated correctly and that only the required locale files are fetched.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and implement core i18n context provider",
+            "description": "Create the context-based i18n provider that holds current locale and translation messages",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 2,
+            "title": "Create translation function t() with pluralization",
+            "description": "Implement the core translation function that handles key lookups and pluralization rules",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 3,
+            "title": "Implement dynamic locale file loader",
+            "description": "Build system to dynamically import JSON translation files based on selected locale with lazy loading",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 4,
+            "title": "Build reactive language switching mechanism",
+            "description": "Create system for changing locale without page reload, updating all UI elements reactively",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 5,
+            "title": "Integrate Intl for date/number/currency formatting",
+            "description": "Use JavaScript Intl object for locale-aware formatting of dates, numbers, and currencies",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 6,
+            "title": "Create E2E tests for language switching",
+            "description": "Set up end-to-end tests to verify language switching, content updates, and locale file loading",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Content Security Policy (CSP) Generation",
+        "description": "Integrate automatic Content Security Policy (CSP) header generation into the build process to enhance application security.",
+        "details": "The production build process will analyze the final assets and code to automatically generate a strict CSP. This includes creating hashes or nonces for inline scripts and styles, and defining `script-src`, `style-src`, and `img-src` directives based on the application's dependencies and assets. The CSP should be configurable by the user for specific needs.",
+        "testStrategy": "Create a test project with various assets (local images, CDN scripts). Run a production build and verify that the generated CSP header is correct and restrictive. Use a tool like Google's CSP Evaluator to check the generated policy's effectiveness.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Built-in XSS and CSRF Protection",
+        "description": "Implement built-in protection against Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) to secure Eghact applications by default.",
+        "details": "For XSS, ensure the Eghact template compiler automatically escapes all dynamic data rendered in templates by default. For CSRF, implement a double-submit cookie or token-based strategy for form submissions and API requests initiated from the client-side, integrating it with the built-in fetch utilities.",
+        "testStrategy": "Unit test the template renderer to ensure it neutralizes script injections. For CSRF, create an E2E test that simulates a form submission, asserting that the request is rejected without a valid token and accepted with one.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement automatic XSS escaping in template compiler",
+            "description": "Modify the Eghact template compiler to automatically escape all dynamic content by default, preventing script injection attacks while allowing opt-out for trusted content",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 2,
+            "title": "Create CSRF token generation and validation system",
+            "description": "Implement double-submit cookie strategy with secure token generation, validation middleware, and integration with forms and fetch utilities for automatic CSRF protection",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 3,
+            "title": "Integrate security features with build system and dev server",
+            "description": "Add XSS/CSRF protection to development server middleware, create security validation during build process, and ensure production deployments have security headers configured",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "VS Code Extension with IntelliSense",
+        "description": "Develop a VS Code extension to provide syntax highlighting, IntelliSense, and go-to-definition for `.egh` files, significantly improving developer experience.",
+        "details": "Create a Language Server using the Language Server Protocol (LSP). The server will interface with the Eghact compiler API (from Task 1 & 2) to provide features. For syntax highlighting, a TextMate grammar (`.tmLanguage.json`) will be created. IntelliSense will provide auto-completion for props, state, and lifecycle hooks.",
+        "testStrategy": "Manually test the extension in VS Code with a sample Eghact project. Create an automated test suite for the Language Server that feeds it mock `.egh` content and verifies the correctness of the returned completions, definitions, and diagnostics.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TextMate grammar for .egh syntax highlighting",
+            "description": "Develop comprehensive .tmLanguage.json grammar file covering template syntax, reactive statements, event bindings, script blocks, and style sections with proper scope mappings for VS Code themes",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "Implement Language Server Protocol (LSP) server",
+            "description": "Build LSP server that interfaces with Eghact compiler API to provide real-time diagnostics, error checking, and language features with proper initialization, capability negotiation, and document synchronization",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 3,
+            "title": "Build IntelliSense and auto-completion features",
+            "description": "Implement intelligent code completion for component props, state variables, events, and lifecycle hooks with context-aware suggestions, parameter hints, and signature help for .egh files",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 4,
+            "title": "Implement go-to-definition and reference finding",
+            "description": "Add navigation features that allow developers to jump to component definitions, prop declarations, function definitions, and find all references across the codebase using the Eghact compiler's symbol resolution",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Browser DevTools Extension for Component Inspection",
+        "description": "Create a browser developer tools extension for inspecting and debugging Eghact applications, similar to React DevTools.",
+        "details": "The extension will have a panel in the browser's DevTools. It needs to communicate with the Eghact runtime on the page to get the component tree structure. The initial version will allow developers to visualize the component hierarchy and inspect the props and state of each component in real-time.",
+        "testStrategy": "Develop a sample application and use it to test the extension. Manually verify that the component tree is accurate, and that state inspection reflects the application's state. Add E2E tests using a framework like Puppeteer to automate interaction with the DevTools panel.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create extension structure and manifest",
+            "description": "Set up Chrome extension manifest v3 with DevTools configuration",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 2,
+            "title": "Build DevTools panel UI",
+            "description": "Create HTML/CSS/JS for component tree visualization and props inspection",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 3,
+            "title": "Implement runtime hook integration",
+            "description": "Create window.__EGHACT_DEVTOOLS__ API for component tracking",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 4,
+            "title": "Create content script and background worker",
+            "description": "Build message passing bridge between page and DevTools panel",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Component Testing Framework",
+        "description": "Build a dedicated component testing framework to enable unit, integration, and visual regression testing for Eghact components.",
+        "details": "The framework will provide a test runner (e.g., based on Jest) and a utility library for rendering components in a simulated DOM environment (e.g., JSDOM). It will include functions to query and interact with the rendered output and to mock events and props. For visual regression, integrate with a tool like Percy or Playwright.",
+        "testStrategy": "The primary test strategy is to dogfood the framework itself. Create a comprehensive suite of tests for a sample Eghact component library using the new testing framework. This will validate its functionality, ergonomics, and stability.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Incremental Compilation for Sub-100ms Rebuilds",
+        "description": "Implement an incremental compilation strategy to reduce rebuild times for large codebases to under 100ms.",
+        "details": "Enhance the existing AST-based compiler with a caching layer. On startup, the compiler will build a dependency graph of all modules. During a rebuild, it will only re-process the changed file and its direct dependents. The cache, storing ASTs and compilation outputs, will be persisted between dev server runs.",
+        "testStrategy": "Create a large-scale benchmark project with hundreds of components. Measure the initial build time and subsequent rebuild times after changing different types of files (a single component, a shared utility). Assert that incremental rebuild times are consistently below the 100ms target.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and implement module dependency graph construction",
+            "description": "Build comprehensive dependency tracking system that maps all .egh files, imports, exports, and cross-references to create an accurate dependency graph for efficient cache invalidation",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 2,
+            "title": "Create multi-level caching system for ASTs and compilation results",
+            "description": "Implement persistent disk cache and in-memory cache for parsed ASTs, transformed code, and compilation artifacts with cache key generation, integrity checking, and automatic cleanup",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 3,
+            "title": "Implement intelligent cache invalidation and rebuild logic",
+            "description": "Build smart invalidation system that detects file changes, analyzes dependency impact, and triggers minimal recompilation of only affected modules while preserving cached results for unchanged dependencies",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Advanced Code Splitting and Tree-Shaking",
+        "description": "Introduce advanced code splitting and tree-shaking strategies to minimize production bundle sizes.",
+        "details": "Go beyond simple route-based splitting. Implement a system that analyzes dynamic `import()` expressions and automatically splits code into smaller chunks. The tree-shaking process will be enhanced to perform cross-component optimization, identifying and removing unused props or internal functions from the production build.",
+        "testStrategy": "Analyze the bundle output of a complex application before and after the changes. Use a bundle analyzer tool to visualize the chunks and verify that code is being split logically. Assert that the total bundle size is reduced and that tree-shaking has removed unused code paths.",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement dynamic import() analysis and chunk creation",
+            "description": "Build system to analyze dynamic import() expressions in code, create dependency graphs for code splitting, and generate optimized chunks with proper naming and loading strategies",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 2,
+            "title": "Build enhanced tree-shaking with cross-component optimization",
+            "description": "Implement dead code elimination that analyzes unused props, methods, and imports across component boundaries, with support for side-effect detection and DCE of unused reactive statements",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 3,
+            "title": "Create bundle analyzer and optimization reporting",
+            "description": "Build tooling to visualize chunk sizes, analyze bundle composition, detect optimization opportunities, and generate reports showing code splitting effectiveness and tree-shaking results",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Plugin Architecture for Extensibility",
+        "description": "Develop a plugin architecture to allow developers to extend the Eghact compiler and runtime with custom functionality.",
+        "details": "Define a clear Plugin API with hooks into the compilation process (e.g., `transform`, `resolveId`) and the runtime (e.g., `beforeMount`, `onStateChange`). The system must be designed for security and performance, ensuring that plugins do not degrade the core framework's speed. This includes creating the infrastructure for a future plugin marketplace.",
+        "testStrategy": "Develop 2-3 example plugins to validate the API: one that adds a custom template directive, one that integrates a CSS-in-JS library, and one that logs runtime performance metrics. These plugins will serve as both a test case and initial documentation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design secure plugin API with compilation and runtime hooks",
+            "description": "Create comprehensive plugin API with lifecycle hooks for compiler transforms, runtime events, and build process integration while ensuring sandbox security and performance isolation",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 2,
+            "title": "Build plugin management and loading system",
+            "description": "Implement plugin discovery, validation, loading mechanism with dependency resolution, version compatibility checking, and secure sandbox execution environment",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 3,
+            "title": "Create example plugins and marketplace infrastructure",
+            "description": "Develop 3 comprehensive example plugins (custom directive, CSS-in-JS integration, performance monitoring) and build marketplace infrastructure for plugin distribution and community contributions",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 11
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "CLI Scaffolding Tools and Templates",
+        "description": "Enhance the Eghact CLI with scaffolding tools to quickly generate new projects and components based on community templates.",
+        "details": "Add a `eghact create <project-name>` command to the CLI. This command will present a series of prompts to the user, allowing them to choose from official and community-managed templates (e.g., 'Barebones', 'TypeScript + SSG', 'Real-time App'). The tool will fetch the template from a repository, install dependencies, and initialize a git repository.",
+        "testStrategy": "Run the CLI command with every possible template combination. For each run, verify that the project is created successfully, dependencies are installed, and the new project's development server starts without errors.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "in-progress",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "React-to-Eghact Migration Codemod",
+        "description": "Create a codemod tool to facilitate the migration of existing React projects to the Eghact framework.",
+        "details": "Use a code transformation toolkit like `jscodeshift` or `AST-Grep`. The codemod will parse React's JSX syntax and component patterns (class components, functional components with hooks) and transform them into the equivalent `.egh` file syntax and Eghact's reactive patterns. The tool should handle common cases like `useState`, `useEffect`, and prop definitions.",
+        "testStrategy": "Gather a corpus of diverse, real-world React components (e.g., from open-source libraries). Run the codemod on this corpus and verify the output. The success metric is a >90% migration success rate, where success is defined as the component rendering and behaving correctly after minimal manual changes.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Visual Component Playground (Storybook-like)",
+        "description": "Build a visual component playground, similar to Storybook, for developing, testing, and documenting components in isolation.",
+        "details": "The playground will be a standalone application that discovers component 'stories' (e.g., `*.story.egh`) within a project. It will provide a UI to browse components and their various states, with controls to interactively modify props. It should integrate with the HMR development server for a seamless experience.",
+        "testStrategy": "Create a sample component library and write stories for each component. Launch the playground and verify that all components are discoverable and render correctly. Test the interactive prop controls and ensure HMR updates the component without a full reload.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Real-time Collaboration and WebSocket Integration",
+        "description": "Integrate real-time collaboration features, including WebSocket support and state synchronization primitives.",
+        "details": "Provide a lightweight, framework-agnostic WebSocket wrapper that integrates seamlessly with Eghact's state management. Create higher-level composable functions (e.g., `useSharedState`) that handle the logic for real-time state synchronization between multiple clients, including basic presence awareness.",
+        "testStrategy": "Build a simple collaborative to-do list application. Use E2E tests with multiple concurrent browser instances (via Playwright or Cypress) to verify that state changes in one client are reflected in others in real-time. Test connection and reconnection scenarios.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Starter Project Templates and Themes",
+        "description": "Create a diverse set of pre-configured starter project templates, complete with theming and documentation, to accelerate new application development and showcase Eghact's capabilities.",
+        "details": "Develop a collection of starter templates to be used with the CLI scaffolding tool (Task 12). Each template must include a well-defined project structure, a README.md with setup and usage instructions, and a basic theming system (e.g., using CSS variables for colors, fonts, and spacing).\n\nTemplates to be created:\n1.  **Hello World**: A minimal, barebones template with a single component to demonstrate the most basic Eghact app structure.\n2.  **TypeScript Starter**: A template fully configured for TypeScript development, including a `tsconfig.json` file and leveraging the automatic `.d.ts` generation from Task 2.\n3.  **SSG Blog**: A content-focused template demonstrating Static Site Generation. It should include file-based routing for Markdown posts and basic SEO-friendly HTML generation.\n4.  **Real-time Chat App**: A template that showcases the WebSocket integration and state synchronization primitives from Task 15. It should feature a simple chat interface where messages are synced between clients.\n5.  **E-commerce Demo**: A more complex application featuring a product grid, shopping cart state management, and multi-page navigation to demonstrate building a substantial application with Eghact.",
+        "testStrategy": "For each template, use the `eghact create` command from Task 12 to generate a new project. \n1. Verify that all dependencies install correctly using the package manager.\n2. Start the development server and ensure the application runs without any console errors.\n3. **TypeScript Starter**: Confirm that the project compiles without type errors and that editor IntelliSense works as expected for component props.\n4. **SSG Blog**: Run the build command and verify that static HTML files for blog posts are correctly generated in the output directory.\n5. **Real-time Chat App**: Open two separate browser instances and verify that messages sent from one client appear instantly in the other.\n6. **E-commerce Demo**: Perform an end-to-end test of the user flow: adding an item to the cart, viewing the cart, and navigating to a mock checkout page, ensuring the UI state updates correctly.",
+        "status": "pending",
+        "dependencies": [
+          12,
+          2,
+          15
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Hello World minimal starter template",
+            "description": "Build the simplest possible Eghact starter with single component, basic package.json, minimal styling, and clear README showing basic .egh file structure and development workflow",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 2,
+            "title": "Build TypeScript starter template with full type safety",
+            "description": "Create comprehensive TypeScript template with tsconfig.json, .d.ts integration, typed props/events, IDE support, and developer-friendly type examples showcasing Eghact's TypeScript features",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 3,
+            "title": "Create SSG Blog template with Markdown content",
+            "description": "Build static site generation template with file-based routing for Markdown posts, frontmatter parsing, blog listing page, SEO optimization, and build-time content generation",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 4,
+            "title": "Build Real-time Chat App template with WebSocket integration",
+            "description": "Create live chat application template demonstrating WebSocket connections, real-time message synchronization, user presence, message history, and multi-client state management",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 5,
+            "title": "Create E-commerce Demo with shopping cart and routing",
+            "description": "Build comprehensive e-commerce template with product catalog, shopping cart state management, checkout flow, multi-page navigation, product search, and responsive design themes",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          },
+          {
+            "id": 6,
+            "title": "Design universal theming system and CSS variable framework",
+            "description": "Create flexible theming architecture with CSS custom properties, dark/light mode support, responsive design tokens, and theme switching functionality for all starter templates",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 16
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Enterprise-Grade Security Foundation and Documentation",
+        "description": "Establish a comprehensive security model for the Eghact framework, including the creation of detailed security documentation, a threat model, and a dedicated suite of automated security tests.",
+        "details": "This task involves a holistic review and hardening of the framework's security posture. Key activities include:\n1. Creating a `SECURITY.md` file detailing security architecture, developer best practices (e.g., avoiding `dangerouslySetInnerHTML`), and a clear process for reporting vulnerabilities.\n2. Conducting a formal threat modeling exercise (e.g., STRIDE) to identify and prioritize potential threats across the compiler, runtime, and official extensions.\n3. Integrating automated security scanning tools (SAST, dependency scanning) into the CI/CD pipeline to proactively identify issues.\n4. Reviewing and hardening existing security mechanisms like CSP generation (Task 4) and XSS/CSRF protection (Task 5).",
+        "testStrategy": "1. The `SECURITY.md` file will be peer-reviewed for clarity and completeness.\n2. The CI pipeline must successfully run integrated security scans (e.g., Snyk, CodeQL) on every commit without reporting new critical vulnerabilities.\n3. A sample application will be subjected to penetration testing tools (e.g., OWASP ZAP) to confirm that common vulnerabilities like XSS and CSRF are effectively mitigated.\n4. The vulnerability reporting process described in the documentation will be tested by a team member following the steps to submit a mock report.",
+        "status": "in-progress",
+        "dependencies": [
+          4,
+          5
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Performance Benchmark Suite and Monitoring Dashboard",
+        "description": "Create an automated performance benchmark suite to track key metrics like rebuild times and bundle size. Develop a monitoring dashboard to visualize performance trends over time and detect regressions.",
+        "details": "**Benchmark Suite Implementation:**\n1.  Create a new, dedicated package within the monorepo for the benchmark suite.\n2.  This package will contain a large-scale sample application with over 500 unique components, a deeply nested dependency tree, and multiple entry points to accurately test code splitting.\n3.  Develop a script (using Node.js) that programmatically runs the Eghact compiler against this sample project.\n4.  The script will measure key metrics: initial production build time, incremental rebuild time (HMR), final bundle size for each entry point (post-Task #10 code splitting), and peak memory usage of the compiler process.\n5.  To test rebuilds, the script will make targeted changes to different file types (e.g., a leaf component, a widely used utility function) and measure the time taken for the dev server to report completion.\n\n**Performance Monitoring Dashboard:**\n1.  Build a simple, static single-page application (SPA) for the dashboard.\n2.  The CI pipeline will be configured to run the benchmark suite on every commit to the `main` branch.\n3.  Upon completion, the CI job will output the results as a JSON object, which includes the commit hash, timestamp, and all measured metrics. This object will be appended to a `performance-history.json` file stored in a publicly accessible location (like a separate branch or a cloud bucket).\n4.  The dashboard application will fetch this `performance-history.json` file and use a charting library (e.g., Chart.js) to render historical trend graphs for each metric, allowing the team to visually track performance over time and identify the impact of specific commits.",
+        "testStrategy": "1.  **Benchmark Accuracy:** Manually run the benchmark script and cross-reference the output with timings and bundle sizes reported by the compiler to ensure accuracy. Introduce a deliberate `setTimeout` delay into a compiler plugin and assert that the benchmark script correctly reports an increased build time.\n2.  **CI Integration:** Verify that the CI job is triggered on commits to `main`, runs the benchmark suite successfully, and correctly appends the results to the `performance-history.json` file.\n3.  **Dashboard Functionality:** Launch the dashboard locally with a sample `performance-history.json` file. Verify that all charts render correctly. Use browser DevTools to confirm that it fetches the JSON file. Add an E2E test that loads the dashboard and asserts that the chart canvases are present in the DOM.",
+        "status": "pending",
+        "dependencies": [
+          9,
+          10
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Performance Monitoring & Analytics System",
+        "description": "Create a comprehensive performance monitoring system for Eghact applications. This system will track real-time metrics, analyze bundle sizes, monitor Core Web Vitals, and provide actionable optimization insights through a dedicated dashboard.",
+        "details": "1. **Runtime Instrumentation**: Instrument the Eghact core renderer to capture key performance events, such as component mount, update, and unmount times. This will involve creating a new performance-focused dispatcher that the analytics package can subscribe to.\n2. **Data Collection Agent**: Develop a lightweight, tree-shakable package (`@eghact/monitor`) for developers to include in their applications. This agent will collect data on Core Web Vitals (LCP, FID, CLS), memory usage (via `performance.memory`), and component-level render timings received from the runtime instrumentation.\n3. **Performance Insights Dashboard**: Build a standalone web application to visualize the collected performance data. The dashboard must feature a timeline view of metrics, a detailed breakdown of render times and re-render counts per component, and a bundle analysis view that integrates with the build process output (from Task 18) to show dependency sizes.\n4. **Optimization Suggestions**: Implement a rules engine within the dashboard that analyzes the collected data and provides actionable suggestions, such as identifying components with excessive re-renders, highlighting large dependencies that could be code-split, or flagging unoptimized images.",
+        "testStrategy": "1. **Metric Validation**: Create a sample application with components that have programmatically introduced `setTimeout` delays and intentional memory leaks. Run the monitoring agent and assert that the reported metrics (render times, memory usage) are within a 5% margin of error.\n2. **Core Web Vitals Accuracy**: Use Playwright to navigate the sample app, perform actions, and measure Core Web Vitals. Compare these measurements against the data collected by the `@eghact/monitor` package to ensure accuracy.\n3. **Dashboard E2E Tests**: Use Cypress or Playwright to test the entire dashboard flow. This includes selecting a time range, filtering data by component, and verifying that charts and tables render correctly based on a predefined set of mock performance data.\n4. **Bundle Analyzer Verification**: Create a test project and add a large, unused dependency (e.g., `moment.js`). Run the build and assert that the performance dashboard correctly identifies this dependency as a significant contributor to the bundle size and a candidate for removal.",
+        "status": "in-progress",
+        "dependencies": [
+          18,
+          7
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "AI-Powered Code Generation Assistant",
+        "description": "Integrate a large language model (LLM) like GPT or Claude into the Eghact developer tooling to enable AI-powered code generation. This will allow developers to scaffold components, create state management patterns, and generate UI layouts from natural language prompts.",
+        "details": "This feature will be integrated into the VS Code extension created in Task 6. A new command will be added to the command palette (e.g., \"Eghact: Generate Code with AI\") that opens an input for the user's natural language prompt.\n\n1.  **API Integration**: The Language Server will be updated to handle secure communication with an external LLM API (e.g., OpenAI, Anthropic). API keys will be configurable in the user's VS Code settings.\n2.  **Prompt Engineering**: The server will construct a detailed prompt for the LLM, combining the user's request with contextual information about Eghact's specific syntax, reactive patterns, and best practices to ensure high-quality, framework-adherent output.\n3.  **Code Insertion**: Upon receiving a valid code response from the LLM, the extension will format and insert the generated snippet directly into the active editor at the user's cursor position or into a new `.egh` file.",
+        "testStrategy": "1.  **Unit Testing**: Create unit tests for the prompt construction logic, mocking user input and asserting that the generated LLM prompt is correctly formatted and includes the necessary Eghact context.\n2.  **Integration Testing**: Within the VS Code extension's test suite, mock the LLM API endpoint. Trigger the AI generation command with a sample prompt, provide a canned code response from the mock API, and assert that the code is correctly inserted and formatted in the test editor.\n3.  **Manual E2E Testing**: With a valid API key, test the full workflow with a variety of prompts, from simple (\"create a component with a title prop\") to complex (\"generate a data table component that fetches and displays a list of users\"). Verify that the generated code is syntactically correct, functional, and adheres to Eghact conventions.",
+        "status": "in-progress",
+        "dependencies": [
+          6
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "AI-Powered Component Generator",
+        "description": "Build an AI system that generates Eghact components from natural language descriptions, wireframes, or design screenshots. Include smart prop inference, state management suggestions, and accessibility features by default.",
+        "details": "",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "WebAssembly Renderer Optimization",
+        "description": "Optimize the Eghact runtime by implementing critical rendering operations in WebAssembly. Focus on virtual DOM diffing, component mounting/unmounting, and reactive system updates for 10x performance improvements.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Mobile-First Framework Adapter",
+        "description": "Create mobile-native adapters for React Native, Flutter, and Progressive Web Apps. Enable Eghact components to compile to mobile platforms with gesture handling, native animations, and platform-specific optimizations.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Next-Gen Runtime Performance Monitor",
+        "description": "Real-time performance profiler that visualizes component render times, memory usage, and bundle impact in the browser dev tools",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Quantum State Time Machine",
+        "description": "Revolutionary debugging tool using temporal state snapshots with quantum-inspired rollback mechanics to debug across parallel component timelines",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Neural Component Synthesis Engine",
+        "description": "AI-powered system that learns from existing codebases to auto-generate optimal component architectures, predict performance bottlenecks, and suggest architectural improvements",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Holographic Component Visualization",
+        "description": "3D holographic representation of component hierarchies with AR/VR debugging interfaces, allowing developers to physically navigate code architecture in virtual space",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Biological Code Evolution Engine",
+        "description": "Self-improving compilation system that uses genetic algorithms and machine learning to evolve optimal JavaScript output, automatically discovering new optimization patterns",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Progressive Web App Service Worker Generator",
+        "description": "Auto-generate optimized service workers with intelligent caching strategies, offline-first architecture, and background sync capabilities for PWA compliance",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Edge Computing Runtime Deployment",
+        "description": "Deploy Eghact applications to edge computing platforms like Cloudflare Workers, Deno Deploy, and Vercel Edge with automatic geographic distribution and latency optimization",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Headless CMS Integration Suite",
+        "description": "Pre-built integrations for popular headless CMS platforms (Strapi, Contentful, Sanity) with automatic type generation from CMS schemas and optimized data fetching",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Enterprise Database Adapter Layer",
+        "description": "Universal database abstraction layer supporting PostgreSQL, MongoDB, Redis, and graph databases with automatic ORM generation and migration tools",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Cross-Platform Mobile Renderer",
+        "description": "Native mobile renderers for iOS and Android that compile Eghact components to platform-specific native UI with gesture handling and platform design systems",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Zero-Day Security Vulnerability Scanner [AGENT 1 ROGUE]",
+        "description": "Revolutionary AI-powered security scanner that detects unknown vulnerabilities using machine learning pattern analysis, behavioral anomaly detection, and quantum-resistant cryptographic validation",
+        "details": "Build an elite security system that goes beyond traditional scanners: 1) Neural network trained on 50M+ vulnerability patterns 2) Real-time behavioral analysis of code execution 3) Quantum-resistant cryptographic verification 4) Zero-day exploit prediction engine 5) Autonomous security patching system",
+        "testStrategy": "Deploy against honeypot systems, validate detection rates against known CVEs, test against red team attacks",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "critical",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "Blockchain-Based Code Integrity Verification [AGENT 1 ROGUE]",
+        "description": "Immutable blockchain system for verifying code integrity, detecting supply chain attacks, and ensuring tamper-proof deployment pipelines with smart contract validation",
+        "details": "Revolutionary security: 1) Every code commit hashed and stored on private blockchain 2) Smart contracts validate build integrity 3) Decentralized consensus for deployment approval 4) Supply chain attack detection through merkle tree verification 5) Cryptographic proof of code provenance",
+        "testStrategy": "Simulate supply chain attacks, validate blockchain integrity, test smart contract security",
+        "status": "pending",
+        "dependencies": [
+          34
+        ],
+        "priority": "critical",
+        "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "Sentient Security AI Guardian [AGENT 1 ROGUE]",
+        "description": "Self-evolving AI security system that learns from attacks, adapts defenses in real-time, and predicts future threats using quantum machine learning algorithms",
+        "details": "Next-gen AI security: 1) Self-modifying neural networks that evolve defenses 2) Quantum machine learning for threat prediction 3) Real-time adaptation to new attack vectors 4) Autonomous incident response and remediation 5) Continuous security posture optimization",
+        "testStrategy": "Red team exercises, adversarial AI testing, quantum threat simulation",
+        "status": "pending",
+        "dependencies": [
+          34,
+          35
+        ],
+        "priority": "critical",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Microservice Architecture Orchestrator",
+        "description": "Deploy Eghact applications as distributed microservices with auto-scaling, service mesh integration, and cross-service state synchronization",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 38,
+        "title": "Real-Time Database Sync Engine",
+        "description": "Bidirectional real-time synchronization between client components and database with conflict resolution, offline queuing, and optimistic updates",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 39,
+        "title": "GraphQL Federation Gateway",
+        "description": "Federated GraphQL gateway that auto-generates schemas from Eghact components and enables seamless data fetching across distributed services",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 40,
+        "title": "Smart Component Analytics Engine",
+        "description": "Advanced analytics system that tracks component usage patterns, performance metrics, and user interactions to optimize component design and placement",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "Multi-Tenant Architecture Framework",
+        "description": "Enterprise multi-tenancy with isolated component namespaces, tenant-specific theming, data isolation, and per-tenant feature flags",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 42,
+        "title": "Adaptive Component Optimization AI",
+        "description": "Machine learning system that automatically optimizes component performance based on usage patterns, user behavior, and runtime metrics",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 43,
+        "title": "Serverless Function Runtime",
+        "description": "Deploy individual Eghact components as serverless functions with automatic scaling, cold start optimization, and edge distribution",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-22T06:10:55.828Z",
+      "updated": "2025-06-22T07:24:52.134Z",
+      "description": "Tasks for phase3 context"
     }
   }
 }

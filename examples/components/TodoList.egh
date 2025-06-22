@@ -1,0 +1,109 @@
+<template>
+  <div class="todo-list">
+    <h2>{title}</h2>
+    {#each todos as todo (todo.id)}
+      <div class="todo-item" class:completed={todo.completed}>
+        <input 
+          type="checkbox" 
+          checked={todo.completed}
+          @change={() => toggleTodo(todo.id)}
+        />
+        <span>{todo.text}</span>
+        <button @click={() => removeTodo(todo.id)}>×</button>
+      </div>
+    {/each}
+    <div class="add-todo">
+      <input 
+        type="text" 
+        bind:value={newTodoText}
+        @keyup.enter={addTodo}
+        placeholder="Add a new todo..."
+      />
+      <button @click={addTodo}>Add</button>
+    </div>
+  </div>
+</template>
+
+<script lang="ts">
+  interface Todo {
+    id: number;
+    text: string;
+    completed: boolean;
+  }
+  
+  export let title: string = 'Todo List';
+  export let todos: Todo[] = [];
+  
+  let newTodoText: string = '';
+  let nextId: number = 1;
+  
+  import { createEventDispatcher } from '@eghact/core';
+  const dispatch = createEventDispatcher<{
+    add: { todo: Todo };
+    toggle: { id: number; completed: boolean };
+    remove: { id: number };
+  }>();
+  
+  function addTodo() {
+    if (newTodoText.trim()) {
+      const todo: Todo = {
+        id: nextId++,
+        text: newTodoText.trim(),
+        completed: false
+      };
+      todos = [...todos, todo];
+      dispatch('add', { todo });
+      newTodoText = '';
+    }
+  }
+  
+  function toggleTodo(id: number) {
+    todos = todos.map(todo => 
+      todo.id === id 
+        ? { ...todo, completed: !todo.completed }
+        : todo
+    );
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+      dispatch('toggle', { id, completed: todo.completed });
+    }
+  }
+  
+  function removeTodo(id: number) {
+    todos = todos.filter(todo => todo.id !== id);
+    dispatch('remove', { id });
+  }
+</script>
+
+<style>
+  .todo-list {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .todo-item.completed span {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+  
+  .add-todo {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  
+  input[type="text"] {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+</style>

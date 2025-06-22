@@ -1,0 +1,250 @@
+/**
+ * I18n Demo Component - Example usage of the Eghact i18n system
+ */
+
+<template>
+  <div class="i18n-demo">
+    <header class="demo-header">
+      <h1>{{ t('demo.title') }}</h1>
+      <p>{{ t('demo.description') }}</p>
+    </header>
+
+    <section class="locale-switcher">
+      <h2>{{ t('demo.localeSwitch') }}</h2>
+      <div class="locale-buttons">
+        <button 
+          v-for="locale in supportedLocales" 
+          :key="locale"
+          :class="{ active: currentLocale === locale }"
+          @click="switchLocale(locale)"
+        >
+          {{ getLocaleName(locale) }}
+        </button>
+      </div>
+    </section>
+
+    <section class="translation-examples">
+      <h2>{{ t('demo.examples') }}</h2>
+      
+      <!-- Basic translation -->
+      <div class="example">
+        <h3>{{ t('examples.basic.title') }}</h3>
+        <p>{{ t('common.hello') }} {{ t('common.welcome') }}</p>
+      </div>
+
+      <!-- Interpolation -->
+      <div class="example">
+        <h3>{{ t('examples.interpolation.title') }}</h3>
+        <p>{{ t('messages.userGreeting', { name: userName }) }}</p>
+        <input 
+          v-model="userName" 
+          :placeholder="t('examples.interpolation.placeholder')"
+        />
+      </div>
+
+      <!-- Pluralization -->
+      <div class="example">
+        <h3>{{ t('examples.pluralization.title') }}</h3>
+        <p>{{ t('items.count', { count: itemCount }) }}</p>
+        <div class="counter">
+          <button @click="decrementItems">-</button>
+          <span>{{ itemCount }}</span>
+          <button @click="incrementItems">+</button>
+        </div>
+      </div>
+
+      <!-- Number formatting -->
+      <div class="example">
+        <h3>{{ t('examples.formatting.title') }}</h3>
+        <p>{{ t('examples.formatting.number') }}: {{ formatNumber(sampleNumber) }}</p>
+        <p>{{ t('examples.formatting.currency') }}: {{ formatCurrency(sampleNumber, 'USD') }}</p>
+        <p>{{ t('examples.formatting.date') }}: {{ formatDate(currentDate) }}</p>
+      </div>
+    </section>
+
+    <section class="loading-state" v-if="isLoading">
+      <p>{{ t('common.loading') }}</p>
+    </section>
+  </div>
+</template>
+
+<script>
+import { useI18n } from '../../../src/i18n/index.js';
+
+export default {
+  setup() {
+    const i18n = useI18n();
+    
+    // Component state
+    const userName = ref('User');
+    const itemCount = ref(1);
+    const sampleNumber = ref(1234.56);
+    const currentDate = new Date();
+
+    // Computed values
+    const currentLocale = computed(() => i18n.state.currentLocale);
+    const supportedLocales = computed(() => i18n.state.config.supportedLocales);
+    const isLoading = computed(() => i18n.state.isLoading);
+
+    // Methods
+    const switchLocale = async (locale) => {
+      try {
+        await i18n.changeLocale(locale);
+      } catch (error) {
+        console.error('Failed to switch locale:', error);
+      }
+    };
+
+    const getLocaleName = (locale) => {
+      const names = {
+        en: 'English',
+        es: 'Español',
+        fr: 'Français',
+        de: 'Deutsch'
+      };
+      return names[locale] || locale;
+    };
+
+    const incrementItems = () => {
+      itemCount.value++;
+    };
+
+    const decrementItems = () => {
+      if (itemCount.value > 0) {
+        itemCount.value--;
+      }
+    };
+
+    return {
+      // i18n functions
+      t: i18n.t,
+      formatNumber: i18n.formatNumber,
+      formatCurrency: i18n.formatCurrency,
+      formatDate: i18n.formatDate,
+      
+      // state
+      userName,
+      itemCount,
+      sampleNumber,
+      currentDate,
+      
+      // computed
+      currentLocale,
+      supportedLocales,
+      isLoading,
+      
+      // methods
+      switchLocale,
+      getLocaleName,
+      incrementItems,
+      decrementItems
+    };
+  }
+};
+</script>
+
+<style>
+.i18n-demo {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: system-ui, sans-serif;
+}
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.demo-header h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.locale-switcher {
+  margin-bottom: 2rem;
+}
+
+.locale-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.locale-buttons button {
+  padding: 0.5rem 1rem;
+  border: 2px solid #3498db;
+  background: white;
+  color: #3498db;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.locale-buttons button:hover {
+  background: #ecf0f1;
+}
+
+.locale-buttons button.active {
+  background: #3498db;
+  color: white;
+}
+
+.translation-examples {
+  margin-bottom: 2rem;
+}
+
+.example {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+}
+
+.example h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.counter button {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.counter button:hover {
+  background: #f0f0f0;
+}
+
+.counter span {
+  font-weight: bold;
+  min-width: 2rem;
+  text-align: center;
+}
+
+input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  color: #856404;
+}
+</style>
