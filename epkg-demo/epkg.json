@@ -1,0 +1,25 @@
+{
+  "name": "epkg-demo",
+  "version": "0.1.0",
+  "type": "eghact-app",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "epkg dev",
+    "build": "epkg build",
+    "test": "epkg test",
+    "lint": "epkg lint"
+  },
+  "dependencies": {
+    "@eghact/runtime": "^1.0.0"
+  },
+  "devDependencies": {
+    "@eghact/compiler": "^1.0.0"
+  },
+  "eghact": {
+    "runtime": "pure",
+    "compiler": {
+      "target": "es2022",
+      "optimize": true
+    }
+  }
+}

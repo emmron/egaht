@@ -1,0 +1,39 @@
+<template>
+  <div class="app">
+    <header>
+      <h1>Eghact App</h1>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>Powered by Eghact Framework</p>
+    </footer>
+  </div>
+</template>
+
+<style>
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+main {
+  flex: 1;
+}
+
+footer {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #666;
+}
+</style>

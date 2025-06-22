@@ -1,0 +1,66 @@
+component Counter {
+  ~count = 0
+  doubled => count * 2
+  
+  count :: {
+    console.log("Count changed:", count)
+  }
+  
+  <[
+    row {
+      button(@click: count--) {
+        @hover { scale: 1.1 }
+        "-"
+      }
+      
+      column {
+        h2 { count }
+        small { "Doubled: " + doubled }
+      }
+      
+      button(@click: count++) {
+        @hover { scale: 1.1 }
+        "+"
+      }
+    }
+  ]>
+}
+
+@style {
+  row {
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+  }
+  
+  button {
+    font-size: 1.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    border: 2px solid #333;
+    background: white;
+    transition: all 0.2s;
+  }
+  
+  button:hover {
+    background: #333;
+    color: white;
+  }
+  
+  column {
+    text-align: center;
+    min-width: 100px;
+  }
+  
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+  }
+  
+  small {
+    color: #666;
+    font-size: 0.875rem;
+  }
+}

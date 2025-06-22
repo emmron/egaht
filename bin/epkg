@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+import '../epkg-js/index.js';

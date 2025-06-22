@@ -1,0 +1,32 @@
+component App {
+  ~message = "Welcome to Eghact!"
+  
+  <[
+    column {
+      h1 { "🚀 " + message }
+      p { "Edit src/App.egh to get started" }
+      
+      @animate(fade-in, 500ms) {
+        Counter {}
+      }
+    }
+  ]>
+}
+
+@style {
+  column {
+    font-family: -apple-system, sans-serif;
+    text-align: center;
+    padding: 2rem;
+  }
+  
+  h1 { 
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: #666;
+    margin-bottom: 2rem;
+  }
+}

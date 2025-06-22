@@ -1,0 +1,143 @@
+component App {
+  ~count = 0
+  ~name = "Developer"
+  ~todos = []
+  ~newTodo = ""
+  
+  // Methods
+  addTodo() => {
+    if (newTodo.trim()) {
+      todos.push({ 
+        id: Date.now(), 
+        text: newTodo, 
+        done: false 
+      })
+      newTodo = ""
+    }
+  }
+  
+  toggleTodo(id) => {
+    const todo = todos.find(t => t.id === id)
+    if (todo) todo.done = !todo.done
+  }
+  
+  // Computed
+  completedCount => todos.filter(t => t.done).length
+  totalCount => todos.length
+  
+  // Template
+  <[
+    column {
+      $padding: 2rem
+      $maxWidth: 800px
+      $margin: "0 auto"
+      
+      h1 {
+        $textAlign: center
+        $color: "#333"
+        "🚀 Welcome to Eghact!"
+      }
+      
+      row {
+        $justifyContent: center
+        $gap: 1rem
+        $marginBottom: 2rem
+        
+        input <~> name {
+          $width: 200px
+          placeholder: "Your name"
+        }
+        
+        span {
+          $fontSize: 1.2rem
+          "Hello, " + name + "!"
+        }
+      }
+      
+      row {
+        $justifyContent: center
+        $gap: 1rem
+        
+        button(@click: count++) {
+          "Clicked: " + count
+        }
+        
+        button(@click: count = 0) {
+          $background: "#dc3545"
+          "Reset"
+        }
+      }
+      
+      // Todo Section
+      column {
+        $marginTop: 3rem
+        $background: white
+        $padding: 2rem
+        $borderRadius: 8px
+        $boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+        
+        h2 { "Todo List" }
+        
+        row {
+          $marginBottom: 1rem
+          
+          input <~> newTodo {
+            $flex: 1
+            placeholder: "Add a todo..."
+            @keyup.enter: addTodo()
+          }
+          
+          button(@click: addTodo()) {
+            "Add"
+          }
+        }
+        
+        ?todos.length > 0 {
+          column {
+            $gap: 0.5rem
+            
+            *~todos as todo {
+              row {
+                $padding: 0.5rem
+                $background: todo.done ? "#f0f0f0" : "#fff"
+                $borderRadius: 4px
+                
+                input {
+                  type: "checkbox"
+                  checked: todo.done
+                  @change: () => toggleTodo(todo.id)
+                }
+                
+                span {
+                  $flex: 1
+                  $textDecoration: todo.done ? "line-through" : "none"
+                  todo.text
+                }
+                
+                button(@click: () => todos = todos.filter(t => t.id !== todo.id)) {
+                  $background: "#dc3545"
+                  $padding: "4px 8px"
+                  $fontSize: 12px
+                  "Delete"
+                }
+              }
+            }
+            
+            p {
+              $marginTop: 1rem
+              $textAlign: center
+              $color: "#666"
+              completedCount + " of " + totalCount + " completed"
+            }
+          }
+        } : {
+          p {
+            $textAlign: center
+            $color: "#999"
+            "No todos yet. Add one above!"
+          }
+        }
+      }
+    }
+  ]>
+}

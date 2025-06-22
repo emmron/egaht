@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EGH Test Page</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    .info {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <h1>🚀 Eghact WSL Test Page</h1>
+    <p>This page tests if the Eghact dev server is working correctly in WSL.</p>
+    
+    <h2>Server Status:</h2>
+    <p id="status">Checking...</p>
+    
+    <h2>Runtime Status:</h2>
+    <p id="runtime">Loading...</p>
+    
+    <h2>Component Status:</h2>
+    <p id="component">Loading...</p>
+  </div>
+  
+  <div id="app"></div>
+  
+  <script type="module">
+    // Test server
+    document.getElementById('status').innerHTML = '<span class="success">✅ Server is running on http://localhost:3000</span>';
+    
+    // Test runtime
+    try {
+      const { mount, reactive, h } = await import('/@eghact/runtime');
+      document.getElementById('runtime').innerHTML = '<span class="success">✅ Runtime loaded successfully</span>';
+      
+      // Test component
+      try {
+        const App = await import('./src/App.js');
+        document.getElementById('component').innerHTML = '<span class="success">✅ App component loaded</span>';
+        
+        // Mount the app
+        mount(App.default || App, document.getElementById('app'));
+      } catch (e) {
+        document.getElementById('component').innerHTML = '<span class="error">❌ Component error: ' + e.message + '</span>';
+        console.error('Component error:', e);
+      }
+    } catch (e) {
+      document.getElementById('runtime').innerHTML = '<span class="error">❌ Runtime error: ' + e.message + '</span>';
+      console.error('Runtime error:', e);
+    }
+  </script>
+</body>
+</html>

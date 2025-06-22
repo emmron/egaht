@@ -1,52 +1,53 @@
 {
   "name": "eghact",
-  "version": "0.1.0",
-  "description": "A revolutionary web framework with compile-time reactivity",
+  "version": "1.0.0",
+  "description": "Revolutionary web framework with zero dependencies",
   "type": "module",
-  "main": "index.js",
+  "main": "runtime-pure/dist/eghact-runtime.js",
   "bin": {
-    "eghact": "./bin/eghact.js"
+    "eghact": "./cli/eghact.js"
   },
   "scripts": {
-    "build:runtime": "cd runtime && ./build.sh",
-    "dev": "node ./bin/eghact.js dev",
-    "build": "node ./build.js",
-    "build:cli": "node ./bin/eghact.js build",
-    "test": "echo 'Tests not yet implemented'"
+    "dev": "node dev-server/server.js",
+    "build": "node build-system/src/index.js",
+    "build:runtime": "cd runtime-pure && npm run build",
+    "build:wasm": "cd runtime-pure && ./build-wasm.sh",
+    "test": "node test/run-tests.js",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,egh,md}\""
+  },
+  "exports": {
+    ".": {
+      "import": "./runtime-pure/dist/eghact-runtime.js",
+      "require": "./runtime-pure/dist/eghact-runtime.iife.js"
+    },
+    "./runtime": "./runtime-pure/dist/eghact-runtime.js",
+    "./compiler": "./compiler/egh-parser/src/compiler.js",
+    "./vdom": "./runtime-pure/src/core/vdom.js",
+    "./reactive": "./runtime-pure/src/core/reactive.js",
+    "./component": "./runtime-pure/src/core/component.js"
   },
   "keywords": [
+    "eghact",
     "framework",
     "reactive",
-    "wasm",
-    "webassembly"
+    "component",
+    "vdom",
+    "zero-dependency",
+    "wasm"
   ],
   "author": "Eghact Team",
   "license": "MIT",
-  "dependencies": {
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "autoprefixer": "^10.4.16",
-    "brotli-size": "^4.0.0",
-    "chalk": "^4.1.2",
-    "chokidar": "^3.5.3",
-    "commander": "^9.4.1",
-    "cssnano": "^6.0.2",
-    "esbuild": "^0.19.8",
-    "express": "^4.18.2",
-    "fs-extra": "^11.1.1",
-    "glob": "^10.3.10",
-    "gzip-size": "^7.0.0",
-    "magic-string": "^0.30.5",
-    "micromatch": "^4.0.8",
-    "postcss": "^8.4.32",
-    "rollup": "^4.6.1",
-    "rollup-plugin-css-only": "^4.5.0",
-    "terser": "^5.24.0",
-    "ws": "^8.14.2"
-  },
   "devDependencies": {
-    "@types/node": "^24.0.3",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "esbuild": "^0.19.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eghact/eghact.git"
   }
 }

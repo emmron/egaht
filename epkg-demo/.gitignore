@@ -1,0 +1,7 @@
+node_modules
+.epkg-cache
+dist
+.DS_Store
+*.log
+.env
+.eghact-lock.json

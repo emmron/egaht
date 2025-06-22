@@ -445,7 +445,7 @@ add_header Permissions-Policy "geolocation=(), microphone=(), camera=()";
 ${this.options.strictMode ? 'add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload";' : ''}
 
 # CSP header (update with your CSP from .csp-metadata.json)
-add_header Content-Security-Policy "${this.buildSystem.buildManifest.csp?.policy || 'default-src \\'self\\''}";
+add_header Content-Security-Policy "${this.buildSystem.buildManifest.csp?.policy || "default-src 'self'"}";
 \`\`\`
 `;
 

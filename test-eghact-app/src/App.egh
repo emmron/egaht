@@ -1,0 +1,44 @@
+// Welcome to Eghact!
+
+component App {
+  // Reactive state
+  ~count = 0
+  ~message = "Hello Eghact!"
+  
+  // Computed value
+  doubled => count * 2
+  
+  // Effect
+  count :: {
+    console.log("Count changed to:", count)
+  }
+  
+  // Template
+  <[
+    column {
+      $alignItems: center
+      $padding: 2rem
+      
+      h1 { message }
+      
+      p { "You clicked " + count + " times" }
+      p { "Doubled: " + doubled }
+      
+      row {
+        $gap: 1rem
+        $marginTop: 1rem
+        
+        button(@click: count++) { "Click me" }
+        button(@click: count = 0) { "Reset" }
+      }
+      
+      ?count > 5 {
+        p {
+          $color: green
+          $marginTop: 1rem
+          "Great job! Keep clicking!"
+        }
+      }
+    }
+  ]>
+}

@@ -1,0 +1,18 @@
+<template>
+  <div class="user">
+    <h1>User {userId}</h1>
+    <p>This is user with ID: {userId}</p>
+    <a href="/users">← Back to users</a>
+  </div>
+</template>
+
+<script>
+// Get user ID from route params
+const userId = $route.params.id;
+</script>
+
+<style>
+.user {
+  padding: 2rem;
+}
+</style>

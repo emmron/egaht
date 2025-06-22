@@ -1,0 +1,10 @@
+{
+  "name": "ultra-fast-app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "egh dev",
+    "build": "egh build",
+    "preview": "egh preview"
+  }
+}

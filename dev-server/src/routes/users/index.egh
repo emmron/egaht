@@ -1,0 +1,25 @@
+<template>
+  <div class="users">
+    <h1>Users</h1>
+    <ul>
+      <li><a href="/users/1">User 1</a></li>
+      <li><a href="/users/2">User 2</a></li>
+    </ul>
+    <a href="/">← Back home</a>
+  </div>
+</template>
+
+<style>
+.users {
+  padding: 2rem;
+}
+
+.users ul {
+  list-style: none;
+  padding: 0;
+}
+
+.users li {
+  margin: 0.5rem 0;
+}
+</style>

@@ -1,0 +1,13 @@
+{
+  "name": "test-eghact-app",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "eghact dev",
+    "build": "eghact build",
+    "preview": "eghact preview"
+  },
+  "dependencies": {
+    "eghact": "file:.."
+  }
+}

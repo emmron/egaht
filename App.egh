@@ -1,0 +1,101 @@
+component App {
+  ~count = 0
+  ~name = "Eghact Developer"
+  ~todos = []
+  ~newTodo = ""
+  
+  addTodo => () => {
+    if (newTodo.trim()) {
+      todos = [...todos, { id: Date.now(), text: newTodo, done: false }]
+      newTodo = ""
+    }
+  }
+  
+  toggleTodo => (id) => {
+    todos = todos.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    )
+  }
+  
+  removeTodo => (id) => {
+    todos = todos.filter(todo => todo.id !== id)
+  }
+  
+  completedCount => todos.filter(t => t.done).length
+  activeCount => todos.filter(t => !t.done).length
+  
+  <[
+    column {
+      h1 { "🚀 Welcome to Eghact!" }
+      
+      p { "The revolutionary web framework with zero runtime overhead" }
+      
+      row {
+        h2 { "Hello, " + name + "!" }
+        input <~> name {
+          placeholder: "Enter your name"
+          @keyup.enter: () => count++
+        }
+      }
+      
+      row {
+        button(@click: count++) { "Count: " + count }
+        button(@click: count = 0, $active: count > 0) { "Reset" }
+      }
+      
+      ?count > 0 {
+        p { "You clicked " + count + " times!" }
+      }
+      
+      h2 { "Todo List Demo" }
+      
+      row {
+        input <~> newTodo {
+          placeholder: "What needs to be done?"
+          @keyup.enter: addTodo()
+        }
+        button(@click: addTodo()) { "Add" }
+      }
+      
+      ?todos.length > 0 {
+        column {
+          *~todos as todo {
+            row {
+              input {
+                type: "checkbox"
+                checked: todo.done
+                @change: () => toggleTodo(todo.id)
+              }
+              span($textDecoration: todo.done ? 'line-through' : 'none') {
+                todo.text
+              }
+              button(@click: () => removeTodo(todo.id)) { "×" }
+            }
+          }
+          
+          row {
+            span { activeCount + " active" }
+            span { " | " }
+            span { completedCount + " completed" }
+          }
+        }
+      } : {
+        p { "No todos yet. Add one above!" }
+      }
+      
+      h3 { "Features demonstrated:" }
+      ul {
+        li { "Reactive state with ~" }
+        li { "Two-way binding with <~>" }
+        li { "Computed values with =>" }
+        li { "Event handlers with @" }
+        li { "Conditionals with ?" }
+        li { "Loops with *~" }
+        li { "Visual layouts (row/column)" }
+        li { "Dynamic styles with $" }
+      }
+    }
+  ]>
+}
+
+export default App

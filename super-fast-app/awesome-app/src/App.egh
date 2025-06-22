@@ -1,0 +1,18 @@
+<template>
+  <div>
+    <h1>Welcome to Eghact!</h1>
+    <p>Edit src/App.egh to get started</p>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App'
+}
+</script>
+
+<style>
+h1 {
+  color: #333;
+}
+</style>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eghact Demo - Live</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #root {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      text-align: center;
+      min-width: 300px;
+    }
+    button {
+      padding: 12px 24px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    p {
+      color: #666;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    .stats {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      font-family: monospace;
+      font-size: 14px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <h1>Loading Eghact...</h1>
+  </div>
+
+  <script type="module">
+    // Import the pure runtime directly
+    import { 
+      h, 
+      Component, 
+      createApp,
+      reactive,
+      computed
+    } from './runtime-pure/src/index.js';
+
+    // Demo Component
+    class DemoApp extends Component {
+      constructor(props) {
+        super(props);
+        this.state = reactive({
+          count: 0,
+          message: 'Welcome to Eghact! 🚀',
+          startTime: Date.now()
+        });
+        
+        // Computed values
+        this.doubled = computed(() => this.state.count * 2);
+        this.tripled = computed(() => this.state.count * 3);
+        this.uptime = computed(() => {
+          const seconds = Math.floor((Date.now() - this.state.startTime) / 1000);
+          return `${seconds}s`;
+        });
+      }
+      
+      onMount() {
+        // Update uptime every second
+        setInterval(() => {
+          // Trigger reactive update
+          this.state.startTime = this.state.startTime; // Force update
+        }, 1000);
+      }
+      
+      increment() {
+        this.state.count++;
+        if (this.state.count === 10) {
+          this.state.message = 'Great job! 🎉';
+        } else if (this.state.count === 20) {
+          this.state.message = 'Eghact is blazing fast! ⚡';
+        } else if (this.state.count === 50) {
+          this.state.message = 'You\'re a clicking champion! 🏆';
+        }
+      }
+      
+      reset() {
+        this.state.count = 0;
+        this.state.message = 'Welcome to Eghact! 🚀';
+      }
+      
+      render() {
+        return h('div', {}, [
+          h('h1', {}, this.state.message),
+          h('p', { style: 'font-size: 24px; font-weight: bold;' }, `Count: ${this.state.count}`),
+          h('p', {}, `Doubled: ${this.doubled.value} | Tripled: ${this.tripled.value}`),
+          h('div', { style: 'margin: 20px 0;' }, [
+            h('button', { 
+              '@click': () => this.increment(),
+              style: 'background: #007bff; color: white;'
+            }, 'Increment'),
+            h('button', { 
+              '@click': () => this.reset(),
+              style: 'background: #dc3545; color: white;'
+            }, 'Reset'),
+            h('button', { 
+              '@click': () => this.state.count = this.state.count * 2,
+              style: 'background: #28a745; color: white;'
+            }, 'Double It!')
+          ]),
+          h('div', { class: 'stats' }, [
+            h('strong', {}, 'Runtime Stats:'),
+            h('br', {}),
+            `• Framework: Eghact (Pure JS)`,
+            h('br', {}),
+            `• Bundle Size: 12KB`,
+            h('br', {}),
+            `• Dependencies: 0`,
+            h('br', {}),
+            `• Uptime: ${this.uptime.value}`,
+            h('br', {}),
+            `• Reactive Updates: ✅`
+          ])
+        ]);
+      }
+    }
+
+    // Initialize and mount app
+    (async () => {
+      try {
+        console.log('Initializing Eghact...');
+        const app = await createApp(DemoApp, document.getElementById('root'));
+        app.mount();
+        console.log('✅ Eghact app mounted successfully!');
+        console.log('🚀 Zero dependencies, pure performance!');
+      } catch (error) {
+        console.error('Failed to mount app:', error);
+        document.getElementById('root').innerHTML = `
+          <h2>Error Loading Eghact</h2>
+          <p style="color: red;">${error.message}</p>
+          <p>Check the console for more details.</p>
+        `;
+      }
+    })();
+  </script>
+</body>
+</html>

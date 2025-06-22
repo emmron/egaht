@@ -1,0 +1,23 @@
+<template>
+  <div class="home">
+    <h1>Welcome to Eghact</h1>
+    <p>The revolutionary web framework</p>
+    <nav>
+      <a href="/about">About</a>
+      <a href="/users">Users</a>
+    </nav>
+  </div>
+</template>
+
+<style>
+.home {
+  text-align: center;
+  padding: 2rem;
+}
+
+nav a {
+  margin: 0 1rem;
+  color: #007acc;
+  text-decoration: none;
+}
+</style>

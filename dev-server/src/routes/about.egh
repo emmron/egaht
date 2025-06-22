@@ -1,0 +1,15 @@
+<template>
+  <div class="about">
+    <h1>About Eghact</h1>
+    <p>Compile-time reactivity, zero runtime overhead.</p>
+    <a href="/">← Back home</a>
+  </div>
+</template>
+
+<style>
+.about {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+</style>

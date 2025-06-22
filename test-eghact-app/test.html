@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eghact Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    #root {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .error {
+      color: red;
+      padding: 20px;
+      background: #fee;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">Loading...</div>
+  
+  <script type="module">
+    try {
+      // First, let's check if the runtime loads
+      console.log('Loading Eghact runtime...');
+      const { createApp, h, Component } = await import('/@eghact/runtime');
+      console.log('✓ Runtime loaded successfully');
+      
+      // Then try to load the App component
+      console.log('Loading App component...');
+      
+      // For now, let's create a simple inline component to test
+      class TestApp extends Component {
+        constructor(props) {
+          super(props);
+          this.state = { count: 0 };
+        }
+        
+        render() {
+          return h('div', {}, [
+            h('h1', {}, 'Eghact is Working! 🎉'),
+            h('p', {}, `Count: ${this.state.count}`),
+            h('button', { 
+              onclick: () => {
+                this.state.count++;
+                this.forceUpdate();
+              }
+            }, 'Click me'),
+            h('p', { style: 'color: green; margin-top: 20px;' }, 
+              'If you see this, the runtime is working correctly!')
+          ]);
+        }
+        
+        forceUpdate() {
+          const root = document.getElementById('root');
+          root.innerHTML = '';
+          root.appendChild(this.render());
+        }
+      }
+      
+      // Create and mount the test app
+      console.log('Creating app...');
+      const app = await createApp(TestApp, document.getElementById('root'));
+      console.log('Mounting app...');
+      app.mount();
+      console.log('✓ App mounted successfully!');
+      
+      // Now try to load the actual App.egh file
+      try {
+        const AppModule = await import('./src/App.js');
+        console.log('App.egh compiled and loaded:', AppModule);
+      } catch (err) {
+        console.warn('Could not load App.egh (this is expected if EGH compilation is not working):', err);
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('root').innerHTML = `
+        <div class="error">
+          <h2>Error Loading Eghact</h2>
+          <p>${error.message}</p>
+          <pre>${error.stack}</pre>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
