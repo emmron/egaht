@@ -1,0 +1,125 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-22T06:43:50.338Z",
+		"tasksAnalyzed": 14,
+		"totalTasks": 15,
+		"analysisCount": 14,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 2,
+			"taskTitle": "Automatic .d.ts Generation for Components",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the task of generating `.d.ts` files. Create subtasks for: 1. Integrating the TypeScript compiler API into the build process. 2. Implementing logic to parse component files and extract prop type definitions. 3. Adding support for extracting custom event signatures. 4. Handling generic components and preserving their generic types in the output. 5. Writing integration tests to verify the generated files for various component types.",
+			"reasoning": "High complexity due to deep integration with the TypeScript compiler API and the need to correctly interpret the framework's specific component syntax to produce accurate type definitions, especially for generics and custom events."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Internationalization (i18n) System",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Decompose the i18n system implementation. Subtasks should cover: 1. Designing and implementing the core i18n context provider. 2. Creating a translation function `t()` that handles key lookups and pluralization. 3. Implementing a dynamic loader for locale-specific JSON files. 4. Building the reactive language switching mechanism. 5. Integrating `Intl` for date, number, and currency formatting. 6. Setting up E2E tests for language switching and content verification.",
+			"reasoning": "High complexity due to the need for a robust, reactive, and performant system. It involves context management, asynchronous code for lazy-loading, and careful design to avoid performance bottlenecks or UI glitches during language switches."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Content Security Policy (CSP) Generation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the automatic CSP generation task. Create subtasks for: 1. Developing a build-time script to scan final assets (HTML, JS, CSS). 2. Implementing logic to generate hashes or nonces for all inline scripts and styles. 3. Constructing the final CSP header string based on scanned assets and directives. 4. Adding a user configuration system to allow overrides and extensions to the generated policy. 5. Creating a test suite that validates the generated CSP against various project structures using a tool like CSP Evaluator.",
+			"reasoning": "Complex due to the security-critical nature of the task. It requires a thorough analysis of all build outputs and a correct implementation of hashing/noncing mechanisms to avoid creating security holes while trying to close them."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Built-in XSS and CSRF Protection",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Decompose the task of implementing built-in security protections. Create subtasks for: 1. Modifying the template compiler to enforce automatic XSS escaping on all dynamic data by default. 2. Designing and implementing a CSRF protection mechanism (e.g., double-submit cookie or token-based). 3. Integrating the CSRF protection into the framework's built-in form submission and fetch utilities. 4. Developing a comprehensive security test suite with specific tests for script injection and forged requests.",
+			"reasoning": "High complexity because it involves modifying core, security-sensitive parts of the framework (compiler and networking). A mistake in either XSS or CSRF implementation could have severe security consequences for all users of the framework."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "VS Code Extension with IntelliSense",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the development of the VS Code extension. Subtasks should cover: 1. Creating the TextMate grammar (`.tmLanguage.json`) for syntax highlighting. 2. Setting up the basic Language Server and client-server communication via LSP. 3. Implementing IntelliSense for component props and state by interfacing with the compiler API. 4. Implementing 'go-to-definition' functionality. 5. Adding diagnostic support to show errors/warnings from the compiler. 6. Creating an automated test suite for the Language Server.",
+			"reasoning": "Very high complexity. It's essentially building a separate, complex application (the Language Server) that needs to performantly parse and analyze code on the fly. It requires a distinct and deep skillset in compiler design and editor tooling protocols."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Browser DevTools Extension for Component Inspection",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Decompose the browser DevTools extension project. Create subtasks for: 1. Designing and implementing the communication bridge between the page's runtime and the DevTools panel. 2. Adding hooks to the Eghact runtime to expose the component tree and state information. 3. Building the DevTools panel UI to visualize the component hierarchy. 4. Creating the inspector view to display and edit a selected component's props and state. 5. Implementing real-time updates in the DevTools when the application state changes. 6. Setting up E2E tests using Puppeteer to automate DevTools interaction.",
+			"reasoning": "Very high complexity due to the need to build a complete browser extension with multiple communicating parts. Hooking into a framework's internal runtime non-intrusively and efficiently is a major challenge, as is building a performant UI within the DevTools environment."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Component Testing Framework",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the creation of the component testing framework. Subtasks should cover: 1. Configuring a test runner (e.g., Jest) and JSDOM environment. 2. Creating a core `render` function to mount Eghact components into the simulated DOM. 3. Developing a query API (e.g., `getByText`, `getByRole`) for finding elements. 4. Implementing a user-event simulation library for interactions like click and type. 5. Designing and implementing assertion utilities specific to Eghact components. 6. Integrating a visual regression testing tool like Percy or Playwright.",
+			"reasoning": "High complexity. Designing a testing framework requires a deep understanding of both the framework's rendering lifecycle and developer ergonomics. Creating a powerful and reliable API is a major software design challenge."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Incremental Compilation for Sub-100ms Rebuilds",
+			"complexityScore": 10,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Decompose the highly complex task of implementing incremental compilation. Create subtasks for: 1. Designing and implementing the module dependency graph construction. 2. Creating a caching layer to store module ASTs and compilation results. 3. Implementing cache persistence to disk between dev server runs. 4. Developing the logic to detect file changes and identify affected modules in the dependency graph. 5. Reworking the compiler pipeline to only re-process invalidated modules. 6. Creating a large-scale benchmark project to measure and validate rebuild times against the <100ms target.",
+			"reasoning": "Peak complexity. This task involves advanced compiler design, graph theory, and performance optimization. The logic for cache invalidation and partial recompilation is extremely sensitive to edge cases, making it one of the hardest problems in tooling development."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Advanced Code Splitting and Tree-Shaking",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the advanced bundling optimization task. Create subtasks for: 1. Enhancing the compiler to statically analyze dynamic `import()` calls. 2. Implementing a chunking algorithm that groups modules into optimal bundles. 3. Developing a cross-module tree-shaking mechanism to identify and remove unused props and internal functions. 4. Integrating the new logic into the production build process. 5. Setting up bundle analysis tests to verify size reduction and correct chunking.",
+			"reasoning": "Very high complexity. This goes far beyond standard bundler features and requires implementing sophisticated static analysis techniques (like whole-program analysis) across the entire application to safely remove code, which is a difficult compiler problem."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Plugin Architecture for Extensibility",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Decompose the task of creating a plugin architecture. Subtasks should cover: 1. Designing the Plugin API, defining hooks for both compiler and runtime. 2. Implementing the compiler-side plugin pipeline (e.g., for code transforms). 3. Implementing the runtime-side plugin hooks (e.g., for lifecycle interception). 4. Developing the infrastructure for loading and managing plugins, including validation and error handling. 5. Creating 2-3 official example plugins to prove the API's viability and serve as documentation.",
+			"reasoning": "High complexity due to architectural significance. The design of the plugin API will have long-lasting consequences. It must be flexible enough to be useful but constrained enough to ensure security and performance, a difficult balance to strike."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "CLI Scaffolding Tools and Templates",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the CLI scaffolding tool task. Create subtasks for: 1. Implementing the `eghact create` command structure using a CLI framework. 2. Building the interactive prompt system for user configuration. 3. Developing the logic to fetch and extract project templates from a remote repository. 4. Writing the script to finalize project setup, including installing dependencies and initializing a git repository.",
+			"reasoning": "Medium-low complexity. While it requires careful implementation for a good user experience, the technical challenges are well-defined and solved by existing libraries for prompts, file system operations, and command execution."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "React-to-Eghact Migration Codemod",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Decompose the React-to-Eghact codemod project. Subtasks should cover: 1. Setting up the AST transformation toolkit (e.g., jscodeshift) and a corpus of React components for testing. 2. Implementing the transformation logic for JSX syntax differences. 3. Writing transforms for common React hooks (`useState`, `useEffect`) to their Eghact equivalents. 4. Adding support for transforming React class components. 5. Iteratively running the codemod against the test corpus and refining it to handle edge cases.",
+			"reasoning": "High complexity due to the sheer variety of patterns in real-world code. While simple components are easy, handling complex logic, higher-order components, and various library patterns via AST transformation is extremely challenging."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Visual Component Playground (Storybook-like)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down the development of the visual component playground. Create subtasks for: 1. Building the file system discovery mechanism to find `*.story.egh` files. 2. Developing the main UI shell with a navigation pane for stories. 3. Implementing the sandboxed rendering area (e.g., an iframe) for isolated component display. 4. Creating the 'Controls' panel that dynamically generates inputs for a component's props. 5. Integrating with the HMR dev server for hot-reloading. 6. Setting up communication between the main UI and the render iframe.",
+			"reasoning": "High complexity because it's a self-contained application with several complex parts: a file-system-aware server, a sophisticated UI, and tricky cross-frame communication for interactivity and hot-reloading."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Real-time Collaboration and WebSocket Integration",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Decompose the real-time collaboration feature set. Create subtasks for: 1. Implementing a framework-integrated WebSocket wrapper for managing connections. 2. Designing the API for a `useSharedState` composable function. 3. Implementing the core state synchronization logic, including message passing and conflict resolution. 4. Adding a basic presence awareness system. 5. Building E2E tests with multiple concurrent browser instances to validate real-time updates.",
+			"reasoning": "High complexity. Designing a generic, easy-to-use state synchronization primitive is a distributed systems problem, which is inherently complex, involving conflict resolution and fault tolerance."
+		}
+	]
+}

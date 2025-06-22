@@ -1,0 +1,39 @@
+{
+  "common": {
+    "hello": "Hello",
+    "goodbye": "Goodbye",
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters"
+  },
+  "items": {
+    "count_zero": "No items",
+    "count_one": "{{count}} item",
+    "count_other": "{{count}} items"
+  },
+  "messages": {
+    "userGreeting": "Hello, {{name}}!",
+    "itemsSelected": "You have selected {{count}} items",
+    "lastUpdated": "Last updated on {{date}}"
+  }
+}

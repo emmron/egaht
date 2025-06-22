@@ -1,0 +1,92 @@
+<template>
+  <div class="counter">
+    <h1>TypeScript Counter</h1>
+    <p>Count: {count}</p>
+    <p>Double: {double}</p>
+    <button @click="increment">Increment</button>
+    <button @click="decrement">Decrement</button>
+    <button @click="reset">Reset</button>
+    {#if count > 10}
+      <p class="warning">Count is getting high!</p>
+    {/if}
+  </div>
+</template>
+
+<script lang="ts">
+  // Props with TypeScript types
+  export let initialValue: number = 0
+  export let step: number = 1
+  export let maxValue?: number
+  
+  // State with type annotations
+  let count: number = initialValue
+  
+  // Reactive statements with type inference
+  $: double = count * 2
+  $: isHigh = count > 10
+  
+  // Methods with proper typing
+  function increment(): void {
+    if (maxValue === undefined || count + step <= maxValue) {
+      count += step
+      dispatch('change', { value: count })
+    }
+  }
+  
+  function decrement(): void {
+    count -= step
+    dispatch('change', { value: count })
+  }
+  
+  function reset(): void {
+    count = initialValue
+    dispatch('reset')
+  }
+  
+  // Event dispatcher with typed events
+  import { createEventDispatcher } from 'eghact'
+  
+  const dispatch = createEventDispatcher<{
+    change: { value: number }
+    reset: never
+  }>()
+  
+  // Lifecycle with TypeScript
+  import { onMount } from 'eghact'
+  
+  onMount(() => {
+    console.log('Counter mounted with initial value:', initialValue)
+    
+    return () => {
+      console.log('Counter unmounted')
+    }
+  })
+</script>
+
+<style>
+  .counter {
+    padding: 2rem;
+    text-align: center;
+    font-family: Arial, sans-serif;
+  }
+  
+  button {
+    margin: 0 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #f0f0f0;
+  }
+  
+  button:hover {
+    background: #e0e0e0;
+  }
+  
+  .warning {
+    color: #ff6b6b;
+    font-weight: bold;
+    margin-top: 1rem;
+  }
+</style>

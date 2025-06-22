@@ -15,6 +15,8 @@ import { FileSystemRouter } from './router.js';
 import { serveRuntime } from './runtime-loader.js';
 import { dataLoader, generateClientDataLoader } from './data-loader.js';
 import { generateErrorBoundaryClient } from './error-boundary.js';
+import { createCsrfMiddleware, generateCsrfClientCode } from './csrf-middleware.js';
+import { SecurityMiddleware } from './middleware/SecurityMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +50,32 @@ export async function startDevServer(options = {}) {
 
   // Register WebSocket plugin
   await app.register(fastifyWebsocket);
+  
+  // Enhanced Security Middleware Integration - Agent 1
+  const securityMiddleware = new SecurityMiddleware({
+    enableCsrf: true,
+    enableXssProtection: true,
+    enableSecurityHeaders: true,
+    enableContentValidation: true,
+    developmentMode: true,
+    csrfSecret: process.env.EGHACT_CSRF_SECRET || undefined,
+    csrfIgnorePaths: [
+      /^\/__eghact\/hmr$/,
+      /^\/__eghact\/client\//,
+      /^\/__eghact\/runtime/,
+      /^\/__eghact\/routes\.js$/,
+      /^\/__eghact\/data-loader\.js$/,
+      /^\/__eghact\/error-boundary\.js$/,
+      /^\/__eghact\/csrf\.js$/
+    ]
+  });
+  
+  // Apply comprehensive security middleware
+  app.addHook('preHandler', securityMiddleware.getMiddleware());
+  
+  // Legacy CSRF middleware fallback (will be removed after security middleware proves stable)
+  const legacyCsrfMiddleware = createCsrfMiddleware();
+  // Commented out in favor of SecurityMiddleware: app.addHook('preHandler', legacyCsrfMiddleware);
   
   // Create HMR server
   const hmr = createHMRServer({ 
@@ -88,6 +116,105 @@ export async function startDevServer(options = {}) {
   app.get('/__eghact/error-boundary.js', async (request, reply) => {
     const errorBoundaryClient = generateErrorBoundaryClient();
     reply.type('application/javascript').send(errorBoundaryClient);
+  });
+
+  // CSRF protection client
+  app.get('/__eghact/csrf.js', async (request, reply) => {
+    const csrfClient = generateCsrfClientCode();
+    reply.type('application/javascript').send(csrfClient);
+  });
+
+  // Security monitoring endpoints - Agent 1
+  app.get('/__eghact/security/status', async (request, reply) => {
+    const securityStats = securityMiddleware.getSecurityStats();
+    reply.send({
+      environment: 'development',
+      security: securityStats,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  app.get('/__eghact/security/report', async (request, reply) => {
+    const securityReport = securityMiddleware.generateSecurityReport();
+    reply.send(securityReport);
+  });
+
+  app.post('/__eghact/security/validate', async (request, reply) => {
+    try {
+      const { content, type = 'general' } = request.body;
+      
+      if (!content) {
+        return reply.code(400).send({ error: 'Content is required for validation' });
+      }
+
+      // Mock validation logic - in real implementation would integrate with actual validators
+      const validation = {
+        valid: true,
+        issues: [],
+        recommendations: []
+      };
+
+      // XSS pattern check
+      const xssPatterns = [
+        /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+        /javascript:/gi,
+        /vbscript:/gi,
+        /on\w+\s*=/gi
+      ];
+
+      for (const pattern of xssPatterns) {
+        if (pattern.test(content)) {
+          validation.valid = false;
+          validation.issues.push({
+            type: 'XSS_RISK',
+            severity: 'high',
+            message: `Potential XSS pattern detected: ${pattern.source}`,
+            pattern: pattern.source
+          });
+        }
+      }
+
+      // CSP validation
+      if (type === 'script' && content.includes('eval(')) {
+        validation.issues.push({
+          type: 'CSP_VIOLATION',
+          severity: 'medium',
+          message: 'eval() usage may violate Content Security Policy',
+          recommendation: 'Consider alternative to eval() for production builds'
+        });
+      }
+
+      // File extension validation
+      if (type === 'upload') {
+        const allowedExtensions = ['.js', '.ts', '.egh', '.css', '.json', '.md'];
+        const hasValidExtension = allowedExtensions.some(ext => 
+          content.toLowerCase().endsWith(ext)
+        );
+        
+        if (!hasValidExtension) {
+          validation.valid = false;
+          validation.issues.push({
+            type: 'FILE_TYPE_INVALID',
+            severity: 'high',
+            message: 'File type not allowed for upload',
+            allowedTypes: allowedExtensions
+          });
+        }
+      }
+
+      reply.send({
+        valid: validation.valid,
+        issues: validation.issues,
+        recommendations: validation.recommendations,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Security validation error:', error);
+      reply.code(500).send({
+        error: 'Security validation failed',
+        message: error.message
+      });
+    }
   });
 
   // Data loading endpoint
@@ -269,6 +396,7 @@ async function generateHTML({ root, url, route }) {
     import { runtime } from '/__eghact/runtime.js';
     import { dataLoader } from '/__eghact/data-loader.js';
     import '/__eghact/error-boundary.js';
+    import '/__eghact/csrf.js';
     
     // Initialize runtime
     await runtime.init?.();

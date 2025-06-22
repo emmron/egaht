@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{description}}">
+  <title>{{name}}</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="/src/main.js" as="script" type="module">
+  
+  <!-- Basic CSS reset and variables -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #333333;
+    }
+    
+    #app {
+      min-height: 100vh;
+    }
+    
+    /* Loading state */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-size: 1.2rem;
+      color: #666;
+    }
+    
+    .loading::after {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid #3b82f6;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Application container -->
+  <div id="app">
+    <div class="loading">Loading {{name}}</div>
+  </div>
+  
+  <!-- Main application script -->
+  <script type="module" src="/src/main.js"></script>
+  
+  <!-- Analytics and monitoring (optional) -->
+  <script>
+    // Add your analytics code here
+    // For example: Google Analytics, Plausible, etc.
+  </script>
+</body>
+</html>

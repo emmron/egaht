@@ -3,6 +3,17 @@ use swc_common::{SourceMap, FileName};
 use swc_ecma_ast::Module;
 use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 
+/// HTML escape function to prevent XSS attacks
+pub fn escape_html(input: &str) -> String {
+    input
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#x27;")
+        .replace('/', "&#x2F;")
+}
+
 pub struct CompilerOutput {
     pub code: String,
     pub map: Option<String>,

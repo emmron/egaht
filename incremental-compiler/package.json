@@ -1,0 +1,64 @@
+{
+  "name": "@eghact/incremental-compiler",
+  "version": "0.1.0",
+  "description": "Incremental compilation system for Eghact framework with sub-100ms rebuilds",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "benchmark": "node dist/benchmark/index.js",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "eghact",
+    "compiler",
+    "incremental",
+    "cache",
+    "performance"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "crypto": "^1.0.1",
+    "fs-extra": "^11.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.1",
+    "@types/jest": "^29.5.5",
+    "@types/node": "^18.17.0",
+    "jest": "^29.7.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eghact/eghact.git",
+    "directory": "packages/incremental-compiler"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src", "<rootDir>/tests"],
+    "testMatch": ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/benchmark/**/*"
+    ]
+  }
+}

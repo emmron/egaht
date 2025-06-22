@@ -1,0 +1,39 @@
+{
+  "common": {
+    "hello": "Hola",
+    "goodbye": "Adiós",
+    "welcome": "Bienvenido",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "settings": "Configuración",
+    "profile": "Perfil"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "email": "Por favor ingrese una dirección de email válida",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "maxLength": "No debe tener más de {{max}} caracteres"
+  },
+  "items": {
+    "count_zero": "No hay elementos",
+    "count_one": "{{count}} elemento",
+    "count_other": "{{count}} elementos"
+  },
+  "messages": {
+    "userGreeting": "¡Hola, {{name}}!",
+    "itemsSelected": "Has seleccionado {{count}} elementos",
+    "lastUpdated": "Última actualización el {{date}}"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@eghact/security-framework",
+  "version": "0.1.0",
+  "description": "Comprehensive security framework for Eghact with XSS/CSRF protection",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "test:security": "jest --testPathPattern=security",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "eghact",
+    "security",
+    "xss",
+    "csrf",
+    "template",
+    "sanitization"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "dompurify": "^3.0.5",
+    "he": "^1.2.0",
+    "validator": "^13.11.0",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/node": "^18.15.0",
+    "@types/he": "^1.2.0",
+    "@types/validator": "^13.11.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ]
+}

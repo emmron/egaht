@@ -16,6 +16,11 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 rust-crypto = "0.2"
 regex = "1.10"
+# CSRF Protection dependencies
+rand = "0.8"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.21"
 
 [dev-dependencies]
 insta = "1.34"

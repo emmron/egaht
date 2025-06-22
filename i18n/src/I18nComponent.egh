@@ -1,0 +1,48 @@
+<template>
+  <div class="i18n-provider">
+    <slot />
+  </div>
+</template>
+
+<script lang="ts">
+  import { I18nProvider, I18nContext, type I18nConfig } from './I18nProvider';
+  import { onMount, onDestroy } from '@eghact/core';
+  
+  export let config: I18nConfig;
+  
+  let provider: I18nProvider;
+  let unsubscribe: (() => void)[] = [];
+  
+  onMount(() => {
+    // Initialize provider
+    provider = new I18nProvider(config);
+    
+    // Set up reactive context
+    const context = provider.getContext();
+    I18nContext.set(context);
+    
+    // Subscribe to locale changes to update context
+    const localeUnsubscribe = provider.locale.subscribe((newLocale) => {
+      I18nContext.set(provider.getContext());
+    });
+    
+    const loadingUnsubscribe = provider.isLoading.subscribe((loading) => {
+      I18nContext.set(provider.getContext());
+    });
+    
+    unsubscribe.push(localeUnsubscribe, loadingUnsubscribe);
+  });
+  
+  onDestroy(() => {
+    // Clean up subscriptions
+    unsubscribe.forEach(unsub => unsub());
+    unsubscribe = [];
+  });
+</script>
+
+<style>
+  .i18n-provider {
+    /* Provider doesn't need visual styling */
+    display: contents;
+  }
+</style>
