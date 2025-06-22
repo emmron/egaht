@@ -2,11 +2,16 @@
   "name": "eghact",
   "version": "0.1.0",
   "description": "A revolutionary web framework with compile-time reactivity",
+  "type": "module",
   "main": "index.js",
+  "bin": {
+    "eghact": "./bin/eghact.js"
+  },
   "scripts": {
     "build:runtime": "cd runtime && ./build.sh",
-    "dev": "echo 'Dev server not yet implemented'",
-    "build": "echo 'Build pipeline not yet implemented'",
+    "dev": "node ./bin/eghact.js dev",
+    "build": "node ./build.js",
+    "build:cli": "node ./bin/eghact.js build",
     "test": "echo 'Tests not yet implemented'"
   },
   "keywords": [
@@ -18,7 +23,26 @@
   "author": "Eghact Team",
   "license": "MIT",
   "dependencies": {
-    "micromatch": "^4.0.8"
+    "micromatch": "^4.0.8",
+    "commander": "^9.4.1",
+    "fs-extra": "^11.1.1",
+    "express": "^4.18.2",
+    "chokidar": "^3.5.3",
+    "ws": "^8.14.2",
+    "esbuild": "^0.19.8",
+    "rollup": "^4.6.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup-plugin-css-only": "^4.5.0",
+    "postcss": "^8.4.32",
+    "cssnano": "^6.0.2",
+    "autoprefixer": "^10.4.16",
+    "chalk": "^5.3.0",
+    "glob": "^10.3.10",
+    "magic-string": "^0.30.5",
+    "terser": "^5.24.0",
+    "gzip-size": "^7.0.0",
+    "brotli-size": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.3",

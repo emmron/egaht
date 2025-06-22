@@ -1,0 +1,13 @@
+{
+  "name": "super-app",
+  "version": "0.1.0",
+  "description": "An Eghact project",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "eghact dev",
+    "build": "eghact build",
+    "deploy": "eghact deploy"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

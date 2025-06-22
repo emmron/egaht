@@ -1,0 +1,13 @@
+{
+  "name": "test-project",
+  "version": "0.1.0",
+  "description": "An Eghact project",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "node ../bin/eghact.js dev",
+    "build": "node ../bin/eghact.js build",
+    "deploy": "node ../bin/eghact.js deploy"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

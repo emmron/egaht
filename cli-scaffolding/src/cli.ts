@@ -261,6 +261,58 @@ program
     }
   });
 
+/**
+ * Interactive REPL mode
+ */
+program
+  .command('repl')
+  .alias('interactive')
+  .description('Start interactive REPL mode for live development')
+  .option('--debug', 'Enable debug mode')
+  .option('--verbose', 'Enable verbose output')
+  .action(async (options: any) => {
+    try {
+      const repl = new EghactREPL(program);
+      await repl.start();
+    } catch (error) {
+      console.error(chalk.red('❌ Failed to start REPL:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+/**
+ * Suggest command - provides command suggestions
+ */
+program
+  .command('suggest')
+  .alias('s')
+  .description('Get command suggestions')
+  .argument('[partial]', 'Partial command to complete')
+  .action(async (partial: string) => {
+    try {
+      const suggestions = commandParser.getSuggestions(partial || '');
+      
+      if (program.opts().json) {
+        console.log(JSON.stringify(suggestions, null, 2));
+      } else {
+        if (suggestions.length === 0) {
+          console.log(chalk.yellow('No suggestions found.'));
+        } else {
+          console.log(chalk.cyan('Available commands:\n'));
+          suggestions.forEach(cmd => {
+            console.log(`  ${chalk.green(cmd.value)} - ${chalk.gray(cmd.description)}`);
+            if (cmd.aliases && cmd.aliases.length > 0) {
+              console.log(`    ${chalk.blue('Aliases:')} ${cmd.aliases.join(', ')}`);
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error(chalk.red('❌ Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
 // Helper functions
 
 async function collectProjectOptions(name: string, cliOptions: any): Promise<CreateProjectOptions> {
@@ -499,7 +551,73 @@ h1 {
   await fs.promises.writeFile('src/App.egh', appEgh, 'utf8');
 }
 
-// Parse command line arguments
-program.parse();
+// Add enhanced error handling
+program.exitOverride();
 
-export { program };
+try {
+  // Check if no arguments provided, show interactive command selector
+  if (process.argv.length === 2) {
+    (async () => {
+      console.log(chalk.cyan('🚀 Welcome to Eghact CLI\n'));
+      
+      const { command } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'command',
+          message: 'What would you like to do?',
+          choices: [
+            { name: 'Create a new project', value: 'create' },
+            { name: 'Generate a component', value: 'generate' },
+            { name: 'Start development server', value: 'dev' },
+            { name: 'Build for production', value: 'build' },
+            { name: 'Start interactive REPL', value: 'repl' },
+            { name: 'View available templates', value: 'templates' },
+            { name: 'Show project info', value: 'info' },
+            { name: 'Exit', value: 'exit' }
+          ]
+        }
+      ]);
+      
+      if (command === 'exit') {
+        process.exit(0);
+      }
+      
+      // Re-run with selected command
+      process.argv.push(command);
+      program.parse();
+    })();
+  } else {
+    // Parse command line arguments with enhanced error handling
+    program.parse();
+  }
+} catch (error: any) {
+  if (error.code === 'commander.unknownCommand') {
+    const userInput = process.argv.slice(2).join(' ');
+    console.error(chalk.red(`Unknown command: ${userInput}`));
+    
+    // Try to suggest similar commands
+    try {
+      const parsed = commandParser.parse(userInput);
+      const suggestions = commandParser.getSuggestions(parsed.command);
+      
+      if (suggestions.length > 0) {
+        console.log(chalk.yellow('\nDid you mean one of these?'));
+        suggestions.forEach(cmd => {
+          console.log(`  ${chalk.green(cmd.value)} - ${chalk.gray(cmd.description)}`);
+        });
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    
+    console.log(chalk.gray('\nRun \'eghact --help\' for available commands'));
+    process.exit(1);
+  } else if (error.code === 'commander.helpDisplayed') {
+    process.exit(0);
+  } else {
+    console.error(chalk.red('Unexpected error:'), error);
+    process.exit(1);
+  }
+}
+
+export { program, commandParser };

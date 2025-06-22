@@ -1,0 +1,25 @@
+<template>
+  <div class="app">
+    <h1>Welcome to {title}</h1>
+    <Counter />
+  </div>
+</template>
+
+<script>
+  import Counter from './components/Counter.egh'
+  
+  let title = 'enhanced-test'
+</script>
+
+<style>
+  .app {
+    text-align: center;
+    padding: 2rem;
+    font-family: Arial, sans-serif;
+  }
+  
+  h1 {
+    color: #333;
+    margin-bottom: 2rem;
+  }
+</style>

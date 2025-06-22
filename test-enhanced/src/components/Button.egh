@@ -1,0 +1,42 @@
+<template>
+  <div class="button">
+    <h2>{title}</h2>
+    <p>{description}</p>
+    <button @click="handleClick">Click me</button>
+  </div>
+</template>
+
+<script>
+  export let props = {
+    title: String,
+    description: String
+  }
+  
+  let { title = 'Default Title', description = 'Default description' } = props
+  
+  function handleClick() {
+    console.log('Button clicked!')
+  }
+</script>
+
+<style>
+  .button {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  button {
+    background: #007acc;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #005999;
+  }
+</style>

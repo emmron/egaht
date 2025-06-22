@@ -741,3 +741,31 @@ self.addEventListener('fetch', (event) => {
 
 // Export for programmatic use
 export default EghactBuildSystem;
+
+// CLI-friendly build function
+export async function runBuild(config = {}) {
+  const buildSystem = new EghactBuildSystem(config);
+  
+  try {
+    console.log('🚀 Starting Eghact build...');
+    
+    // Execute the build
+    const result = await buildSystem.build();
+    
+    console.log('✅ Build completed successfully!');
+    console.log(`📦 Output directory: ${result.outDir}`);
+    console.log(`⚡ Build time: ${result.buildTime}ms`);
+    
+    if (result.bundleSizes) {
+      console.log('\n📊 Bundle Analysis:');
+      Object.entries(result.bundleSizes).forEach(([file, size]) => {
+        console.log(`  ${file}: ${size}`);
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Build failed:', error.message);
+    throw error;
+  }
+}

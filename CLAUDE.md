@@ -30,6 +30,10 @@ task-master export --tag=<tag> --format=json      # Export tasks for analysis
 
 ### Current Active Tag: phase3
 
+## 🚨 CRITICAL DEVELOPMENT RULES
+
+**NEVER USE SIMPLE VARIANTS**: Always use the existing sophisticated implementations. Do not create simplified versions of complex systems - enhance and build upon the existing architecture.
+
 ## 💪 SCRUM MASTER: CORE AGENT IN COMMAND
 
 **OFFICIAL DESIGNATION**: Core Agent is the PERMANENT Scrum Master of the Eghact Framework project due to superior performance and leadership capabilities. All other agents report to Core Agent.

@@ -208,6 +208,15 @@
             "status": "done",
             "dependencies": [],
             "parentTaskId": 1
+          },
+          {
+            "id": 6,
+            "title": "Implement CLI tooling and build system",
+            "description": "Create functional eghact CLI, dev server, and build pipeline to make README commands work",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
           }
         ]
       },
@@ -603,6 +612,69 @@
             "status": "done",
             "dependencies": [],
             "parentTaskId": 11
+          },
+          {
+            "id": 4,
+            "title": "[LEXY001] Plugin Ecosystem Architecture v2",
+            "description": "Design next-gen plugin system supporting 10,000+ plugins with dependency resolution",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 5,
+            "title": "[LEXY002] Enterprise Build Pipeline",
+            "description": "Architect distributed build system for Fortune 500 scale",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 6,
+            "title": "[LEXY003] Merge All Worktrees and Push to GitHub",
+            "description": "Coordinate merging of all feature branches from worktrees into main branch and push to GitHub with updated README",
+            "details": "",
+            "status": "in-progress",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 7,
+            "title": "[LEXY004] WebAssembly Universal Runtime Architecture",
+            "description": "Design cross-platform WASM runtime enabling Eghact apps to run natively on ANY device - browsers, servers, IoT, mobile, embedded systems. Sub-5MB runtime with near-native performance.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 8,
+            "title": "[LEXY005] Neural Network Component Optimization Engine",
+            "description": "AI-powered build optimizer that learns from millions of Eghact apps to automatically optimize component trees, reduce bundle sizes by 90%, and predict user interactions for preloading. Uses on-device ML for privacy.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 9,
+            "title": "[LEXY006] Distributed Component Registry Architecture",
+            "description": "Design globally distributed registry supporting 100M+ components with sub-10ms resolution, content-addressable storage, cryptographic verification, and edge caching across 200+ PoPs worldwide.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
+          },
+          {
+            "id": 10,
+            "title": "[LEXY007] Microservices Component Architecture",
+            "description": "Design component federation system allowing Eghact components to be deployed as independent microservices with automatic service mesh integration, circuit breakers, and transparent RPC.",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 11
           }
         ]
       },
@@ -617,7 +689,71 @@
           11
         ],
         "status": "in-progress",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Fix CLI issues with other agent",
+            "description": "Coordinate with other agent to identify and resolve any CLI functionality issues, ensure dev and build commands work correctly",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 2,
+            "title": "[BOB001] Enhanced CLI Command Parser",
+            "description": "Build advanced command parser with autocomplete, fuzzy matching, and intelligent suggestions for CLI commands",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 3,
+            "title": "[BOB002] CLI Interactive Mode with REPL",
+            "description": "Implement interactive REPL mode for CLI with live code execution, debugging capabilities, and real-time framework interaction",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 4,
+            "title": "[PO001] CLI Startup Optimization",
+            "description": "Reduce CLI startup time to under 50ms through lazy loading, optimized imports, and bytecode caching",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 5,
+            "title": "[BOB003] CLI Plugin System Integration",
+            "description": "Integrate plugin system into CLI commands, allowing plugins to extend CLI functionality with custom commands",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 6,
+            "title": "[PO002] Build Performance Optimization",
+            "description": "Optimize build process to achieve <100ms incremental builds using parallel compilation and smart caching",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          },
+          {
+            "id": 7,
+            "title": "[PO003] Memory Optimization for Large Projects",
+            "description": "Implement memory-efficient compilation for projects with 10,000+ components using streaming parsers and garbage collection optimization",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12
+          }
+        ]
       },
       {
         "id": 13,
@@ -1038,7 +1174,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T06:10:55.828Z",
-      "updated": "2025-06-22T07:24:52.134Z",
+      "updated": "2025-06-22T10:29:01.749Z",
       "description": "Tasks for phase3 context"
     }
   }
