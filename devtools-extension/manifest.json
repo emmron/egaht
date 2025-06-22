@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Eghact DevTools",
+  "version": "1.0.0",
+  "description": "Browser DevTools extension for inspecting and debugging Eghact applications",
+  
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["src/bridge/runtime-hook.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  
+  "devtools_page": "src/devtools/devtools.html",
+  
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    }
+  }
+}

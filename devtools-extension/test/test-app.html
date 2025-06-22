@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eghact DevTools Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .component {
+            border: 2px solid #40c8ae;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        .component h3 {
+            margin: 0 0 10px 0;
+            color: #40c8ae;
+        }
+        button {
+            background: #40c8ae;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #35a892;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Eghact DevTools Test Page</h1>
+    <p>This page simulates an Eghact application for testing the DevTools extension.</p>
+    
+    <div class="component">
+        <h3>&lt;App&gt;</h3>
+        <p>Root component</p>
+        <button onclick="mountComponent()">Mount Child</button>
+        <button onclick="updateState()">Update State</button>
+        <button onclick="unmountComponent()">Unmount Child</button>
+    </div>
+    
+    <div id="child-container"></div>
+    
+    <h2>DevTools Status</h2>
+    <pre id="status">Checking for DevTools...</pre>
+    
+    <script>
+        // Load the runtime hook to simulate Eghact
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('src/bridge/runtime-hook.js');
+        document.head.appendChild(script);
+        
+        // Simulate components
+        let childComponent = null;
+        let componentId = 1;
+        
+        // Wait for runtime hook to load
+        setTimeout(() => {
+            if (window.__EGHACT_DEVTOOLS__) {
+                document.getElementById('status').textContent = '✓ Eghact DevTools hook detected!';
+                
+                // Mount root component
+                const rootComponent = {
+                    constructor: { name: 'App' },
+                    props: { title: 'Test App' },
+                    state: { count: 0, theme: 'dark' },
+                    parent: null
+                };
+                
+                window.__EGHACT_DEVTOOLS__.notifyMount(rootComponent);
+            } else {
+                document.getElementById('status').textContent = '✗ DevTools hook not found';
+            }
+        }, 100);
+        
+        function mountComponent() {
+            if (!window.__EGHACT_DEVTOOLS__) return;
+            
+            const container = document.getElementById('child-container');
+            container.innerHTML = `
+                <div class="component">
+                    <h3>&lt;Counter&gt;</h3>
+                    <p>Count: <span id="count">0</span></p>
+                    <button onclick="incrementCount()">Increment</button>
+                </div>
+            `;
+            
+            childComponent = {
+                constructor: { name: 'Counter' },
+                props: { initialValue: 0 },
+                state: { count: 0 },
+                parent: { __devtools_id: 'eghact-0' } // Reference root
+            };
+            
+            window.__EGHACT_DEVTOOLS__.notifyMount(childComponent);
+        }
+        
+        function updateState() {
+            if (!window.__EGHACT_DEVTOOLS__) return;
+            
+            // Update root component state
+            const rootComponent = {
+                __devtools_id: 'eghact-0',
+                constructor: { name: 'App' },
+                props: { title: 'Test App' },
+                state: { count: Math.floor(Math.random() * 100), theme: 'dark' }
+            };
+            
+            window.__EGHACT_DEVTOOLS__.notifyUpdate(rootComponent);
+        }
+        
+        function unmountComponent() {
+            if (!window.__EGHACT_DEVTOOLS__ || !childComponent) return;
+            
+            window.__EGHACT_DEVTOOLS__.notifyUnmount(childComponent);
+            document.getElementById('child-container').innerHTML = '';
+            childComponent = null;
+        }
+        
+        function incrementCount() {
+            if (!window.__EGHACT_DEVTOOLS__ || !childComponent) return;
+            
+            childComponent.state.count++;
+            document.getElementById('count').textContent = childComponent.state.count;
+            window.__EGHACT_DEVTOOLS__.notifyUpdate(childComponent);
+        }
+    </script>
+</body>
+</html>

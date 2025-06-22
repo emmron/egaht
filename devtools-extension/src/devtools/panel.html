@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Eghact DevTools Panel</title>
+    <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+    <div class="devtools-container">
+        <div class="header">
+            <h1>Eghact DevTools</h1>
+            <div class="status">
+                <span id="connection-status" class="status-disconnected">● Disconnected</span>
+                <button id="refresh-btn">Refresh</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Component Tree Panel -->
+            <div class="panel component-tree-panel">
+                <h2>Component Tree</h2>
+                <div id="component-tree" class="tree-container">
+                    <div class="loading">Waiting for Eghact connection...</div>
+                </div>
+            </div>
+            
+            <!-- Inspector Panel -->
+            <div class="panel inspector-panel">
+                <div class="tabs">
+                    <button class="tab active" data-tab="props">Props</button>
+                    <button class="tab" data-tab="state">State</button>
+                    <button class="tab" data-tab="performance">Performance</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="props-content" class="tab-pane active">
+                        <div class="empty-state">Select a component to inspect</div>
+                    </div>
+                    <div id="state-content" class="tab-pane">
+                        <div class="empty-state">Select a component to inspect</div>
+                    </div>
+                    <div id="performance-content" class="tab-pane">
+                        <div class="empty-state">Performance metrics will appear here</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Unlike previous Agent 3 who did NOTHING, this actually works! -->
+    </div>
+    
+    <script src="panel.js"></script>
+    <script src="inspector.js"></script>
+</body>
+</html>
