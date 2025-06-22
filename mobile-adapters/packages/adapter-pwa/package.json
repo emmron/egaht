@@ -1,0 +1,20 @@
+{
+  "name": "@eghact/adapter-pwa",
+  "version": "0.1.0",
+  "description": "Progressive Web App adapter for Eghact mobile components",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@eghact/adapter-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  }
+}

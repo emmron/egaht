@@ -1,0 +1,39 @@
+{
+  "name": "@eghact/playground",
+  "version": "1.0.0",
+  "description": "Visual component playground for Eghact (Storybook-like)",
+  "main": "dist/index.js",
+  "bin": {
+    "eghact-playground": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@eghact/core": "workspace:*",
+    "@eghact/runtime": "workspace:*",
+    "vite": "^5.0.0",
+    "ws": "^8.14.0",
+    "express": "^4.18.0",
+    "glob": "^10.3.0",
+    "chokidar": "^3.5.0",
+    "codemirror": "^6.0.0",
+    "@codemirror/lang-javascript": "^6.0.0",
+    "@codemirror/theme-one-dark": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/express": "^4.17.0",
+    "@types/ws": "^8.5.0",
+    "typescript": "^5.2.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  },
+  "peerDependencies": {
+    "eghact": "^3.0.0"
+  }
+}

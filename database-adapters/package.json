@@ -1,0 +1,26 @@
+{
+  "name": "@eghact/database-adapters",
+  "version": "0.1.0",
+  "description": "Enterprise database adapter layer for Eghact framework - PostgreSQL, MongoDB, Redis, and graph databases",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "migrate:create": "node packages/migration-tool/dist/cli.js create",
+    "migrate:up": "node packages/migration-tool/dist/cli.js up",
+    "migrate:down": "node packages/migration-tool/dist/cli.js down",
+    "generate:models": "node packages/orm-generator/dist/cli.js generate"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

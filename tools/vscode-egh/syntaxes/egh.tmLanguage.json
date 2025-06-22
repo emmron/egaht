@@ -1,0 +1,183 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "EGH",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#component" },
+    { "include": "#type" },
+    { "include": "#styles" },
+    { "include": "#import" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.egh",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.egh",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "component": {
+      "begin": "\\b(component)\\s+(\\w+)",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.component.egh" },
+        "2": { "name": "entity.name.class.egh" }
+      },
+      "end": "(?<=})",
+      "patterns": [
+        { "include": "#component-params" },
+        { "include": "#component-body" }
+      ]
+    },
+    "component-params": {
+      "begin": "\\(",
+      "end": "\\)",
+      "patterns": [
+        { "include": "#parameter" }
+      ]
+    },
+    "component-body": {
+      "begin": "{",
+      "end": "}",
+      "patterns": [
+        { "include": "#reactive-state" },
+        { "include": "#computed" },
+        { "include": "#effect" },
+        { "include": "#template" },
+        { "include": "#method" }
+      ]
+    },
+    "reactive-state": {
+      "match": "(~)(\\w+)\\s*(=)",
+      "captures": {
+        "1": { "name": "keyword.operator.reactive.egh" },
+        "2": { "name": "variable.other.property.egh" },
+        "3": { "name": "keyword.operator.assignment.egh" }
+      }
+    },
+    "computed": {
+      "match": "(\\w+)\\s*(=>)",
+      "captures": {
+        "1": { "name": "variable.other.property.computed.egh" },
+        "2": { "name": "keyword.operator.arrow.egh" }
+      }
+    },
+    "effect": {
+      "match": "(\\w+)\\s*(::)",
+      "captures": {
+        "1": { "name": "variable.other.property.egh" },
+        "2": { "name": "keyword.operator.effect.egh" }
+      }
+    },
+    "template": {
+      "begin": "<\\[",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.template.begin.egh" }
+      },
+      "end": "\\]>",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.template.end.egh" }
+      },
+      "patterns": [
+        { "include": "#element" },
+        { "include": "#text" },
+        { "include": "#expression" },
+        { "include": "#directive" },
+        { "include": "#conditional" },
+        { "include": "#loop" }
+      ]
+    },
+    "element": {
+      "patterns": [
+        {
+          "match": "\\b(row|column|grid|layer)\\b",
+          "name": "support.function.layout.egh"
+        },
+        {
+          "match": "\\b(div|span|p|h[1-6]|button|input|select|textarea|img|a|ul|ol|li)\\b",
+          "name": "entity.name.tag.egh"
+        }
+      ]
+    },
+    "directive": {
+      "patterns": [
+        {
+          "match": "@(click|input|change|submit|keydown|keyup|mouseenter|mouseleave)",
+          "name": "entity.other.attribute-name.event.egh"
+        },
+        {
+          "match": "@(animate|transition|virtual|worker|ai|monitor)",
+          "name": "keyword.control.directive.egh"
+        },
+        {
+          "match": "\\$(\\w+)",
+          "name": "entity.other.attribute-name.style.egh"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "match": "<~>",
+          "name": "keyword.operator.binding.egh"
+        },
+        {
+          "match": "\\|>",
+          "name": "keyword.operator.pipe.egh"
+        },
+        {
+          "match": "\\*~",
+          "name": "keyword.operator.reactive-loop.egh"
+        },
+        {
+          "match": "\\?~",
+          "name": "keyword.operator.lazy.egh"
+        },
+        {
+          "match": "[?!#]",
+          "name": "keyword.operator.modifier.egh"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "match": "\\b(match|as|slot|import|from|type|styles)\\b",
+          "name": "keyword.control.egh"
+        }
+      ]
+    },
+    "string": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.egh",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.egh",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.egh",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.egh",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scopeName": "source.egh"
+}

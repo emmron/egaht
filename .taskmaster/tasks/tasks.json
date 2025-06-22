@@ -217,6 +217,15 @@
             "status": "done",
             "dependencies": [],
             "parentTaskId": 1
+          },
+          {
+            "id": 7,
+            "title": "Create EGH Syntax Specification",
+            "description": "Design and implement Eghact Hyperlanguage - a revolutionary new template syntax",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 1
           }
         ]
       },
@@ -758,7 +767,7 @@
             "title": "[PO003] Memory Optimization for Large Projects",
             "description": "Implement memory-efficient compilation for projects with 10,000+ components using streaming parsers and garbage collection optimization",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 12
           }
@@ -783,7 +792,7 @@
         "testStrategy": "Create a sample component library and write stories for each component. Launch the playground and verify that all components are discoverable and render correctly. Test the interactive prop controls and ensure HMR updates the component without a full reload.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": []
       },
       {
@@ -939,7 +948,7 @@
         "description": "Optimize the Eghact runtime by implementing critical rendering operations in WebAssembly. Focus on virtual DOM diffing, component mounting/unmounting, and reactive system updates for 10x performance improvements.",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -950,7 +959,7 @@
         "description": "Create mobile-native adapters for React Native, Flutter, and Progressive Web Apps. Enable Eghact components to compile to mobile platforms with gesture handling, native animations, and platform-specific optimizations.",
         "details": "",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": [
@@ -959,7 +968,7 @@
             "title": "React Native Adapter",
             "description": "Create adapter to compile Eghact components to React Native components with gesture handling and native animations",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 23
           },
@@ -969,7 +978,7 @@
             "description": "Establish the foundational contract that all mobile adapters must implement. This includes defining a common, platform-agnostic API for component rendering, gesture handling, and native animations. Set up the monorepo structure to house the individual adapter packages.",
             "dependencies": [],
             "details": "Define TypeScript interfaces for the core adapter functionality (e.g., `createView`, `createText`, `onPan`, `animate`). Use a monorepo tool like Turborepo or Lerna to create packages for `@eghact/adapter-core`, `@eghact/adapter-react-native`, `@eghact/adapter-flutter`, and `@eghact/adapter-pwa`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use static analysis and type checking to validate the API contract. Create a basic build script and run it in CI to ensure the monorepo scaffolding is correctly configured."
           },
           {
@@ -980,7 +989,7 @@
               2
             ],
             "details": "In the `@eghact/adapter-react-native` package, implement the core API. Map `createView` to `<View>`, `createText` to `<Text>`, etc. For gestures, use the `react-native-gesture-handler` library to implement the `onPan`, `onTap`, and `onPinch` API methods, as it provides a more robust solution than the built-in PanResponder.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a sample React Native application that consumes the adapter. Use Jest for unit testing the mapping logic and Detox for E2E tests to verify components render correctly and gestures are handled on an emulator."
           },
           {
@@ -991,7 +1000,7 @@
               2
             ],
             "details": "In the `@eghact/adapter-flutter` package, implement the core API. The primary challenge is the JS-to-Dart bridge. A potential approach is to use a hidden `WebView` with a `JavaScriptChannel` to communicate between Eghact and a Flutter host. Map API calls to Flutter widgets (`Container`, `Text`) and gesture detectors (`GestureDetector`).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop a sample Flutter app that hosts the Eghact runtime. Use Flutter's `flutter_test` for widget tests to verify component rendering and `integration_test` to validate gesture handling and bridge communication."
           },
           {
@@ -1002,7 +1011,7 @@
               2
             ],
             "details": "In the `@eghact/adapter-pwa` package, implement the core API by mapping functions to the DOM API (e.g., `createView` -> `document.createElement('div')`). Use the `PointerEvents` API for a unified implementation of gesture handlers that works for both touch and mouse input. Ensure the adapter works with service workers for offline PWA functionality.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Jest with JSDOM for unit testing the DOM mapping logic. Use a framework like Cypress or Playwright for E2E testing of a sample PWA to verify rendering, gestures, and responsiveness across different mobile viewports."
           },
           {
@@ -1015,8 +1024,17 @@
               5
             ],
             "details": "Extend the core API with methods like `createTimingAnimation`. For React Native, implement this using `react-native-reanimated` to run animations on the UI thread. For Flutter, use its built-in `AnimationController` and `AnimatedWidget`. For PWAs, use the Web Animations API. For optimizations, implement virtualization for long lists by mapping to `FlatList` (RN), `ListView.builder` (Flutter), and intersection observers (PWA).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Conduct performance benchmark tests on all three platforms to measure frame rates (FPS) during complex animations and scrolling. Use visual regression testing to catch any visual glitches in animations."
+          },
+          {
+            "id": 7,
+            "title": "Eghact Native Mobile Runtime",
+            "description": "Build Eghact's own mobile runtime using C/WASM that compiles directly to iOS/Android native code without React Native dependency",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 23
           }
         ]
       },
@@ -1114,7 +1132,7 @@
         "description": "Universal database abstraction layer supporting PostgreSQL, MongoDB, Redis, and graph databases with automatic ORM generation and migration tools",
         "details": "",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": [
@@ -1124,7 +1142,7 @@
             "description": "Design and implement the fundamental interfaces for the database adapter layer. This includes defining a unified API for connections, CRUD operations, transaction management, and a standardized configuration structure that all specific adapters will adhere to.",
             "dependencies": [],
             "details": "Create an `IDatabaseAdapter` interface with methods like `connect()`, `disconnect()`, `create()`, `read()`, `update()`, `delete()`, and `executeRaw()`. Define a generic `IQueryOptions` interface for pagination, sorting, and filtering. Establish an `ITransaction` interface with `begin()`, `commit()`, and `rollback()`. Design a configuration loader that can parse a common format (e.g., JSON/YAML) to instantiate the correct adapter based on a `type` field (e.g., 'postgres', 'mongodb').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the interface definitions and configuration parsing logic. Ensure that configuration models correctly validate input. No functional tests are possible at this stage."
           },
           {
@@ -1135,7 +1153,7 @@
               1
             ],
             "details": "Use a mature library like `node-postgres` (pg) or `JDBC`. Implement all methods from `IDatabaseAdapter` and `ITransaction`. Map generic CRUD methods to `INSERT`, `SELECT`, `UPDATE`, `DELETE` statements. Translate `IQueryOptions` into `WHERE`, `ORDER BY`, `LIMIT`, and `OFFSET` clauses. Implement connection pooling within the `connect()` and `disconnect()` logic.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests against a local or containerized PostgreSQL instance. Test each CRUD operation, transaction handling (commit/rollback), and query options (pagination, sorting)."
           },
           {
@@ -1146,7 +1164,7 @@
               1
             ],
             "details": "Use the official `mongodb` driver. Implement the `IDatabaseAdapter` interface. Map CRUD methods to `insertOne/insertMany`, `find`, `updateOne/updateMany`, and `deleteOne/deleteMany`. Implement the `ITransaction` interface using MongoDB's multi-document transaction capabilities. Translate `IQueryOptions` into MongoDB's query, projection, sort, skip, and limit objects.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests against a local or containerized MongoDB instance. Verify that all CRUD operations and query options work as expected. Specifically test handling of nested documents and document-specific query operators."
           },
           {
@@ -1158,7 +1176,7 @@
               3
             ],
             "details": "Define a schema syntax in YAML or JSON to specify models, fields, types, and relationships. Use a templating engine (e.g., EJS, Handlebars) to generate source code files. The generated models should provide static methods like `Model.find(id)` and instance methods like `instance.save()`, which internally call the appropriate adapter methods. The tool should be invokable from the command line, e.g., `db-tool generate --schema ./schema.yml --out ./src/models`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the generator by providing various sample schemas and asserting that the generated code is syntactically correct and matches expectations. Write integration tests for the generated models to ensure they function correctly with both the PostgreSQL and MongoDB adapters."
           },
           {
@@ -1170,8 +1188,17 @@
               3
             ],
             "details": "Implement a CLI with commands like `migrate:create <name>`, `migrate:up`, and `migrate:down`. `migrate:create` will generate a timestamped migration file with `up()` and `down()` functions. The tool will inject a schema builder instance into these functions, allowing developers to write declarative schema changes (e.g., `schema.createTable(...)`). The tool will translate these declarations into raw SQL or database commands via the configured adapter. A special table/collection (e.g., `_migrations`) will be used in the target database to track execution state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Perform end-to-end testing of the CLI tool against both PostgreSQL and MongoDB. Test the full lifecycle: creating a migration, applying it, checking the status, and rolling it back. Ensure it correctly handles error scenarios, like a failing migration."
+          },
+          {
+            "id": 6,
+            "title": "Eghact Native Database Engine",
+            "description": "Build lightweight embedded database engine in C/WASM with SQL and NoSQL support, eliminating need for external database drivers",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 32
           }
         ]
       },
@@ -1230,7 +1257,7 @@
         "description": "Deploy Eghact applications as distributed microservices with auto-scaling, service mesh integration, and cross-service state synchronization",
         "details": "",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": [
@@ -1240,7 +1267,7 @@
             "description": "Create a standardized, multi-stage Dockerfile and build process to package Eghact applications into lightweight, OCI-compliant container images. This will establish the fundamental, portable unit for deployment.",
             "dependencies": [],
             "details": "Develop a multi-stage Dockerfile. The first stage should use a build environment to compile the Eghact application and its dependencies. The final stage should copy only the necessary compiled artifacts into a minimal base image like 'gcr.io/distroless/static-debian11' or 'alpine'. The process should be automated within a CI pipeline to build and push the tagged image to a central container registry.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Build the image and run it locally using `docker run`. Verify the application starts successfully and responds to health checks. Check the final image size to ensure it is reasonably small."
           },
           {
@@ -1251,7 +1278,7 @@
               1
             ],
             "details": "Create a `Deployment.yaml` that references the container image built in the previous step. Define container ports, environment variables, and initial resource requests/limits (CPU/memory). Create a corresponding `Service.yaml` of type `ClusterIP` to provide a stable internal endpoint for the pods managed by the Deployment. Use Kustomize or Helm for templating to manage environment-specific configurations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Apply the manifests to a development Kubernetes cluster. Verify the pod transitions to a 'Running' state using `kubectl get pods`. Use `kubectl port-forward` to access the service from your local machine and confirm the application is responsive."
           },
           {
@@ -1262,7 +1289,7 @@
               2
             ],
             "details": "Ensure the Deployment manifest from the previous subtask has CPU resource `requests` defined, as this is a prerequisite for CPU-based scaling. Create an `HPA.yaml` manifest that targets the Deployment. Configure it with `minReplicas`, `maxReplicas`, and a `targetCPUUtilizationPercentage` (e.g., 80%).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Deploy a load-testing tool (e.g., `hey` or `k6`) against the application's Service endpoint. Monitor the HPA's status with `kubectl get hpa -w` and verify that the number of replicas increases under load and decreases once the load test is stopped."
           },
           {
@@ -1273,7 +1300,7 @@
               2
             ],
             "details": "Enable automatic Istio sidecar proxy injection for the application's namespace. Create an Istio `Gateway` resource to define an entry point for external traffic into the mesh. Create a `VirtualService` to route traffic from the Gateway to the application's Kubernetes Service. This setup will control how external users access the microservice.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Send requests to the Istio Ingress Gateway's external IP address and verify they are correctly routed to the application pods. Use the Kiali dashboard to visualize the service graph and confirm that traffic is flowing through the Istio proxy. Check for telemetry data in Prometheus."
           },
           {
@@ -1284,7 +1311,7 @@
               2
             ],
             "details": "Deploy a message broker like RabbitMQ or NATS into the Kubernetes cluster, preferably using a stable Helm chart. Modify the Eghact application code to: 1. Establish a connection to the message broker. 2. Publish a message to a specific topic/exchange whenever a significant state change occurs. 3. Implement a consumer/subscriber that listens for relevant events from other services and updates its own state accordingly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test that triggers an action in the service, then asserts that a corresponding message is published to the message queue. Write a separate component test for the consumer logic that provides a mock message and verifies the application state is updated correctly."
           }
         ]
@@ -1306,10 +1333,65 @@
         "description": "Federated GraphQL gateway that auto-generates schemas from Eghact components and enables seamless data fetching across distributed services",
         "details": "",
         "testStrategy": "",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Apollo Federation Gateway Boilerplate",
+            "description": "Initialize a new Node.js project for the GraphQL gateway. Install and configure Apollo Server with the `@apollo/gateway` package to create a basic, non-functional federated gateway that can be built upon.",
+            "dependencies": [],
+            "details": "Use npm or yarn to initialize a new project. Install `apollo-server`, `graphql`, and `@apollo/gateway`. Create a main `index.js` file that instantiates `ApolloServer` with a new `ApolloGateway`. The initial `serviceList` for the gateway can be empty or contain a placeholder, as it will be made dynamic in a later step.",
+            "status": "done",
+            "testStrategy": "Start the server. It should run without crashing, although it will likely log an error about having no services to compose. This confirms the basic setup is correct."
+          },
+          {
+            "id": 2,
+            "title": "Implement Schema Discovery Logic for Eghact Components",
+            "description": "Create a mechanism that automatically discovers subgraph services (defined as 'Eghact components') and extracts their schemas. This logic will be responsible for dynamically building the `serviceList` required by the Apollo Gateway.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new module (e.g., `service-discovery.js`). The discovery strategy will be to scan a predefined directory (e.g., `./services`) for manifest files (e.g., `eghact.json`). Each manifest should contain the service's name and its running URL. The module will export a function that reads these manifests and returns a `serviceList` array (e.g., `[{ name: 'users', url: 'http://localhost:4001' }]`) compatible with `ApolloGateway`.",
+            "status": "done",
+            "testStrategy": "Write unit tests for the discovery module. Use a mock file system to simulate the presence of `eghact.json` files and assert that the function returns the correctly formatted `serviceList` array."
+          },
+          {
+            "id": 3,
+            "title": "Create a Sample Subgraph Service (Eghact Component)",
+            "description": "Build a standalone GraphQL service that acts as a single subgraph. This service will expose a simple schema (e.g., for 'Users') and conform to the 'Eghact component' structure by including a manifest file for discovery.",
+            "dependencies": [
+              1
+            ],
+            "details": "In a new subdirectory (e.g., `./services/users`), create a new Node.js project. Use `apollo-server` and `@apollo/subgraph` to build the service. Define a simple `User` type with fields like `id` and `username`. In the root of this service, create an `eghact.json` manifest file specifying its name and URL (e.g., `{\"name\": \"users\", \"url\": \"http://localhost:4001\"}`).",
+            "status": "done",
+            "testStrategy": "Run this subgraph service independently. Use a GraphQL client like Apollo Sandbox or Insomnia to send queries directly to it (e.g., to `http://localhost:4001`) and verify it returns correct data for its local schema."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Dynamic Subgraph Composition into Gateway",
+            "description": "Connect the schema discovery logic with the Apollo Gateway instance. The gateway should now dynamically discover the running sample subgraph service, compose its schema, and become fully operational.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "In the gateway's main `index.js` file, import and call the service discovery function from subtask 2. Pass the dynamically generated `serviceList` to the `ApolloGateway` constructor. The gateway will then poll the subgraph's URL to fetch its schema for composition.",
+            "status": "done",
+            "testStrategy": "Start the subgraph service from subtask 3, then start the gateway. Connect a GraphQL client to the gateway's port. Execute a query for a `User` and verify that the gateway correctly proxies the request to the subgraph and returns the data."
+          },
+          {
+            "id": 5,
+            "title": "Implement Cross-Service Data Fetching using Entities",
+            "description": "Demonstrate federation by creating a second subgraph that extends a type from the first. This will validate the gateway's ability to resolve a single query by fetching data from multiple distributed services.",
+            "dependencies": [
+              4
+            ],
+            "details": "1. In the 'Users' subgraph, update the `User` type to be an entity by adding the `@key(fields: \"id\")` directive. 2. Create a second subgraph service (e.g., 'Products') with its own schema and `eghact.json` manifest. 3. In the 'Products' schema, define a `Product` type that includes a field like `owner: User`. Extend the `User` type using `extend type User @key(fields: \"id\") { products: [Product] @external }`. 4. Ensure the gateway discovers both services.",
+            "status": "done",
+            "testStrategy": "Run both subgraphs and the gateway. Execute a query that requests a user's `username` (from the Users service) and their `products` (from the Products service) in a single operation. Verify the gateway correctly orchestrates the calls and returns the combined data."
+          }
+        ]
       },
       {
         "id": 40,
@@ -1358,7 +1440,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T06:10:55.828Z",
-      "updated": "2025-06-22T10:37:32.820Z",
+      "updated": "2025-06-22T11:09:41.636Z",
       "description": "Tasks for phase3 context"
     }
   }

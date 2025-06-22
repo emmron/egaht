@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eghact Pure Runtime Test</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    #app {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .counter {
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .metrics {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .todo-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .todo-input input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    li.completed span {
+      text-decoration: line-through;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Eghact Pure Runtime Test</h1>
+    <p>Testing the zero-dependency runtime...</p>
+    <div id="root"></div>
+    <div class="metrics" id="metrics">
+      Performance metrics will appear here...
+    </div>
+  </div>
+
+  <script type="module">
+    // Import the pure runtime - NO React, NO Node dependencies!
+    import { 
+      h, 
+      Component, 
+      createApp,
+      reactive,
+      effect,
+      computed,
+      useState,
+      useEffect,
+      wasmBenchmark
+    } from '../src/index.js';
+
+    // Test Component 1: Counter with hooks
+    function Counter({ title }) {
+      const [count, setCount] = useState(0);
+      const [step, setStep] = useState(1);
+      
+      useEffect(() => {
+        console.log(`Count changed to: ${count}`);
+        updateMetrics();
+      }, [count]);
+      
+      return h('div', { class: 'counter' }, [
+        h('h2', {}, title || 'Counter'),
+        h('h3', {}, `Count: ${count}`),
+        h('div', {}, [
+          h('button', { '@click': () => setCount(count - step) }, `-${step}`),
+          h('button', { '@click': () => setCount(0) }, 'Reset'),
+          h('button', { '@click': () => setCount(count + step) }, `+${step}`),
+        ]),
+        h('div', {}, [
+          h('label', {}, 'Step: '),
+          h('input', {
+            type: 'number',
+            value: step,
+            '@input': (e) => setStep(parseInt(e.target.value) || 1),
+            style: { width: '60px', marginLeft: '10px' }
+          })
+        ])
+      ]);
+    }
+
+    // Test Component 2: Todo List with reactive state
+    class TodoList extends Component {
+      constructor(props) {
+        super(props);
+        this.state = reactive({
+          todos: [],
+          inputValue: ''
+        });
+        
+        // Computed property
+        this.completedCount = computed(() => 
+          this.state.todos.filter(t => t.completed).length
+        );
+      }
+      
+      addTodo() {
+        if (this.state.inputValue.trim()) {
+          this.state.todos.push({
+            id: Date.now(),
+            text: this.state.inputValue,
+            completed: false
+          });
+          this.state.inputValue = '';
+          updateMetrics();
+        }
+      }
+      
+      toggleTodo(id) {
+        const todo = this.state.todos.find(t => t.id === id);
+        if (todo) {
+          todo.completed = !todo.completed;
+          updateMetrics();
+        }
+      }
+      
+      render() {
+        return h('div', {}, [
+          h('h2', {}, 'Todo List (Reactive)'),
+          h('div', { class: 'todo-input' }, [
+            h('input', {
+              type: 'text',
+              value: this.state.inputValue,
+              '@input': (e) => this.state.inputValue = e.target.value,
+              '@keydown': (e) => e.key === 'Enter' && this.addTodo(),
+              placeholder: 'Add a todo...'
+            }),
+            h('button', { '@click': () => this.addTodo() }, 'Add')
+          ]),
+          h('ul', {}, 
+            this.state.todos.map(todo => 
+              h('li', { 
+                key: todo.id,
+                class: todo.completed ? 'completed' : ''
+              }, [
+                h('input', {
+                  type: 'checkbox',
+                  checked: todo.completed,
+                  '@change': () => this.toggleTodo(todo.id)
+                }),
+                h('span', {}, todo.text)
+              ])
+            )
+          ),
+          h('p', {}, `Total: ${this.state.todos.length}, Completed: ${this.completedCount.value}`)
+        ]);
+      }
+    }
+
+    // Main App
+    class App extends Component {
+      render() {
+        return h('div', {}, [
+          h(Counter, { title: 'Test Counter' }),
+          h('hr', { style: { margin: '30px 0' } }),
+          h(TodoList, {})
+        ]);
+      }
+    }
+
+    // Performance metrics update
+    function updateMetrics() {
+      const metrics = document.getElementById('metrics');
+      const stats = {
+        'Runtime': 'Pure JavaScript (No React/Node)',
+        'WASM Status': wasmInstance ? 'Loaded' : 'Using JS Fallback',
+        'Components': document.querySelectorAll('[data-eghact-component]').length,
+        'DOM Nodes': document.getElementById('root').querySelectorAll('*').length,
+        'Memory': `${(performance.memory?.usedJSHeapSize / 1048576).toFixed(2) || 'N/A'} MB`
+      };
+      
+      metrics.innerHTML = '<strong>Performance Metrics:</strong><br>' +
+        Object.entries(stats).map(([k, v]) => `${k}: ${v}`).join('<br>');
+    }
+
+    // Initialize app
+    (async () => {
+      try {
+        console.log('Initializing Eghact Pure Runtime...');
+        const app = await createApp(App, document.getElementById('root'));
+        app.mount();
+        console.log('✓ App mounted successfully!');
+        
+        // Initial metrics
+        setTimeout(updateMetrics, 100);
+        
+        // Test WASM performance if available
+        if (window.wasmBenchmark) {
+          const timerId = wasmBenchmark.startTimer('app-init');
+          setTimeout(() => {
+            const duration = wasmBenchmark.endTimer(timerId);
+            console.log(`App initialization took: ${duration.toFixed(2)}ms`);
+          }, 0);
+        }
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        document.getElementById('root').innerHTML = `
+          <div style="color: red; padding: 20px;">
+            Error: ${error.message}<br>
+            <small>Check console for details</small>
+          </div>
+        `;
+      }
+    })();
+
+    // Expose for debugging
+    window.EghactRuntime = {
+      h, Component, reactive, effect, computed
+    };
+  </script>
+</body>
+</html>

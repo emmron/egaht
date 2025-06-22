@@ -1,0 +1,292 @@
+// Advanced Todo App showcasing EGH syntax features
+
+component TodoApp {
+  // Reactive state with ~
+  ~todos = []
+  ~filter = 'all'
+  ~inputValue = ''
+  ~editingId = null
+  ~theme = 'light'
+  
+  // Computed values with =>
+  activeTodos => todos.filter(t => !t.completed)
+  completedTodos => todos.filter(t => t.completed)
+  
+  filteredTodos => match filter {
+    'all' -> todos
+    'active' -> activeTodos
+    'completed' -> completedTodos
+  }
+  
+  allCompleted => todos.length > 0 && activeTodos.length === 0
+  
+  // Effects with ::
+  theme :: {
+    document.body.className = theme
+    localStorage.setItem('theme', theme)
+  }
+  
+  todos :: {
+    localStorage.setItem('todos', JSON.stringify(todos))
+  }
+  
+  // Methods
+  addTodo() => {
+    if (inputValue.trim()) {
+      todos.push({
+        id: Date.now(),
+        text: inputValue,
+        completed: false
+      })
+      inputValue = ''
+    }
+  }
+  
+  toggleTodo(id) => {
+    const todo = todos.find(t => t.id === id)
+    if (todo) todo.completed = !todo.completed
+  }
+  
+  deleteTodo(id) => {
+    todos = todos.filter(t => t.id !== id)
+  }
+  
+  toggleAll() => {
+    const shouldComplete = activeTodos.length > 0
+    todos.forEach(todo => todo.completed = shouldComplete)
+  }
+  
+  clearCompleted() => {
+    todos = activeTodos
+  }
+  
+  // Template with visual layout
+  <[
+    @animate(fade-in, 300ms) {
+      layer {
+        @top-right {
+          button(@click: theme = theme === 'light' ? 'dark' : 'light') {
+            ?theme === 'light' { "🌙" } : { "☀️" }
+          }
+        }
+        
+        @center {
+          column {
+            $maxWidth: 600px
+            $margin: '0 auto'
+            $padding: 2rem
+            
+            h1 {
+              $textAlign: center
+              $fontSize: 3rem
+              $color: primary
+              "todos"
+            }
+            
+            // Input section with two-way binding
+            row {
+              $background: white
+              $borderRadius: 8px
+              $padding: 1rem
+              $boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              
+              checkbox(
+                checked: allCompleted,
+                @change: toggleAll
+              )
+              
+              input <~> inputValue {
+                $flex: 1
+                $border: none
+                $outline: none
+                $fontSize: 1.2rem
+                @keydown: e => e.key === 'Enter' && addTodo()
+                placeholder: "What needs to be done?"
+              }
+            }
+            
+            // Todo list with reactive loop
+            ?todos.length > 0 {
+              column {
+                $marginTop: 2rem
+                
+                // Filter buttons
+                row {
+                  $justifyContent: center
+                  $gap: 1rem
+                  $marginBottom: 1rem
+                  
+                  *~['all', 'active', 'completed'] as filterType {
+                    button(
+                      @click: filter = filterType,
+                      $variant: filter === filterType ? 'primary' : 'ghost'
+                    ) {
+                      filterType |> capitalize
+                    }
+                  }
+                }
+                
+                // Todo items with animations
+                @virtual(height: 60) {
+                  *~filteredTodos as todo {
+                    @animate(slide-in, 200ms) {
+                      TodoItem(
+                        todo,
+                        editing: editingId === todo.id,
+                        onToggle: () => toggleTodo(todo.id),
+                        onDelete: () => deleteTodo(todo.id),
+                        onEdit: () => editingId = todo.id,
+                        onSave: (text) => {
+                          todo.text = text
+                          editingId = null
+                        }
+                      )
+                    }
+                  }
+                }
+                
+                // Footer
+                row {
+                  $justifyContent: 'space-between'
+                  $alignItems: center
+                  $marginTop: 1rem
+                  $padding: '0.5rem 1rem'
+                  $fontSize: 0.875rem
+                  $color: textSecondary
+                  
+                  span { activeTodos.length + " item" + (activeTodos.length !== 1 ? "s" : "") + " left" }
+                  
+                  ?completedTodos.length > 0 {
+                    button(
+                      @click: clearCompleted,
+                      $variant: 'ghost'
+                    ) {
+                      "Clear completed"
+                    }
+                  }
+                }
+              }
+            }
+            
+            // Empty state
+            ?todos.length === 0 {
+              @animate(fade-in, 500ms) {
+                column {
+                  $alignItems: center
+                  $marginTop: 4rem
+                  $opacity: 0.5
+                  
+                  span {
+                    $fontSize: 4rem
+                    "📝"
+                  }
+                  
+                  p {
+                    $marginTop: 1rem
+                    "No todos yet. Add one above!"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]>
+}
+
+// Sub-component for todo items
+component TodoItem(todo, editing, onToggle, onDelete, onEdit, onSave) {
+  ~editText = todo.text
+  
+  <[
+    row {
+      $alignItems: center
+      $padding: '0.75rem 1rem'
+      $borderBottom: '1px solid #eee'
+      $hover: { background: '#f5f5f5' }
+      
+      ?!editing {
+        checkbox(
+          checked: todo.completed,
+          @change: onToggle
+        )
+        
+        span {
+          $flex: 1
+          $textDecoration: todo.completed ? 'line-through' : 'none'
+          $color: todo.completed ? '#999' : 'inherit'
+          $cursor: 'pointer'
+          @dblclick: onEdit
+          
+          todo.text
+        }
+        
+        button(
+          @click: onDelete,
+          $variant: 'ghost'
+          $color: 'danger'
+        ) {
+          "×"
+        }
+      } : {
+        input <~> editText {
+          $flex: 1
+          $padding: '0.5rem'
+          $fontSize: 'inherit'
+          @keydown: e => {
+            if (e.key === 'Enter') onSave(editText)
+            if (e.key === 'Escape') {
+              editText = todo.text
+              onSave(todo.text)
+            }
+          }
+          @blur: () => onSave(editText)
+          autofocus: true
+        }
+      }
+    }
+  ]>
+}
+
+// AI-powered feature suggestion
+@ai component FeatureSuggestion {
+  description: "Suggest new features based on user's todo patterns"
+  data: { todos, userBehavior }
+  style: "minimal, helpful assistant"
+}
+
+// Styles using EGH style blocks
+styles TodoStyles {
+  :root {
+    --primary: #4a90e2
+    --danger: #e74c3c
+    --text-primary: #333
+    --text-secondary: #999
+    --bg-primary: #fff
+    --bg-secondary: #f5f5f5
+  }
+  
+  .dark {
+    --text-primary: #fff
+    --text-secondary: #aaa
+    --bg-primary: #1a1a1a
+    --bg-secondary: #2a2a2a
+  }
+  
+  @keyframes fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+  }
+  
+  @keyframes slide-in {
+    from { 
+      opacity: 0
+      transform: translateY(-10px)
+    }
+    to {
+      opacity: 1
+      transform: translateY(0)
+    }
+  }
+}

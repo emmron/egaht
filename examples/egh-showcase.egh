@@ -1,0 +1,391 @@
+// EGH Syntax Showcase - Demonstrating all language features
+
+import { api } from './services/api'
+import { User, Product } from './types'
+
+// Type definitions in EGH
+type CartItem {
+  product: Product
+  quantity: number
+  selected: boolean
+}
+
+// Main shopping component
+component ShoppingApp {
+  // Reactive state
+  ~user = null
+  ~products = []
+  ~cart = []
+  ~searchQuery = ''
+  ~loading = false
+  ~view = 'grid' // 'grid' | 'list' | 'table'
+  
+  // Computed properties
+  cartTotal => cart
+    .filter(item => item.selected)
+    .reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  
+  cartCount => cart.reduce((sum, item) => sum + item.quantity, 0)
+  
+  searchResults => products.filter(p => 
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.description.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  
+  // Effects
+  searchQuery :: {
+    if (searchQuery.length > 2) {
+      loading = true
+      products = await api.searchProducts(searchQuery)
+      loading = false
+    }
+  }
+  
+  // Async data with lazy loading
+  ?~user {
+    loading: UserSkeleton {}
+    error: ErrorMessage { message: "Failed to load user" }
+    data: UserProfile { user: data }
+  }
+  
+  // Pipeline for search
+  searchProducts => searchQuery
+    |> debounce(300)
+    |> filter(q => q.length > 2)
+    |> async api.searchProducts
+    => products
+  
+  // Template with advanced layouts
+  <[
+    layer {
+      @top {
+        Header { 
+          user, 
+          cartCount,
+          onLogout: () => user = null 
+        }
+      }
+      
+      @left {
+        #expensive {
+          Sidebar { 
+            categories: getCategories(products),
+            onSelect: (cat) => filterByCategory(cat)
+          }
+        }
+      }
+      
+      @center {
+        column {
+          // Search with two-way binding
+          row {
+            $padding: 1rem
+            $background: white
+            $boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            
+            input <~> searchQuery {
+              $flex: 1
+              placeholder: "Search products..."
+              @keydown: (e) => e.key === 'Escape' && (searchQuery = '')
+            }
+            
+            // View switcher
+            row {
+              *~['grid', 'list', 'table'] as mode {
+                button(
+                  @click: view = mode,
+                  $active: view === mode
+                ) {
+                  match mode {
+                    'grid' -> "⊞"
+                    'list' -> "☰"
+                    'table' -> "⊟"
+                  }
+                }
+              }
+            }
+          }
+          
+          // Products display with transitions
+          @transition(view, morph) {
+            'grid' -> ProductGrid { products: searchResults }
+            'list' -> ProductList { products: searchResults }
+            'table' -> ProductTable { products: searchResults }
+          }
+          
+          // Loading overlay
+          ?loading {
+            @animate(pulse, 1s, infinite) {
+              layer {
+                @center {
+                  Spinner { size: 'large' }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      @right {
+        Cart {
+          items: cart,
+          total: cartTotal,
+          onCheckout: () => processCheckout()
+        }
+      }
+    }
+  ]>
+}
+
+// Product grid with virtualization
+component ProductGrid(products) {
+  <[
+    grid(4x*) {
+      $gap: 1rem
+      $padding: 1rem
+      
+      @virtual(height: 300) {
+        *~products as product, index {
+          @animate(fade-slide-up, 200ms, delay: index * 50ms) {
+            ProductCard { 
+              product,
+              onAddToCart: () => addToCart(product)
+            }
+          }
+        }
+      }
+    }
+  ]>
+}
+
+// Product card with hover effects
+component ProductCard(product, onAddToCart) {
+  ~hovering = false
+  ~imageLoaded = false
+  
+  <[
+    column {
+      $background: white
+      $borderRadius: 8px
+      $overflow: hidden
+      $transition: 'all 0.3s ease'
+      $transform: hovering ? 'scale(1.05)' : 'scale(1)'
+      $boxShadow: hovering ? '0 8px 16px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.1)'
+      @mouseenter: hovering = true
+      @mouseleave: hovering = false
+      
+      // Lazy loaded image
+      div {
+        $height: 200px
+        $overflow: hidden
+        
+        ?~product.imageUrl {
+          loading: ImageSkeleton {}
+          error: div { "🖼️" }
+          data: img {
+            src: data
+            alt: product.name
+            @load: imageLoaded = true
+            $opacity: imageLoaded ? 1 : 0
+            $transition: 'opacity 0.3s'
+          }
+        }
+      }
+      
+      column {
+        $padding: 1rem
+        $gap: 0.5rem
+        
+        h3 { product.name }
+        p {
+          $color: '#666'
+          $fontSize: 0.875rem
+          product.description
+        }
+        
+        row {
+          $justifyContent: 'space-between'
+          $alignItems: center
+          
+          span {
+            $fontSize: 1.5rem
+            $fontWeight: bold
+            "$" + product.price
+          }
+          
+          button(
+            @click: onAddToCart,
+            $variant: 'primary'
+          ) {
+            "Add to Cart"
+          }
+        }
+      }
+    }
+  ]>
+}
+
+// AI-powered recommendations
+@ai component ProductRecommendations {
+  description: "Show personalized product recommendations based on user history and cart"
+  data: { userHistory, currentCart, allProducts }
+  style: "modern e-commerce, card-based layout"
+  behavior: "Update in real-time as cart changes"
+}
+
+// Complex form with validation
+component CheckoutForm {
+  ~formData = {
+    email: '',
+    shipping: {
+      name: '',
+      address: '',
+      city: '',
+      zip: ''
+    },
+    payment: {
+      cardNumber: '',
+      expiry: '',
+      cvv: ''
+    }
+  }
+  
+  ~errors = {}
+  ~submitting = false
+  
+  // Validation rules
+  validate => {
+    errors = {}
+    
+    if (!formData.email.includes('@')) {
+      errors.email = 'Invalid email'
+    }
+    
+    if (formData.shipping.zip.length !== 5) {
+      errors.zip = 'ZIP must be 5 digits'
+    }
+    
+    // More validation...
+    
+    return Object.keys(errors).length === 0
+  }
+  
+  // Form submission
+  async submit() {
+    if (!validate()) return
+    
+    submitting = true
+    try {
+      await api.processOrder(formData)
+      showSuccess()
+    } catch (error) {
+      errors.submit = error.message
+    } finally {
+      submitting = false
+    }
+  }
+  
+  <[
+    form(@submit: e => { e.preventDefault(); submit() }) {
+      column {
+        $gap: 2rem
+        
+        // Email section
+        section {
+          h3 { "Contact Information" }
+          
+          input <~> formData.email {
+            type: 'email'
+            placeholder: 'Email address'
+            $error: errors.email
+          }
+          
+          ?errors.email {
+            span.error { errors.email }
+          }
+        }
+        
+        // Shipping section
+        section {
+          h3 { "Shipping Address" }
+          
+          grid(2x2) {
+            $gap: 1rem
+            
+            input <~> formData.shipping.name {
+              placeholder: 'Full name'
+              $gridColumn: '1 / -1'
+            }
+            
+            input <~> formData.shipping.address {
+              placeholder: 'Address'
+              $gridColumn: '1 / -1'
+            }
+            
+            input <~> formData.shipping.city {
+              placeholder: 'City'
+            }
+            
+            input <~> formData.shipping.zip {
+              placeholder: 'ZIP'
+              pattern: '[0-9]{5}'
+              $error: errors.zip
+            }
+          }
+        }
+        
+        // Payment with PCI compliance
+        @worker {
+          PaymentFields {
+            onTokenize: (token) => formData.paymentToken = token
+          }
+        }
+        
+        // Submit button
+        button(
+          type: 'submit',
+          $variant: 'primary',
+          $loading: submitting,
+          disabled: submitting
+        ) {
+          submitting ? "Processing..." : "Complete Order"
+        }
+      }
+    }
+  ]>
+}
+
+// Performance monitoring
+@monitor component PerformanceDebugger {
+  metrics: ['renderTime', 'componentCount', 'memoryUsage']
+  threshold: { renderTime: 16, memoryUsage: 50 }
+  position: 'bottom-right'
+}
+
+// Styles with theme support
+styles ShoppingStyles {
+  @theme light {
+    --primary: #007bff
+    --background: #ffffff
+    --text: #333333
+  }
+  
+  @theme dark {
+    --primary: #4a90e2
+    --background: #1a1a1a
+    --text: #ffffff
+  }
+  
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr !important
+    }
+  }
+  
+  @supports (backdrop-filter: blur(10px)) {
+    .overlay {
+      backdrop-filter: blur(10px)
+      background: rgba(0, 0, 0, 0.5)
+    }
+  }
+}

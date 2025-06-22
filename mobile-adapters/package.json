@@ -1,0 +1,22 @@
+{
+  "name": "@eghact/mobile-adapters",
+  "version": "0.1.0",
+  "description": "Mobile platform adapters for Eghact framework - React Native, Flutter, and PWA support",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

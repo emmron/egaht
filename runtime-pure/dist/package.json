@@ -1,0 +1,21 @@
+{
+  "name": "@eghact/runtime",
+  "version": "1.0.0",
+  "description": "Pure Eghact runtime - zero dependencies",
+  "type": "module",
+  "main": "./eghact-runtime.js",
+  "module": "./eghact-runtime.js",
+  "browser": "./eghact-runtime.js",
+  "exports": {
+    ".": {
+      "import": "./eghact-runtime.js",
+      "require": "./eghact-runtime.iife.js",
+      "default": "./eghact-runtime.js"
+    },
+    "./dev": "./eghact-runtime.dev.js"
+  },
+  "files": [
+    "*"
+  ],
+  "sideEffects": false
+}

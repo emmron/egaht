@@ -1,0 +1,82 @@
+// Simple counter showcasing EGH basic syntax
+
+component Counter {
+  // Reactive state
+  ~count = 0
+  ~step = 1
+  
+  // Computed values
+  doubled => count * 2
+  isEven => count % 2 === 0
+  message => match {
+    count < 0 -> "Going negative!"
+    count === 0 -> "Click to start"
+    count < 10 -> "Keep going..."
+    count < 50 -> "Nice progress!"
+    _ -> "Wow, that's high!"
+  }
+  
+  // Effects
+  count :: {
+    console.log("Count is now:", count)
+  }
+  
+  // Template
+  <[
+    column {
+      $alignItems: center
+      $gap: 1rem
+      $padding: 2rem
+      
+      h1 { "Counter Example" }
+      
+      // Display with conditional styling
+      h2 {
+        $color: isEven ? 'blue' : 'red'
+        $fontSize: 3rem
+        count
+      }
+      
+      p { message }
+      
+      row {
+        $gap: 0.5rem
+        
+        button(@click: count -= step) { "-" + step }
+        button(@click: count = 0) { "Reset" }
+        button(@click: count += step) { "+" + step }
+      }
+      
+      // Step control
+      row {
+        $alignItems: center
+        $gap: 0.5rem
+        
+        label { "Step:" }
+        input <~> step {
+          type: 'number'
+          min: 1
+          max: 10
+          $width: 60px
+        }
+      }
+      
+      // Fun facts
+      ?count > 0 {
+        column {
+          $marginTop: 2rem
+          $padding: 1rem
+          $background: '#f0f0f0'
+          $borderRadius: 8px
+          
+          h3 { "Fun Facts:" }
+          ul {
+            li { "Doubled: " + doubled }
+            li { isEven ? "It's even!" : "It's odd!" }
+            li { "Clicks away from 100: " + (100 - count) }
+          }
+        }
+      }
+    }
+  ]>
+}

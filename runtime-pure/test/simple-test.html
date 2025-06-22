@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Eghact Runtime - Simple Test</title>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="module">
+    import { h, Component, createApp } from '../src/index.js';
+    
+    class TestApp extends Component {
+      render() {
+        return h('div', {}, [
+          h('h1', {}, 'Eghact Works!'),
+          h('p', {}, 'Pure runtime without React or Node.js')
+        ]);
+      }
+    }
+    
+    createApp(TestApp, document.getElementById('root')).then(app => {
+      app.mount();
+      console.log('App mounted!');
+    });
+  </script>
+</body>
+</html>

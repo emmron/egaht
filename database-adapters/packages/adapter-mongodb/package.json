@@ -1,0 +1,21 @@
+{
+  "name": "@eghact/db-adapter-mongodb",
+  "version": "0.1.0",
+  "description": "MongoDB adapter for Eghact database layer",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@eghact/db-adapter-core": "workspace:*",
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  }
+}

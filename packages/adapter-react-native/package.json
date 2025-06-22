@@ -1,0 +1,31 @@
+{
+  "name": "@eghact/adapter-react-native",
+  "version": "1.0.0",
+  "description": "React Native adapter for Eghact framework",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@eghact/adapter-core": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-gesture-handler": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.45",
+    "@types/react-native": "^0.72.8",
+    "typescript": "^5.3.3"
+  }
+}

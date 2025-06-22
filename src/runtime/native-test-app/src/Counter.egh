@@ -1,0 +1,31 @@
+<template>
+  <div class="counter">
+    <button @click="count--">-</button>
+    <span>{{ count }}</span>
+    <button @click="count++">+</button>
+  </div>
+</template>
+
+<script>
+export default {
+  state: {
+    count: 0
+  }
+};
+</script>
+
+<style>
+.counter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+</style>

@@ -1,0 +1,39 @@
+{
+  "name": "@eghact/compiler",
+  "version": "1.0.0",
+  "description": "Eghact Hyperlanguage (EGH) Compiler",
+  "type": "module",
+  "main": "src/compiler.js",
+  "bin": {
+    "eghc": "./cli.js"
+  },
+  "exports": {
+    ".": "./src/compiler.js",
+    "./tokenizer": "./src/tokenizer.js",
+    "./parser": "./src/parser.js",
+    "./transformer": "./src/transformer.js"
+  },
+  "scripts": {
+    "test": "node test/test-compiler.js",
+    "example": "node cli.js compile examples dist"
+  },
+  "keywords": [
+    "eghact",
+    "compiler",
+    "egh",
+    "hyperlanguage",
+    "template",
+    "reactive"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "commander": "^10.0.0",
+    "chalk": "^5.2.0",
+    "chokidar": "^3.5.3"
+  },
+  "devDependencies": {}
+}

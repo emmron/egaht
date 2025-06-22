@@ -1,0 +1,10 @@
+{
+  "name": "production-ready-app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "eghact dev",
+    "build": "eghact build",
+    "preview": "eghact preview"
+  }
+}

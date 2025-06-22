@@ -1,0 +1,32 @@
+{
+  "name": "@eghact/runtime-pure",
+  "version": "1.0.0",
+  "description": "Pure Eghact runtime with zero Node/React dependencies",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./vdom": "./src/core/vdom.js",
+    "./renderer": "./src/core/renderer.js",
+    "./reactive": "./src/core/reactive.js",
+    "./component": "./src/core/component.js",
+    "./wasm": "./src/wasm-bridge.js"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "build:wasm": "./build-wasm.sh",
+    "test": "node test-runner.js",
+    "bench": "node test/benchmark.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/",
+    "src/",
+    "wasm/"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@eghact/adapter-core",
+  "version": "1.0.0",
+  "description": "Core interfaces and base implementations for Eghact mobile adapters",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "eghact",
+    "mobile",
+    "adapter",
+    "react-native",
+    "flutter",
+    "pwa"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/jest": "^29.5.11",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "rollup": "^4.9.2",
+    "ts-jest": "^29.1.1",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "eghact": "*"
+  }
+}

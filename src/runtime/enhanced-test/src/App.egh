@@ -1,0 +1,23 @@
+<template>
+  <div class="app">
+    <h1>Welcome to Eghact!</h1>
+    <p>Edit src/App.egh to get started</p>
+    <Counter />
+  </div>
+</template>
+
+<script>
+import Counter from './Counter.egh';
+
+export default {
+  components: { Counter }
+};
+</script>
+
+<style>
+.app {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 2rem;
+}
+</style>

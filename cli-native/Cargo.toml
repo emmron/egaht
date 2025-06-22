@@ -1,0 +1,60 @@
+[package]
+name = "eghact-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "eghact"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive", "color", "suggestions"] }
+tokio = { version = "1.35", features = ["full"] }
+colored = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+walkdir = "2.4"
+notify = "6.1"
+tempfile = "3.8"
+which = "5.0"
+indicatif = "0.17"
+dialoguer = "0.11"
+reqwest = { version = "0.11", features = ["json"] }
+zip = "0.6"
+flate2 = "1.0"
+tar = "0.4"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# HTTP server
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors", "compression"] }
+mime_guess = "2.0"
+
+# WebSocket support
+tokio-tungstenite = "0.21"
+futures-util = "0.3"
+
+# File watching
+notify-debouncer-mini = "0.4"
+
+# Performance
+rayon = "1.8"
+dashmap = "5.5"
+parking_lot = "0.12"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
+
+[build-dependencies]
+cc = "1.0"

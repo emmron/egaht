@@ -1,0 +1,337 @@
+<script>
+  import { onMount, createSignal } from '@eghact/core'
+  import CodeIsland from './code-island.egh'
+  import StoryRenderer from './story-renderer.egh'
+  import ComponentTree from './component-tree.egh'
+  import ControlPanel from './control-panel.egh'
+  
+  // Story discovery
+  let [stories, setStories] = createSignal([])
+  let [selectedStory, setSelectedStory] = createSignal(null)
+  let [storyArgs, setStoryArgs] = createSignal({})
+  let [viewMode, setViewMode] = createSignal('canvas') // canvas | docs | both
+  
+  onMount(async () => {
+    // Discover all *.story.egh files
+    const response = await fetch('/api/stories')
+    const discoveredStories = await response.json()
+    setStories(discoveredStories)
+    
+    // Select first story by default
+    if (discoveredStories.length > 0) {
+      selectStory(discoveredStories[0])
+    }
+    
+    // Setup HMR for live updates
+    setupHMR()
+  })
+  
+  function setupHMR() {
+    const ws = new WebSocket('ws://localhost:3001/hmr')
+    
+    ws.onmessage = (event) => {
+      const { type, path, content } = JSON.parse(event.data)
+      
+      if (type === 'story-update') {
+        // Hot reload the story
+        reloadStory(path, content)
+      }
+    }
+  }
+  
+  function selectStory(story) {
+    setSelectedStory(story)
+    setStoryArgs(story.defaultArgs || {})
+  }
+  
+  function updateArg(name, value) {
+    setStoryArgs(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+  
+  async function reloadStory(path, content) {
+    // Re-compile and update story
+    const response = await fetch('/api/compile-story', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, content })
+    })
+    
+    const updatedStory = await response.json()
+    
+    // Update stories list
+    setStories(prev => prev.map(s => 
+      s.path === path ? updatedStory : s
+    ))
+    
+    // Update selected if current
+    if (selectedStory()?.path === path) {
+      setSelectedStory(updatedStory)
+    }
+  }
+  
+  $: sidebarClass = viewMode() === 'docs' ? 'sidebar-wide' : 'sidebar'
+</script>
+
+<template>
+  <div class="playground-app">
+    <header class="playground-header">
+      <h1>🎮 Eghact Playground</h1>
+      <div class="view-mode-toggle">
+        <button 
+          class:active={viewMode() === 'canvas'}
+          @click={() => setViewMode('canvas')}
+        >
+          Canvas
+        </button>
+        <button 
+          class:active={viewMode() === 'docs'}
+          @click={() => setViewMode('docs')}
+        >
+          Docs
+        </button>
+        <button 
+          class:active={viewMode() === 'both'}
+          @click={() => setViewMode('both')}
+        >
+          Both
+        </button>
+      </div>
+    </header>
+    
+    <div class="playground-body">
+      <aside class={sidebarClass}>
+        <ComponentTree 
+          stories={stories()} 
+          selected={selectedStory()}
+          onSelect={selectStory}
+        />
+      </aside>
+      
+      <main class="playground-main">
+        {#if viewMode() === 'canvas' || viewMode() === 'both'}
+          <section class="canvas-section">
+            <div class="canvas-toolbar">
+              <select class="viewport-selector">
+                <option value="responsive">Responsive</option>
+                <option value="mobile">Mobile (375px)</option>
+                <option value="tablet">Tablet (768px)</option>
+                <option value="desktop">Desktop (1024px)</option>
+              </select>
+              <button class="refresh-btn" @click={() => reloadStory(selectedStory().path)}>
+                🔄 Refresh
+              </button>
+            </div>
+            
+            {#if selectedStory()}
+              <StoryRenderer 
+                story={selectedStory()}
+                args={storyArgs()}
+              />
+            {:else}
+              <div class="empty-state">
+                Select a story from the sidebar
+              </div>
+            {/if}
+          </section>
+        {/if}
+        
+        {#if viewMode() === 'docs' || viewMode() === 'both'}
+          <section class="docs-section">
+            {#if selectedStory()}
+              <h2>{selectedStory().meta.title}</h2>
+              
+              {#if selectedStory().meta.description}
+                <p class="story-description">{selectedStory().meta.description}</p>
+              {/if}
+              
+              <h3>Live Code Example</h3>
+              <CodeIsland 
+                code={selectedStory().source}
+                language="eghact"
+                editable={true}
+                height="300px"
+              />
+              
+              <h3>Usage</h3>
+              <CodeIsland 
+                code={generateUsageExample(selectedStory())}
+                language="javascript"
+                editable={false}
+                height="150px"
+              />
+            {/if}
+          </section>
+        {/if}
+      </main>
+      
+      {#if selectedStory() && (viewMode() === 'canvas' || viewMode() === 'both')}
+        <aside class="controls-panel">
+          <ControlPanel 
+            story={selectedStory()}
+            args={storyArgs()}
+            onUpdate={updateArg}
+          />
+        </aside>
+      {/if}
+    </div>
+  </div>
+</template>
+
+<style>
+  .playground-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
+  
+  .playground-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .playground-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .view-mode-toggle {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--surface-color);
+    padding: 0.25rem;
+    border-radius: 8px;
+  }
+  
+  .view-mode-toggle button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .view-mode-toggle button.active {
+    background: var(--primary-color);
+    color: white;
+  }
+  
+  .playground-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+  }
+  
+  .sidebar-wide {
+    width: 320px;
+  }
+  
+  .playground-main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  
+  .canvas-section,
+  .docs-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .canvas-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .viewport-selector {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: white;
+  }
+  
+  .refresh-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+  }
+  
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 1.125rem;
+  }
+  
+  .docs-section {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .story-description {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 1rem 0 2rem;
+  }
+  
+  .controls-panel {
+    width: 300px;
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--border-color);
+    overflow-y: auto;
+  }
+  
+  /* Theme variables */
+  :root {
+    --bg-color: #fafafa;
+    --text-color: #1a1a1a;
+    --text-muted: #666;
+    --header-bg: #ffffff;
+    --sidebar-bg: #f5f5f5;
+    --surface-color: #ffffff;
+    --border-color: #e0e0e0;
+    --primary-color: #6366f1;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-color: #0a0a0a;
+      --text-color: #fafafa;
+      --text-muted: #a0a0a0;
+      --header-bg: #1a1a1a;
+      --sidebar-bg: #141414;
+      --surface-color: #1a1a1a;
+      --border-color: #333;
+    }
+  }
+</style>

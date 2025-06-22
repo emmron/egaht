@@ -1,0 +1,227 @@
+<script>
+  import { onMount, createSignal } from '@eghact/core'
+  import { EditorView, basicSetup } from 'codemirror'
+  import { javascript } from '@codemirror/lang-javascript'
+  import { oneDark } from '@codemirror/theme-one-dark'
+  
+  export let code = ''
+  export let language = 'javascript'
+  export let theme = 'dark'
+  export let editable = true
+  export let showLineNumbers = true
+  export let height = '400px'
+  
+  let editorContainer
+  let editor
+  let [compiledCode, setCompiledCode] = createSignal('')
+  let [error, setError] = createSignal(null)
+  
+  onMount(() => {
+    // Initialize CodeMirror
+    editor = new EditorView({
+      doc: code,
+      extensions: [
+        basicSetup,
+        javascript(),
+        theme === 'dark' ? oneDark : [],
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged && editable) {
+            handleCodeChange(update.state.doc.toString())
+          }
+        }),
+        EditorView.editable.of(editable),
+        EditorView.lineWrapping,
+      ],
+      parent: editorContainer
+    })
+    
+    // Initial compilation
+    compileCode(code)
+  })
+  
+  async function compileCode(source) {
+    try {
+      setError(null)
+      
+      // Call Eghact compiler
+      const response = await fetch('/api/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          source, 
+          type: language === 'eghact' ? 'component' : 'script' 
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      
+      const { output } = await response.json()
+      setCompiledCode(output)
+      
+      // Execute in sandboxed iframe
+      if (language === 'javascript') {
+        executeInSandbox(output)
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+  
+  function executeInSandbox(code) {
+    const sandbox = document.createElement('iframe')
+    sandbox.style.display = 'none'
+    sandbox.sandbox = 'allow-scripts'
+    document.body.appendChild(sandbox)
+    
+    try {
+      sandbox.contentWindow.eval(code)
+    } catch (err) {
+      setError(`Runtime error: ${err.message}`)
+    } finally {
+      document.body.removeChild(sandbox)
+    }
+  }
+  
+  function handleCodeChange(newCode) {
+    code = newCode
+    compileCode(newCode)
+  }
+  
+  $: editorStyles = `
+    height: ${height};
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+  `
+</script>
+
+<template>
+  <div class="code-island">
+    <div class="code-island-header">
+      <span class="language-badge">{language}</span>
+      {#if editable}
+        <span class="editable-badge">Editable</span>
+      {/if}
+    </div>
+    
+    <div 
+      bind:this={editorContainer} 
+      class="editor-container"
+      style={editorStyles}
+    />
+    
+    {#if error}
+      <div class="error-panel">
+        <span class="error-icon">⚠️</span>
+        <pre>{error}</pre>
+      </div>
+    {/if}
+    
+    {#if compiledCode && language === 'eghact'}
+      <div class="preview-panel">
+        <div class="preview-header">Preview</div>
+        <div class="preview-content" id="preview-{Math.random()}">
+          <!-- Compiled component renders here -->
+        </div>
+      </div>
+    {/if}
+  </div>
+</template>
+
+<style>
+  .code-island {
+    margin: 1rem 0;
+    background: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .code-island-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .language-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  
+  .editable-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--success-color);
+    color: white;
+    border-radius: 4px;
+  }
+  
+  .editor-container {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+  }
+  
+  .error-panel {
+    padding: 1rem;
+    background: var(--error-bg);
+    color: var(--error-color);
+    border-top: 1px solid var(--error-border);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .error-panel pre {
+    margin: 0;
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+  }
+  
+  .preview-panel {
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .preview-header {
+    padding: 0.75rem 1rem;
+    background: var(--surface-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .preview-content {
+    padding: 2rem;
+    min-height: 200px;
+  }
+  
+  /* CSS Variables for theming */
+  :root {
+    --surface-color: #ffffff;
+    --surface-secondary: #f5f5f5;
+    --border-color: #e0e0e0;
+    --primary-color: #6366f1;
+    --success-color: #10b981;
+    --error-bg: #fef2f2;
+    --error-color: #dc2626;
+    --error-border: #fca5a5;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-color: #1a1a1a;
+      --surface-secondary: #262626;
+      --border-color: #404040;
+      --error-bg: #450a0a;
+      --error-border: #dc2626;
+    }
+  }
+</style>

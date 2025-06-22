@@ -1,0 +1,136 @@
+{
+  "Component": {
+    "prefix": "comp",
+    "body": [
+      "component ${1:ComponentName} {",
+      "  ~${2:state} = ${3:initialValue}",
+      "  ",
+      "  ${4:computed} => ${5:expression}",
+      "  ",
+      "  <[",
+      "    ${6:div} {",
+      "      $0",
+      "    }",
+      "  ]>",
+      "}"
+    ],
+    "description": "Create a new EGH component"
+  },
+  "Reactive State": {
+    "prefix": "state",
+    "body": "~${1:name} = ${2:value}",
+    "description": "Declare reactive state"
+  },
+  "Computed Value": {
+    "prefix": "comp",
+    "body": "${1:name} => ${2:expression}",
+    "description": "Create computed value"
+  },
+  "Effect": {
+    "prefix": "effect",
+    "body": [
+      "${1:dependency} :: {",
+      "  ${2:// side effect code}",
+      "}"
+    ],
+    "description": "Create reactive effect"
+  },
+  "Two-way Binding": {
+    "prefix": "bind",
+    "body": "input <~> ${1:variable}",
+    "description": "Two-way data binding"
+  },
+  "Conditional": {
+    "prefix": "if",
+    "body": [
+      "?${1:condition} {",
+      "  ${2:// true branch}",
+      "} : {",
+      "  ${3:// false branch}",
+      "}"
+    ],
+    "description": "Conditional rendering"
+  },
+  "Reactive Loop": {
+    "prefix": "for",
+    "body": [
+      "*~${1:items} as ${2:item} {",
+      "  ${3:li} { ${2:item}.$0 }",
+      "}"
+    ],
+    "description": "Reactive loop"
+  },
+  "Row Layout": {
+    "prefix": "row",
+    "body": [
+      "row {",
+      "  $0",
+      "}"
+    ],
+    "description": "Horizontal layout"
+  },
+  "Column Layout": {
+    "prefix": "col",
+    "body": [
+      "column {",
+      "  $0",
+      "}"
+    ],
+    "description": "Vertical layout"
+  },
+  "Event Handler": {
+    "prefix": "on",
+    "body": "@${1:click}: ${2:handler}",
+    "description": "Event handler"
+  },
+  "Style Property": {
+    "prefix": "style",
+    "body": "\\$${1:property}: ${2:value}",
+    "description": "Inline style"
+  },
+  "Animation": {
+    "prefix": "anim",
+    "body": [
+      "@animate(${1:animation}, ${2:duration}) {",
+      "  $0",
+      "}"
+    ],
+    "description": "Animation wrapper"
+  },
+  "Match Expression": {
+    "prefix": "match",
+    "body": [
+      "match ${1:value} {",
+      "  '${2:case1}' -> ${3:result1}",
+      "  '${4:case2}' -> ${5:result2}",
+      "  _ -> ${6:default}",
+      "}"
+    ],
+    "description": "Pattern matching"
+  },
+  "Lazy Load": {
+    "prefix": "lazy",
+    "body": [
+      "?~${1:resource} {",
+      "  loading: ${2:LoadingComponent} {}",
+      "  error: ${3:ErrorComponent} { message: error }",
+      "  data: ${4:Component} { ${5:prop}: data }",
+      "}"
+    ],
+    "description": "Lazy loading pattern"
+  },
+  "Grid Layout": {
+    "prefix": "grid",
+    "body": [
+      "grid(${1:3}x${2:3}) {",
+      "  $0",
+      "}"
+    ],
+    "description": "Grid layout"
+  },
+  "Pipeline": {
+    "prefix": "pipe",
+    "body": "${1:value} |> ${2:transform1} |> ${3:transform2}",
+    "description": "Pipeline operator"
+  }
+}
