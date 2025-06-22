@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eghact Runtime Example</title>
+</head>
+<body>
+    <div id="app"></div>
+    
+    <script type="module">
+        // This will be replaced with actual WASM loading once built
+        // For now, showing the API design
+        
+        // Mock runtime for demonstration
+        const runtime = {
+            createElement(tag) {
+                return document.createElement(tag);
+            },
+            createTextNode(text) {
+                return document.createTextNode(text);
+            },
+            appendChild(parent, child) {
+                return parent.appendChild(child);
+            },
+            setAttribute(element, name, value) {
+                element.setAttribute(name, value);
+            },
+            addEventListener(element, type, callback) {
+                element.addEventListener(type, callback);
+            },
+            getElementById(id) {
+                return document.getElementById(id);
+            }
+        };
+        
+        // Example usage - this is what compiled Eghact components will do
+        const app = runtime.getElementById('app');
+        
+        const h1 = runtime.createElement('h1');
+        const text = runtime.createTextNode('Hello from Eghact!');
+        runtime.appendChild(h1, text);
+        runtime.appendChild(app, h1);
+        
+        const button = runtime.createElement('button');
+        const btnText = runtime.createTextNode('Click me');
+        runtime.appendChild(button, btnText);
+        
+        let count = 0;
+        runtime.addEventListener(button, 'click', () => {
+            count++;
+            text.nodeValue = `Clicked ${count} times`;
+        });
+        
+        runtime.appendChild(app, button);
+    </script>
+</body>
+</html>

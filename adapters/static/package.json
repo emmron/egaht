@@ -1,0 +1,16 @@
+{
+  "name": "@eghact/adapter-static",
+  "version": "1.0.0",
+  "description": "Static export adapter for Eghact - deploy anywhere",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["eghact", "adapter", "static", "export", "hosting"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "@eghact/adapter-base": "file:../base"
+  }
+}

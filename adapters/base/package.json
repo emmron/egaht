@@ -1,0 +1,17 @@
+{
+  "name": "@eghact/adapter-base",
+  "version": "1.0.0",
+  "description": "Base adapter interface for Eghact deployment adapters",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["eghact", "adapter", "deployment"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^10.3.10",
+    "fs-extra": "^11.2.0"
+  }
+}

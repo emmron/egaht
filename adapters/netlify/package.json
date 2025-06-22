@@ -1,0 +1,17 @@
+{
+  "name": "@eghact/adapter-netlify",
+  "version": "1.0.0",
+  "description": "Netlify adapter for Eghact - zero-config deployment with edge functions",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["eghact", "adapter", "netlify", "deployment", "edge"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "@eghact/adapter-base": "file:../base",
+    "@netlify/functions": "^2.4.0"
+  }
+}

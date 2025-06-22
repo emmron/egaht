@@ -1,0 +1,17 @@
+{
+  "name": "@eghact/adapter-vercel",
+  "version": "1.0.0",
+  "description": "Vercel adapter for Eghact - zero-config deployment",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["eghact", "adapter", "vercel", "deployment", "serverless"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "@eghact/adapter-base": "file:../base",
+    "@vercel/build-utils": "^7.2.2"
+  }
+}

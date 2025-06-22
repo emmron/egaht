@@ -1,0 +1,23 @@
+{
+  "name": "eghact",
+  "version": "0.1.0",
+  "description": "A revolutionary web framework with compile-time reactivity",
+  "main": "index.js",
+  "scripts": {
+    "build:runtime": "cd runtime && ./build.sh",
+    "dev": "echo 'Dev server not yet implemented'",
+    "build": "echo 'Build pipeline not yet implemented'",
+    "test": "echo 'Tests not yet implemented'"
+  },
+  "keywords": [
+    "framework",
+    "reactive",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "micromatch": "^4.0.8"
+  }
+}

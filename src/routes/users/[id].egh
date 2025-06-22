@@ -1,0 +1,92 @@
+<template>
+  <div class="user">
+    <h1>User {userId}</h1>
+    <p>This is user with ID: {userId}</p>
+    {#if userData}
+      <div class="user-details">
+        <h3>User Details</h3>
+        <p>Name: {userData.name}</p>
+        <p>Email: {userData.email}</p>
+        <p>Joined: {userData.joinDate}</p>
+      </div>
+    {/if}
+    <a href="/users">← Back to users</a>
+  </div>
+</template>
+
+<script>
+// Get user ID from route params
+const userId = $route.params.id;
+
+// Server-side data loading function
+export async function load({ params, fetch }) {
+  const userId = params.id;
+  
+  try {
+    // Simulate API call - in real app would fetch from actual API
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    
+    return {
+      userData,
+      cache: {
+        maxAge: 60000 // Cache for 1 minute
+      }
+    };
+  } catch (error) {
+    // Return fallback data on error
+    return {
+      userData: {
+        name: `User ${userId}`,
+        email: `user${userId}@example.com`,
+        joinDate: new Date().toLocaleDateString()
+      },
+      error: error.message
+    };
+  }
+}
+</script>
+
+<style>
+.user {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.user-details {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.user-details h3 {
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.user-details p {
+  margin: 0.25rem 0;
+  color: #666;
+}
+
+a {
+  color: #007acc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+</style>

@@ -1,0 +1,181 @@
+<template>
+  <div class="control-flow-demo">
+    <h2>Control Flow Examples</h2>
+    
+    <!-- Simple if statement -->
+    {#if isLoggedIn}
+      <p>Welcome back, {username}!</p>
+    {/if}
+    
+    <!-- If-else statement -->
+    {#if count > 10}
+      <p>Count is high: {count}</p>
+    {:else}
+      <p>Count is low: {count}</p>
+    {/if}
+    
+    <!-- Nested if statements -->
+    {#if user}
+      <div class="user-info">
+        <h3>{user.name}</h3>
+        {#if user.isPremium}
+          <span class="badge">Premium Member</span>
+        {:else}
+          <button @click={upgradeToPremium}>Upgrade to Premium</button>
+        {/if}
+      </div>
+    {:else}
+      <button @click={login}>Please Login</button>
+    {/if}
+    
+    <!-- Each loop with items -->
+    <h3>Todo List</h3>
+    {#each todos as todo}
+      <div class="todo-item">
+        <input type="checkbox" bind:checked={todo.done} />
+        <span class={todo.done ? 'completed' : ''}>{todo.text}</span>
+      </div>
+    {/each}
+    
+    <!-- Each with index -->
+    <h3>Numbered List</h3>
+    {#each items as item, index}
+      <div class="list-item">
+        {index + 1}. {item.name} - ${item.price}
+      </div>
+    {/each}
+    
+    <!-- Each with key for efficient updates -->
+    <h3>Dynamic List</h3>
+    {#each users as user (user.id)}
+      <div class="user-card">
+        <img src={user.avatar} alt={user.name} />
+        <h4>{user.name}</h4>
+        <button @click={() => removeUser(user.id)}>Remove</button>
+      </div>
+    {/each}
+    
+    <!-- Empty state handling -->
+    {#if messages.length === 0}
+      <p class="empty-state">No messages yet</p>
+    {:else}
+      {#each messages as message}
+        <div class="message">{message}</div>
+      {/each}
+    {/if}
+  </div>
+</template>
+
+<script>
+  let isLoggedIn = true;
+  let username = 'John';
+  let count = 5;
+  let user = {
+    name: 'Jane Doe',
+    isPremium: false
+  };
+  
+  let todos = [
+    { text: 'Learn Eghact', done: true },
+    { text: 'Build an app', done: false },
+    { text: 'Deploy to production', done: false }
+  ];
+  
+  let items = [
+    { name: 'Coffee', price: 4.99 },
+    { name: 'Sandwich', price: 8.99 },
+    { name: 'Salad', price: 12.99 }
+  ];
+  
+  let users = [
+    { id: 1, name: 'Alice', avatar: '/avatars/alice.jpg' },
+    { id: 2, name: 'Bob', avatar: '/avatars/bob.jpg' },
+    { id: 3, name: 'Charlie', avatar: '/avatars/charlie.jpg' }
+  ];
+  
+  let messages = [];
+  
+  function upgradeToPremium() {
+    user.isPremium = true;
+  }
+  
+  function login() {
+    isLoggedIn = true;
+  }
+  
+  function removeUser(id) {
+    users = users.filter(u => u.id !== id);
+  }
+  
+  // Test reactive updates
+  $: {
+    if (count > 10) {
+      console.log('Count exceeded 10!');
+    }
+  }
+</script>
+
+<style>
+  .control-flow-demo {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .user-info {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .badge {
+    background: gold;
+    color: black;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+  
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+  }
+  
+  .completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+  
+  .list-item {
+    padding: 0.5rem 0;
+  }
+  
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    margin: 0.5rem 0;
+  }
+  
+  .user-card img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+  
+  .empty-state {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+</style>

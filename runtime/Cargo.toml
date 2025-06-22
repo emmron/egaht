@@ -1,0 +1,32 @@
+[package]
+name = "eghact-runtime"
+version = "0.1.0"
+edition = "2021"
+authors = ["Eghact Team"]
+description = "Ultra-lightweight runtime for Eghact framework"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Node",
+  "Window",
+  "Event",
+  "EventTarget",
+  "Text",
+]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

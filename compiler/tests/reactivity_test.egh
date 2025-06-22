@@ -1,0 +1,86 @@
+<template>
+  <div class="reactive-demo">
+    <h1>Reactivity Test</h1>
+    
+    <!-- Simple interpolation -->
+    <p>Count: {count}</p>
+    
+    <!-- Reactive derived value -->
+    <p>Doubled: {doubled}</p>
+    
+    <!-- Dynamic attribute -->
+    <div class={containerClass}>
+      Dynamic class based on count
+    </div>
+    
+    <!-- Event handlers -->
+    <button @click={increment}>Increment</button>
+    <button @click={reset}>Reset</button>
+    
+    <!-- Conditional rendering -->
+    {#if count > 5}
+      <p class="warning">Count is greater than 5!</p>
+    {/if}
+    
+    <!-- Loop with reactivity -->
+    {#each items as item}
+      <li>{item.name} - {item.value}</li>
+    {/each}
+  </div>
+</template>
+
+<script>
+// Reactive variables
+let count = 0;
+let items = [
+  { name: "Item 1", value: 10 },
+  { name: "Item 2", value: 20 }
+];
+
+// Reactive statements
+$: doubled = count * 2;
+$: containerClass = count > 3 ? "highlight" : "normal";
+
+// Update items when count changes
+$: {
+  if (count > 0) {
+    items = items.map(item => ({
+      ...item,
+      value: item.value + count
+    }));
+  }
+}
+
+function increment() {
+  count++;
+}
+
+function reset() {
+  count = 0;
+  items = [
+    { name: "Item 1", value: 10 },
+    { name: "Item 2", value: 20 }
+  ];
+}
+</script>
+
+<style>
+.reactive-demo {
+  padding: 20px;
+}
+
+.warning {
+  color: red;
+  font-weight: bold;
+}
+
+.highlight {
+  background-color: yellow;
+  padding: 10px;
+}
+
+.normal {
+  background-color: #f0f0f0;
+  padding: 10px;
+}
+</style>

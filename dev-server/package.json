@@ -1,0 +1,43 @@
+{
+  "name": "@eghact/dev-server",
+  "version": "0.1.0",
+  "description": "High-performance development server for Eghact with HMR support",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "eghact-dev": "./src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "@fastify/websocket": "^8.3.0",
+    "@fastify/static": "^6.12.0",
+    "chokidar": "^3.5.3",
+    "ws": "^8.16.0",
+    "chalk": "^5.3.0",
+    "portfinder": "^1.0.32",
+    "selfsigned": "^2.4.1",
+    "micromatch": "^4.0.5",
+    "magic-string": "^0.30.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Eghact Team",
+  "license": "MIT",
+  "keywords": [
+    "eghact",
+    "dev-server",
+    "hmr",
+    "hot-reload",
+    "development"
+  ]
+}

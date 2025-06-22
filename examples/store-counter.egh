@@ -1,0 +1,70 @@
+<template>
+  <div class="store-counter">
+    <h1>Global Count: {$counterStore}</h1>
+    <p>Doubled: {$doubledCount}</p>
+    <button @click="increment">+</button>
+    <button @click="decrement">-</button>
+    <button @click="reset">Reset</button>
+  </div>
+</template>
+
+<script>
+import { createStore, derived } from '@eghact/store';
+
+// Global counter store
+const counterStore = createStore(0, {
+  name: 'counter',
+  persist: true,
+  middleware: [
+    middleware.validator(x => x >= 0),
+    middleware.logger('counter')
+  ]
+});
+
+// Derived store
+const doubledCount = derived([counterStore], (count) => count * 2);
+
+function increment() {
+  counterStore.update(n => n + 1);
+}
+
+function decrement() {
+  counterStore.update(n => Math.max(0, n - 1));
+}
+
+function reset() {
+  counterStore.set(0);
+}
+
+// Component can also subscribe to changes
+counterStore.subscribe((value) => {
+  if (value > 10) {
+    console.log('Counter is getting high!');
+  }
+});
+</script>
+
+<style>
+.store-counter {
+  text-align: center;
+  padding: 2rem;
+  border: 2px solid #007acc;
+  border-radius: 8px;
+  margin: 1rem;
+}
+
+button {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  background: #007acc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: #005999;
+}
+</style>

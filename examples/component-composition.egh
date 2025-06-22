@@ -1,0 +1,134 @@
+<template>
+  <div class="composition-demo">
+    <h1>Component Composition Examples</h1>
+    
+    <!-- Basic component usage -->
+    <UserCard {user} />
+    
+    <!-- Component with props -->
+    <Button 
+      variant="primary" 
+      size="large"
+      @click={handleClick}
+    >
+      Click Me
+    </Button>
+    
+    <!-- Component with default slot -->
+    <Card>
+      <p>This content goes into the default slot</p>
+    </Card>
+    
+    <!-- Component with named slots -->
+    <Modal bind:open={showModal}>
+      <h2 slot="header">Confirm Action</h2>
+      <p>Are you sure you want to proceed?</p>
+      <div slot="footer">
+        <Button @click={() => showModal = false}>Cancel</Button>
+        <Button variant="primary" @click={confirmAction}>Confirm</Button>
+      </div>
+    </Modal>
+    
+    <!-- Complex composition with multiple slots -->
+    <Layout>
+      <nav slot="sidebar">
+        <NavMenu items={menuItems} />
+      </nav>
+      
+      <header slot="header">
+        <Logo />
+        <SearchBar placeholder="Search..." />
+      </header>
+      
+      <main>
+        <h2>Main Content Area</h2>
+        {#each posts as post}
+          <BlogPost {post} />
+        {/each}
+      </main>
+      
+      <footer slot="footer">
+        <Copyright year={2025} />
+      </footer>
+    </Layout>
+    
+    <!-- Nested components with slot forwarding -->
+    <DataTable data={users}>
+      <span slot="empty">No users found</span>
+      
+      <template slot="row" let:item>
+        <td>{item.name}</td>
+        <td>{item.email}</td>
+        <td>
+          <Button size="small" @click={() => editUser(item.id)}>
+            Edit
+          </Button>
+        </td>
+      </template>
+    </DataTable>
+  </div>
+</template>
+
+<script>
+  import UserCard from './components/UserCard.egh';
+  import Button from './components/Button.egh';
+  import Card from './components/Card.egh';
+  import Modal from './components/Modal.egh';
+  import Layout from './components/Layout.egh';
+  import NavMenu from './components/NavMenu.egh';
+  import Logo from './components/Logo.egh';
+  import SearchBar from './components/SearchBar.egh';
+  import BlogPost from './components/BlogPost.egh';
+  import Copyright from './components/Copyright.egh';
+  import DataTable from './components/DataTable.egh';
+  
+  let showModal = false;
+  let user = {
+    name: 'John Doe',
+    email: 'john@example.com',
+    avatar: '/avatars/john.jpg'
+  };
+  
+  let menuItems = [
+    { label: 'Home', href: '/' },
+    { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' }
+  ];
+  
+  let posts = [
+    { id: 1, title: 'Getting Started with Eghact', content: '...' },
+    { id: 2, title: 'Component Composition', content: '...' },
+    { id: 3, title: 'Advanced Patterns', content: '...' }
+  ];
+  
+  let users = [
+    { id: 1, name: 'Alice', email: 'alice@example.com' },
+    { id: 2, name: 'Bob', email: 'bob@example.com' },
+    { id: 3, name: 'Charlie', email: 'charlie@example.com' }
+  ];
+  
+  function handleClick() {
+    showModal = true;
+  }
+  
+  function confirmAction() {
+    console.log('Action confirmed!');
+    showModal = false;
+  }
+  
+  function editUser(id) {
+    console.log('Editing user:', id);
+  }
+</script>
+
+<style>
+  .composition-demo {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  main {
+    padding: 2rem;
+  }
+</style>

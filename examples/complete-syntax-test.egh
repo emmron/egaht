@@ -1,0 +1,278 @@
+<template>
+  <div class="syntax-test">
+    <h1>Eghact Complete Syntax Test</h1>
+    
+    <!-- Template Interpolation -->
+    <section>
+      <h2>Template Interpolation</h2>
+      <p>Simple: {message}</p>
+      <p>Expression: {count * 2}</p>
+      <p>Method call: {user.getName()}</p>
+      <p>Ternary: {isActive ? 'Active' : 'Inactive'}</p>
+      <div>Raw HTML: {@html htmlContent}</div>
+    </section>
+    
+    <!-- Reactive Statements -->
+    <section>
+      <h2>Reactive Statements</h2>
+      <p>Count: {count}</p>
+      <p>Doubled: {doubled}</p>
+      <p>Quadrupled: {quadrupled}</p>
+      <button @click={() => count++}>Increment</button>
+    </section>
+    
+    <!-- Event Handlers -->
+    <section>
+      <h2>Event Handlers</h2>
+      <button @click={handleClick}>Simple Click</button>
+      <form @submit.prevent={handleSubmit}>
+        <input @keydown.enter={handleEnter} placeholder="Press Enter" />
+        <button type="submit">Submit</button>
+      </form>
+      <div @click.once={handleOnce}>Click once only</div>
+    </section>
+    
+    <!-- Control Flow -->
+    <section>
+      <h2>Control Flow</h2>
+      
+      {#if showContent}
+        <p>Content is visible</p>
+      {:else}
+        <p>Content is hidden</p>
+      {/if}
+      
+      <ul>
+        {#each todos as todo, index (todo.id)}
+          <li>
+            {index + 1}. {todo.text}
+            {#if todo.done}
+              <span>✓</span>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </section>
+    
+    <!-- Component Composition -->
+    <section>
+      <h2>Component Composition</h2>
+      
+      <Card title="Basic Card">
+        <p>Card content goes here</p>
+      </Card>
+      
+      <Modal bind:open={modalOpen}>
+        <h3 slot="header">Modal Header</h3>
+        <p>Modal body content</p>
+        <div slot="footer">
+          <Button @click={() => modalOpen = false}>Close</Button>
+        </div>
+      </Modal>
+      
+      <Button variant="primary" @click={() => modalOpen = true}>
+        Open Modal
+      </Button>
+    </section>
+    
+    <!-- Complex Example -->
+    <section>
+      <h2>Complex Example</h2>
+      
+      <DataGrid 
+        data={users} 
+        columns={columns}
+        @sort={handleSort}
+        @filter={handleFilter}
+      >
+        <div slot="empty">No users found</div>
+        
+        <template slot="cell" let:column let:row>
+          {#if column.key === 'actions'}
+            <Button size="small" @click={() => editUser(row.id)}>
+              Edit
+            </Button>
+          {:else}
+            {row[column.key]}
+          {/if}
+        </template>
+      </DataGrid>
+    </section>
+  </div>
+</template>
+
+<script>
+  import Card from './components/Card.egh';
+  import Modal from './components/Modal.egh';
+  import Button from './components/Button.egh';
+  import DataGrid from './components/DataGrid.egh';
+  
+  // State variables
+  let message = 'Hello, Eghact!';
+  let count = 0;
+  let doubled = 0;
+  let quadrupled = 0;
+  let isActive = true;
+  let htmlContent = '<strong>Bold text</strong> and <em>italic text</em>';
+  let showContent = true;
+  let modalOpen = false;
+  
+  // Reactive statements
+  $: doubled = count * 2;
+  $: quadrupled = doubled * 2;
+  $: {
+    console.log('Count changed:', count);
+    if (count > 10) {
+      console.log('Count is high!');
+    }
+  }
+  
+  // Todo data
+  let todos = [
+    { id: 1, text: 'Learn Eghact', done: true },
+    { id: 2, text: 'Build an app', done: false },
+    { id: 3, text: 'Deploy to production', done: false }
+  ];
+  
+  // User data for grid
+  let users = [
+    { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin' },
+    { id: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'User' },
+    { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', role: 'User' }
+  ];
+  
+  let columns = [
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'email', label: 'Email', sortable: true },
+    { key: 'role', label: 'Role', filterable: true },
+    { key: 'actions', label: 'Actions' }
+  ];
+  
+  // Lifecycle hooks
+  function onMount() {
+    console.log('Component mounted');
+  }
+  
+  function onDestroy() {
+    console.log('Component destroyed');
+  }
+  
+  // Event handlers
+  function handleClick(event) {
+    console.log('Button clicked:', event);
+  }
+  
+  function handleSubmit(event) {
+    console.log('Form submitted');
+  }
+  
+  function handleEnter() {
+    console.log('Enter key pressed');
+  }
+  
+  function handleOnce() {
+    console.log('This will only fire once');
+  }
+  
+  function handleSort(column, direction) {
+    console.log('Sorting by', column, direction);
+  }
+  
+  function handleFilter(filters) {
+    console.log('Applying filters:', filters);
+  }
+  
+  function editUser(id) {
+    console.log('Editing user:', id);
+  }
+  
+  // User object with method
+  let user = {
+    firstName: 'John',
+    lastName: 'Doe',
+    getName() {
+      return `${this.firstName} ${this.lastName}`;
+    }
+  };
+  
+  // Data loading function
+  export async function load() {
+    // This would be called on the server during SSR
+    return {
+      initialData: await fetchInitialData()
+    };
+  }
+  
+  async function fetchInitialData() {
+    // Simulated API call
+    return { timestamp: Date.now() };
+  }
+</script>
+
+<style>
+  .syntax-test {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: system-ui, sans-serif;
+  }
+  
+  section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  
+  h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+  }
+  
+  button {
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    border: 1px solid #007bff;
+    background: white;
+    color: #007bff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  button:hover {
+    background: #007bff;
+    color: white;
+  }
+  
+  input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 0.25rem;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    padding: 0.5rem;
+    background: #f5f5f5;
+    margin: 0.25rem 0;
+    border-radius: 4px;
+  }
+  
+  .syntax-test :global(.modal) {
+    /* Global styles for modal component */
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>

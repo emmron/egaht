@@ -1,0 +1,111 @@
+<template>
+  {#if open}
+    <div class="modal-backdrop" @click={handleBackdropClick}>
+      <div class="modal" @click.stop>
+        <div class="modal-header">
+          <slot name="header">
+            <h3>Modal Title</h3>
+          </slot>
+          <button class="close" @click={closeModal}>×</button>
+        </div>
+        
+        <div class="modal-body">
+          <slot>
+            <!-- Default slot content -->
+            <p>Modal content goes here</p>
+          </slot>
+        </div>
+        
+        <div class="modal-footer">
+          <slot name="footer">
+            <button @click={closeModal}>Close</button>
+          </slot>
+        </div>
+      </div>
+    </div>
+  {/if}
+</template>
+
+<script>
+  export let open = false;
+  
+  function closeModal() {
+    open = false;
+  }
+  
+  function handleBackdropClick() {
+    if (closeOnBackdrop) {
+      closeModal();
+    }
+  }
+  
+  export let closeOnBackdrop = true;
+</script>
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+  
+  .close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .close:hover {
+    color: #000;
+  }
+</style>

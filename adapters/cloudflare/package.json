@@ -1,0 +1,17 @@
+{
+  "name": "@eghact/adapter-cloudflare",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers adapter for Eghact - deploy to the edge",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["eghact", "adapter", "cloudflare", "workers", "edge"],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "@eghact/adapter-base": "file:../base",
+    "@cloudflare/workers-types": "^4.20231121.0"
+  }
+}

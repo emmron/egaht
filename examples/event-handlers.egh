@@ -1,0 +1,107 @@
+<template>
+  <div class="event-demo">
+    <h2>Event Handler Examples</h2>
+    
+    <!-- Simple click handler -->
+    <button @click={handleClick}>Simple Click</button>
+    
+    <!-- Click with prevent modifier -->
+    <form>
+      <button @click.prevent={handleSubmit}>Submit (Prevented)</button>
+    </form>
+    
+    <!-- Multiple modifiers -->
+    <div @click.stop.once={handleDivClick}>
+      <button @click.stop={handleButtonClick}>Nested Button</button>
+    </div>
+    
+    <!-- Keyboard events with modifiers -->
+    <input 
+      @keydown.enter={handleEnter}
+      @keydown.escape={handleEscape}
+      placeholder="Press Enter or Escape"
+    />
+    
+    <!-- Inline handler -->
+    <button @click={() => count++}>Count: {count}</button>
+    
+    <!-- Method call with arguments -->
+    <ul>
+      {#each items as item, index}
+        <li>
+          <span>{item.name}</span>
+          <button @click={() => removeItem(index)}>Remove</button>
+        </li>
+      {/each}
+    </ul>
+  </div>
+</template>
+
+<script>
+  let count = 0;
+  let items = [
+    { name: 'Item 1' },
+    { name: 'Item 2' },
+    { name: 'Item 3' }
+  ];
+  
+  function handleClick(event) {
+    console.log('Simple click:', event);
+  }
+  
+  function handleSubmit(event) {
+    console.log('Form submit prevented');
+  }
+  
+  function handleDivClick() {
+    console.log('Div clicked (only once)');
+  }
+  
+  function handleButtonClick() {
+    console.log('Button clicked (propagation stopped)');
+  }
+  
+  function handleEnter() {
+    console.log('Enter key pressed');
+  }
+  
+  function handleEscape() {
+    console.log('Escape key pressed');
+  }
+  
+  function removeItem(index) {
+    items = items.filter((_, i) => i !== index);
+  }
+</script>
+
+<style>
+  .event-demo {
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  button {
+    margin: 0.5rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  
+  input {
+    padding: 0.5rem;
+    margin: 0.5rem;
+    width: 300px;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+</style>

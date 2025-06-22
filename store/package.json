@@ -1,0 +1,16 @@
+{
+  "name": "@eghact/store",
+  "version": "0.1.0",
+  "description": "Built-in global state management for Eghact framework",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node test/store.test.js"
+  },
+  "dependencies": {
+    "signal-polyfill": "^0.1.4"
+  },
+  "keywords": ["eghact", "state", "store", "reactivity"],
+  "author": "Eghact Team",
+  "license": "MIT"
+}

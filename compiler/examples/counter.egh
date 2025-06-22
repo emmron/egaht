@@ -1,0 +1,44 @@
+<template>
+  <div class="counter">
+    <h1>Count: {count}</h1>
+    <p>Doubled: {doubled}</p>
+    <button @click={increment}>+</button>
+    <button @click={decrement}>-</button>
+    
+    {#if count > 10}
+      <p class="warning">That's a big number!</p>
+    {/if}
+  </div>
+</template>
+
+<script>
+let count = 0;
+
+$: doubled = count * 2;
+
+function increment() {
+  count++;
+}
+
+function decrement() {
+  count--;
+}
+</script>
+
+<style>
+.counter {
+  text-align: center;
+  padding: 2rem;
+}
+
+button {
+  margin: 0 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+}
+
+.warning {
+  color: red;
+  font-weight: bold;
+}
+</style>
