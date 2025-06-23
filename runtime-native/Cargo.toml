@@ -31,7 +31,7 @@ web-sys = { version = "0.3", features = [
 
 # Native compilation
 cranelift = "0.104"
-wasmtime = "17.0"
+wasmtime = "34.0"
 
 # Data binding
 dashmap = "5.5"
