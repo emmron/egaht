@@ -13,7 +13,7 @@
     "benchmark": "node benchmarks/bundle-size.js"
   },
   "dependencies": {
-    "esbuild": "^0.19.8",
+    "esbuild": "^0.25.5",
     "rollup": "^4.6.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.4",
