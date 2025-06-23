@@ -22,6 +22,21 @@ chrome.devtools.panels.create(
   }
 );
 
+// Create the Performance panel
+chrome.devtools.panels.create(
+  "⚡ Eghact Performance",
+  "icons/icon-16.png",
+  "src/devtools/performance-panel.html",
+  (panel) => {
+    console.log("[Eghact DevTools] Performance panel created successfully");
+    
+    panel.onShown.addListener((window) => {
+      console.log("[Eghact DevTools] Performance panel shown");
+      // Performance panel handles its own connection
+    });
+  }
+);
+
 // Set up connection between DevTools and the inspected page
 function initializeConnection(panelWindow) {
   // Create a connection to the background script

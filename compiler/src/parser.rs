@@ -138,9 +138,47 @@ fn extract_script_with_lang(source: &str) -> (Option<String>, ScriptLang) {
 }
 
 fn extract_event_types(module: &Module) -> Vec<EventType> {
-    // TODO: Implement event type extraction from dispatch calls
-    // This will analyze createEventDispatcher usage patterns
-    vec![]
+    let mut event_types = Vec::new();
+    
+    // Look for dispatch calls in the JavaScript/TypeScript code
+    if let Some(script) = &module.js {
+        // Simple pattern matching for dispatch calls
+        // This looks for patterns like: dispatch('eventName', data)
+        let dispatch_regex = regex::Regex::new(r#"dispatch\s*\(\s*['"`]([^'"`]+)['"`]"#).unwrap();
+        
+        for cap in dispatch_regex.captures_iter(script) {
+            if let Some(event_name) = cap.get(1) {
+                event_types.push(EventType {
+                    name: event_name.as_str().to_string(),
+                    detail_type: None, // Could be enhanced to infer types
+                });
+            }
+        }
+        
+        // Also look for createEventDispatcher patterns
+        let create_dispatcher_regex = regex::Regex::new(r#"createEventDispatcher\s*<\s*\{([^}]+)\}"#).unwrap();
+        
+        for cap in create_dispatcher_regex.captures_iter(script) {
+            if let Some(events_def) = cap.get(1) {
+                // Parse event definitions from TypeScript interface
+                // This is a simplified parser - could be enhanced
+                let event_defs = events_def.as_str();
+                for line in event_defs.lines() {
+                    if let Some(event_name) = line.split(':').next() {
+                        let cleaned_name = event_name.trim().trim_matches('"').trim_matches('\'');
+                        if !cleaned_name.is_empty() {
+                            event_types.push(EventType {
+                                name: cleaned_name.to_string(),
+                                detail_type: None,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    event_types
 }
 
 fn extract_section(source: &str, tag: &str) -> Option<String> {

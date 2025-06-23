@@ -1,0 +1,59 @@
+[package]
+name = "eghact-realtime-sync"
+version = "1.0.0"
+edition = "2021"
+authors = ["Eghact Core Team"]
+description = "Real-time database synchronization engine with CRDT support"
+
+[dependencies]
+# Core async runtime
+tokio = { version = "1.35", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+
+# CRDT implementation
+crdt = "6.0"
+diamond-types = "1.0"  # For text CRDTs
+yrs = "0.17"  # Yjs-compatible CRDT
+
+# Database
+sled = "0.34"
+rocksdb = "0.21"
+
+# Networking
+quinn = "0.10"  # QUIC for low-latency sync
+libp2p = "0.53"  # P2P networking
+tonic = "0.10"  # gRPC
+
+# Serialization
+bincode = "1.3"
+rkyv = { version = "0.7", features = ["validation"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Compression
+lz4 = "1.24"
+zstd = "0.13"
+
+# Cryptography
+blake3 = "1.5"
+ed25519-dalek = "2.1"
+x25519-dalek = "2.0"
+
+# Time synchronization
+chrono = "0.4"
+ntp = "0.5"
+
+# Conflict resolution
+operational-transform = "0.6"
+
+# Change detection
+notify = "6.1"
+watchexec-events = "2.0"
+
+# Metrics
+prometheus = "0.13"
+opentelemetry = "0.21"
+
+[build-dependencies]
+tonic-build = "0.10"

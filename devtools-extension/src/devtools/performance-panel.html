@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Eghact Performance Monitor</title>
+    <link rel="stylesheet" href="../../../performance-monitor/devtools-panel.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #devtools-root {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="devtools-root"></div>
+    
+    <!-- Load Eghact Runtime -->
+    <script src="../../../runtime-pure/dist/eghact-runtime.js"></script>
+    
+    <!-- Load Performance Panel Component -->
+    <script type="module">
+        // Import the DevTools panel component
+        import('../../../performance-monitor/devtools-panel.egh').then(module => {
+            const EghactDevToolsPanel = module.default;
+            
+            // Create and mount the panel
+            const panel = new EghactDevToolsPanel();
+            panel._mount(document.getElementById('devtools-root'));
+            
+            console.log('[Performance Panel] Mounted successfully');
+        }).catch(err => {
+            console.error('[Performance Panel] Failed to load:', err);
+            document.getElementById('devtools-root').innerHTML = `
+                <div style="padding: 20px; color: #ff6b6b;">
+                    Failed to load performance panel: ${err.message}
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

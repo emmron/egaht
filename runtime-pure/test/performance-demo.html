@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eghact Performance Profiler Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .metrics-display {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #0052cc;
+        }
+        
+        .heavy-component {
+            background: #ffe5e5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .light {
+            background: #e5f5e5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Eghact Performance Profiler Demo</h1>
+        
+        <div class="demo-section">
+            <h2>Component Rendering Demo</h2>
+            <div id="app"></div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Performance Controls</h2>
+            <button onclick="runTests()">Run Performance Tests</button>
+            <button onclick="clearMetrics()">Clear Metrics</button>
+            <button onclick="startMemoryMonitor()">Start Memory Monitor</button>
+            <button onclick="stopMemoryMonitor()">Stop Memory Monitor</button>
+            <button onclick="exportMetrics()">Export Metrics</button>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Real-time Metrics</h2>
+            <div id="metrics" class="metrics-display">
+                <pre>No metrics yet. Click "Run Performance Tests" to start.</pre>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>Performance Chart</h2>
+            <canvas id="perfChart" width="800" height="300"></canvas>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { 
+            createApp, 
+            Component, 
+            h,
+            performanceStore,
+            startMemoryMonitoring,
+            stopMemoryMonitoring
+        } from '../dist/eghact-runtime.js';
+        
+        // Import test components
+        import { runPerformanceTests, ParentComponent } from './performance-profiler.test.js';
+        
+        // Demo app component
+        class DemoApp extends Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    showHeavy: true,
+                    iterations: 0
+                };
+            }
+            
+            render() {
+                return h('div', { class: 'demo-app' }, [
+                    h('h3', {}, 'Interactive Demo'),
+                    h('button', { 
+                        '@click': () => this.setState({ showHeavy: !this.state.showHeavy }) 
+                    }, this.state.showHeavy ? 'Hide Heavy Components' : 'Show Heavy Components'),
+                    h('button', { 
+                        '@click': () => this.setState({ iterations: this.state.iterations + 1 }) 
+                    }, `Force Re-render (${this.state.iterations})`),
+                    this.state.showHeavy ? h(ParentComponent, {}) : h('p', {}, 'Heavy components hidden')
+                ]);
+            }
+        }
+        
+        // Initialize app
+        let app;
+        
+        async function initApp() {
+            app = await createApp(DemoApp, document.getElementById('app'));
+            app.mount();
+            
+            // Subscribe to performance updates
+            performanceStore.subscribe(updateMetricsDisplay);
+        }
+        
+        // Update metrics display
+        function updateMetricsDisplay() {
+            const metrics = performanceStore.getMetrics();
+            const metricsEl = document.getElementById('metrics');
+            
+            let html = '<h3>Component Metrics:</h3>';
+            
+            Object.entries(metrics.renderMetrics).forEach(([name, data]) => {
+                html += `
+                    <div style="margin-bottom: 15px;">
+                        <strong>${name}</strong>
+                        <ul>
+                            <li>Total renders: ${data.totalRenders}</li>
+                            <li>Average time: ${data.avgTime.toFixed(2)}ms</li>
+                            <li>Min/Max: ${data.minTime.toFixed(2)}ms / ${data.maxTime.toFixed(2)}ms</li>
+                            <li>Memory impact: ${(data.memoryImpact / 1024).toFixed(2)}KB</li>
+                        </ul>
+                    </div>
+                `;
+            });
+            
+            if (metrics.memorySnapshots.length > 0) {
+                html += '<h3>Memory Snapshots:</h3><ul>';
+                metrics.memorySnapshots.slice(-5).forEach(snapshot => {
+                    html += `<li>${snapshot.label}: ${(snapshot.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            metricsEl.innerHTML = html;
+            updateChart(metrics);
+        }
+        
+        // Chart rendering
+        function updateChart(metrics) {
+            const canvas = document.getElementById('perfChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Get render history for all components
+            const allRenders = [];
+            Object.entries(metrics.renderMetrics).forEach(([name, data]) => {
+                data.renderHistory.forEach(render => {
+                    allRenders.push({ ...render, componentName: name });
+                });
+            });
+            
+            // Sort by timestamp
+            allRenders.sort((a, b) => a.timestamp - b.timestamp);
+            
+            if (allRenders.length === 0) return;
+            
+            // Draw axes
+            ctx.strokeStyle = '#ccc';
+            ctx.beginPath();
+            ctx.moveTo(50, 250);
+            ctx.lineTo(750, 250);
+            ctx.moveTo(50, 20);
+            ctx.lineTo(50, 250);
+            ctx.stroke();
+            
+            // Find max duration for scaling
+            const maxDuration = Math.max(...allRenders.map(r => r.duration));
+            
+            // Draw bars
+            const barWidth = Math.min(700 / allRenders.length, 20);
+            const colors = {
+                'HeavyComponent': '#ff6b6b',
+                'ParentComponent': '#4dabf7',
+                'LightComponent': '#51cf66',
+                'DemoApp': '#845ef7'
+            };
+            
+            allRenders.forEach((render, i) => {
+                const x = 60 + i * (barWidth + 2);
+                const height = (render.duration / maxDuration) * 200;
+                const y = 250 - height;
+                
+                ctx.fillStyle = colors[render.componentName] || '#868e96';
+                ctx.fillRect(x, y, barWidth, height);
+                
+                // Draw duration text
+                ctx.fillStyle = '#333';
+                ctx.font = '10px sans-serif';
+                ctx.save();
+                ctx.translate(x + barWidth/2, y - 5);
+                ctx.rotate(-Math.PI/4);
+                ctx.fillText(`${render.duration.toFixed(1)}ms`, 0, 0);
+                ctx.restore();
+            });
+            
+            // Legend
+            let legendY = 30;
+            Object.entries(colors).forEach(([name, color]) => {
+                ctx.fillStyle = color;
+                ctx.fillRect(650, legendY, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(name, 670, legendY + 12);
+                legendY += 20;
+            });
+        }
+        
+        // Global functions
+        window.runTests = async function() {
+            await runPerformanceTests();
+            updateMetricsDisplay();
+        };
+        
+        window.clearMetrics = function() {
+            performanceStore.clearMetrics();
+            updateMetricsDisplay();
+        };
+        
+        window.startMemoryMonitor = function() {
+            startMemoryMonitoring(500);
+            console.log('Memory monitoring started');
+        };
+        
+        window.stopMemoryMonitor = function() {
+            stopMemoryMonitoring();
+            console.log('Memory monitoring stopped');
+        };
+        
+        window.exportMetrics = function() {
+            const metrics = performanceStore.getMetrics();
+            const blob = new Blob([JSON.stringify(metrics, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `eghact-performance-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        
+        // Initialize on load
+        initApp();
+    </script>
+</body>
+</html>

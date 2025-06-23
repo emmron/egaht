@@ -1,0 +1,601 @@
+// Eghact DevTools Performance Panel
+// Completely decoupled, works with any Eghact app
+
+component EghactDevToolsPanel {
+  state = {
+    connected: false,
+    metrics: {},
+    selectedComponent: null,
+    view: 'flamegraph', // flamegraph, timeline, memory, bundle
+    recording: false,
+    frames: [],
+    settings: {
+      theme: 'dark',
+      updateInterval: 100,
+      retainHistory: 1000,
+      showAdvanced: false
+    }
+  }
+
+  onMount() {
+    this.connectToRuntime();
+    this.startUpdateLoop();
+  }
+
+  connectToRuntime() {
+    // Try multiple connection methods
+    const connectionMethods = [
+      () => window.__EghactPerfHook?.state?.perfStore,
+      () => window.Eghact?.__performanceStore,
+      () => window.performanceStore,
+      () => this.injectAndConnect()
+    ];
+
+    for (const method of connectionMethods) {
+      const store = method();
+      if (store) {
+        this.state.perfStore = store;
+        this.state.connected = true;
+        
+        // Subscribe to updates
+        this.unsubscribe = store.subscribe(this.handlePerfEvent.bind(this));
+        
+        console.log('[DevTools] Connected to performance store');
+        break;
+      }
+    }
+
+    if (!this.state.connected) {
+      console.warn('[DevTools] Could not connect to performance store');
+      setTimeout(() => this.connectToRuntime(), 1000);
+    }
+  }
+
+  injectAndConnect() {
+    // Inject performance hook if not present
+    const script = document.createElement('script');
+    script.src = '/performance-monitor/perf-runtime-hook.egh';
+    document.head.appendChild(script);
+    
+    // Wait for injection
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(window.__EghactPerfHook?.state?.perfStore);
+      }, 500);
+    });
+  }
+
+  startUpdateLoop() {
+    this.updateInterval = setInterval(() => {
+      if (this.state.connected && this.state.perfStore) {
+        this.updateMetrics();
+      }
+    }, this.state.settings.updateInterval);
+  }
+
+  updateMetrics() {
+    const newMetrics = this.state.perfStore.getMetrics();
+    this.state.metrics = this.processMetrics(newMetrics);
+    
+    if (this.state.recording) {
+      this.recordFrame();
+    }
+  }
+
+  processMetrics(raw) {
+    // Enhanced metrics processing
+    const processed = {
+      components: {},
+      performance: {
+        fps: this.calculateFPS(),
+        jank: this.detectJank(),
+        idle: this.calculateIdleTime()
+      },
+      memory: this.processMemoryMetrics(raw.memory),
+      bundle: this.processBundleMetrics(raw.bundle)
+    };
+
+    // Process component metrics
+    Object.entries(raw.components || {}).forEach(([name, data]) => {
+      processed.components[name] = {
+        ...data,
+        health: this.calculateComponentHealth(data),
+        impact: this.calculateImpact(data),
+        trends: this.calculateTrends(data)
+      };
+    });
+
+    return processed;
+  }
+
+  calculateFPS() {
+    const recentFrames = this.state.frames.slice(-60);
+    if (recentFrames.length < 2) return 60;
+
+    const totalTime = recentFrames[recentFrames.length - 1].timestamp - recentFrames[0].timestamp;
+    return Math.round((recentFrames.length / totalTime) * 1000);
+  }
+
+  detectJank() {
+    const recentFrames = this.state.frames.slice(-120);
+    let jankFrames = 0;
+
+    for (let i = 1; i < recentFrames.length; i++) {
+      const frameDuration = recentFrames[i].timestamp - recentFrames[i - 1].timestamp;
+      if (frameDuration > 50) { // 20fps threshold
+        jankFrames++;
+      }
+    }
+
+    return {
+      count: jankFrames,
+      percentage: (jankFrames / recentFrames.length) * 100
+    };
+  }
+
+  calculateIdleTime() {
+    // Calculate browser idle time
+    const totalTime = performance.now();
+    const activeTime = Object.values(this.state.metrics.components || {})
+      .reduce((sum, comp) => sum + (comp.totalTime || 0), 0);
+    
+    return {
+      percentage: ((totalTime - activeTime) / totalTime) * 100,
+      absolute: totalTime - activeTime
+    };
+  }
+
+  calculateComponentHealth(data) {
+    const scores = {
+      performance: data.avgTime < 16 ? 100 : Math.max(0, 100 - (data.avgTime - 16) * 2),
+      memory: data.memoryImpact < 100000 ? 100 : Math.max(0, 100 - (data.memoryImpact / 10000)),
+      stability: data.errorCount ? Math.max(0, 100 - data.errorCount * 10) : 100
+    };
+
+    return {
+      scores,
+      overall: (scores.performance + scores.memory + scores.stability) / 3,
+      status: this.getHealthStatus((scores.performance + scores.memory + scores.stability) / 3)
+    };
+  }
+
+  getHealthStatus(score) {
+    if (score >= 90) return 'excellent';
+    if (score >= 70) return 'good';
+    if (score >= 50) return 'fair';
+    return 'poor';
+  }
+
+  calculateImpact(data) {
+    return {
+      cpu: data.totalTime || 0,
+      memory: data.memoryImpact || 0,
+      renders: data.count || 0,
+      weight: (data.totalTime || 0) * (data.count || 1)
+    };
+  }
+
+  calculateTrends(data) {
+    if (!data.history || data.history.length < 10) return null;
+
+    const recent = data.history.slice(-10);
+    const older = data.history.slice(-20, -10);
+
+    if (older.length === 0) return null;
+
+    const recentAvg = recent.reduce((sum, h) => sum + h.duration, 0) / recent.length;
+    const olderAvg = older.reduce((sum, h) => sum + h.duration, 0) / older.length;
+
+    return {
+      direction: recentAvg > olderAvg ? 'degrading' : 'improving',
+      change: ((recentAvg - olderAvg) / olderAvg) * 100
+    };
+  }
+
+  processMemoryMetrics(memoryData) {
+    if (!memoryData || memoryData.length === 0) return null;
+
+    const latest = memoryData[memoryData.length - 1];
+    const oldest = memoryData[0];
+
+    return {
+      current: latest.used,
+      peak: Math.max(...memoryData.map(m => m.used)),
+      growth: latest.used - oldest.used,
+      growthRate: (latest.used - oldest.used) / (latest.timestamp - oldest.timestamp) * 1000,
+      pressure: latest.used / latest.limit
+    };
+  }
+
+  processBundleMetrics(bundleData) {
+    if (!bundleData) return null;
+
+    const totalSize = Object.values(bundleData).reduce((sum, b) => sum + b.size, 0);
+    const components = Object.entries(bundleData).map(([name, data]) => ({
+      name,
+      size: data.size,
+      percentage: (data.size / totalSize) * 100,
+      dependencies: data.dependencies?.length || 0
+    }));
+
+    return {
+      totalSize,
+      components: components.sort((a, b) => b.size - a.size),
+      treeshaking: components.some(c => c.treeshaking)
+    };
+  }
+
+  recordFrame() {
+    this.state.frames.push({
+      timestamp: performance.now(),
+      metrics: { ...this.state.metrics }
+    });
+
+    // Limit frame history
+    if (this.state.frames.length > this.state.settings.retainHistory) {
+      this.state.frames = this.state.frames.slice(-this.state.settings.retainHistory);
+    }
+  }
+
+  handlePerfEvent(event) {
+    // Real-time event handling
+    if (event.type === 'metric') {
+      this.flashComponent(event.data.componentName);
+    } else if (event.type === 'report') {
+      this.displayReport(event.data);
+    }
+  }
+
+  flashComponent(componentName) {
+    // Visual feedback for component renders
+    const element = document.querySelector(`[data-component="${componentName}"]`);
+    if (element) {
+      element.style.outline = '2px solid #4dabf7';
+      setTimeout(() => {
+        element.style.outline = '';
+      }, 200);
+    }
+  }
+
+  render() {
+    return <div class={`devtools-panel ${this.state.settings.theme}`}>
+      <div class="devtools-header">
+        <h1>⚡ Eghact Performance Monitor</h1>
+        <div class="connection-status">
+          <span class={`status-dot ${this.state.connected ? 'connected' : 'disconnected'}`}></span>
+          {this.state.connected ? 'Connected' : 'Disconnected'}
+        </div>
+      </div>
+
+      <div class="devtools-toolbar">
+        <button 
+          class={this.state.recording ? 'recording' : ''}
+          @click={() => this.toggleRecording()}
+        >
+          {this.state.recording ? '⏹ Stop' : '⏺ Record'}
+        </button>
+        <button @click={() => this.clearData()}>🗑 Clear</button>
+        <button @click={() => this.exportData()}>📤 Export</button>
+        
+        <div class="view-selector">
+          {['flamegraph', 'timeline', 'memory', 'bundle'].map(view => (
+            <button
+              key={view}
+              class={this.state.view === view ? 'active' : ''}
+              @click={() => this.state.view = view}
+            >
+              {view.charAt(0).toUpperCase() + view.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="devtools-content">
+        {this.renderView()}
+      </div>
+
+      <div class="devtools-sidebar">
+        {this.renderSidebar()}
+      </div>
+    </div>
+  }
+
+  renderView() {
+    switch (this.state.view) {
+      case 'flamegraph':
+        return this.renderFlamegraph();
+      case 'timeline':
+        return this.renderTimeline();
+      case 'memory':
+        return this.renderMemoryView();
+      case 'bundle':
+        return this.renderBundleView();
+      default:
+        return null;
+    }
+  }
+
+  renderFlamegraph() {
+    const components = Object.entries(this.state.metrics.components || {})
+      .sort((a, b) => b[1].impact.weight - a[1].impact.weight);
+
+    return <div class="flamegraph-view">
+      <h2>Component Flamegraph</h2>
+      <div class="flamegraph-container">
+        {components.map(([name, data]) => (
+          <div 
+            key={name}
+            class="flame-bar"
+            style={{
+              width: `${(data.impact.weight / components[0][1].impact.weight) * 100}%`,
+              background: this.getFlameColor(data.health.overall)
+            }}
+            @click={() => this.selectComponent(name)}
+          >
+            <span class="flame-label">
+              {name} ({data.avgTime.toFixed(1)}ms)
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      <div class="performance-summary">
+        <div class="summary-card">
+          <h3>FPS</h3>
+          <div class="metric-value">{this.state.metrics.performance?.fps || 0}</div>
+        </div>
+        <div class="summary-card">
+          <h3>Jank</h3>
+          <div class="metric-value">{this.state.metrics.performance?.jank?.percentage?.toFixed(1) || 0}%</div>
+        </div>
+        <div class="summary-card">
+          <h3>Idle</h3>
+          <div class="metric-value">{this.state.metrics.performance?.idle?.percentage?.toFixed(1) || 0}%</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  renderTimeline() {
+    const frames = this.state.frames.slice(-200);
+    const maxDuration = Math.max(...frames.map(f => 
+      Object.values(f.metrics.components || {})
+        .reduce((sum, c) => sum + (c.avgTime || 0), 0)
+    ), 16.67);
+
+    return <div class="timeline-view">
+      <h2>Frame Timeline</h2>
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <span>0ms</span>
+          <span>16.67ms (60fps)</span>
+          <span>{maxDuration.toFixed(1)}ms</span>
+        </div>
+        <div class="timeline-frames">
+          {frames.map((frame, i) => {
+            const duration = Object.values(frame.metrics.components || {})
+              .reduce((sum, c) => sum + (c.avgTime || 0), 0);
+            const height = (duration / maxDuration) * 100;
+            
+            return <div
+              key={i}
+              class="timeline-frame"
+              style={{
+                height: `${height}%`,
+                background: duration > 16.67 ? '#ff6b6b' : '#51cf66'
+              }}
+              title={`Frame ${i}: ${duration.toFixed(2)}ms`}
+            />
+          })}
+        </div>
+      </div>
+    </div>
+  }
+
+  renderMemoryView() {
+    const memory = this.state.metrics.memory;
+    if (!memory) {
+      return <div class="memory-view">
+        <h2>Memory Usage</h2>
+        <div class="empty-state">No memory data available</div>
+      </div>
+    }
+
+    return <div class="memory-view">
+      <h2>Memory Usage</h2>
+      
+      <div class="memory-stats">
+        <div class="stat-card">
+          <h3>Current</h3>
+          <div class="stat-value">{(memory.current / 1024 / 1024).toFixed(2)} MB</div>
+        </div>
+        <div class="stat-card">
+          <h3>Peak</h3>
+          <div class="stat-value">{(memory.peak / 1024 / 1024).toFixed(2)} MB</div>
+        </div>
+        <div class="stat-card">
+          <h3>Growth Rate</h3>
+          <div class="stat-value">{(memory.growthRate / 1024).toFixed(2)} KB/s</div>
+        </div>
+        <div class="stat-card">
+          <h3>Pressure</h3>
+          <div class="stat-value">{(memory.pressure * 100).toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <div class="memory-chart">
+        {this.renderMemoryChart()}
+      </div>
+
+      {memory.growthRate > 100000 && (
+        <div class="warning-banner">
+          ⚠️ High memory growth detected! Possible memory leak.
+        </div>
+      )}
+    </div>
+  }
+
+  renderBundleView() {
+    const bundle = this.state.metrics.bundle;
+    if (!bundle) {
+      return <div class="bundle-view">
+        <h2>Bundle Analysis</h2>
+        <div class="empty-state">No bundle data available</div>
+      </div>
+    }
+
+    return <div class="bundle-view">
+      <h2>Bundle Analysis</h2>
+      
+      <div class="bundle-summary">
+        <h3>Total Size: {(bundle.totalSize / 1024).toFixed(2)} KB</h3>
+        {bundle.treeshaking && <span class="badge">✓ Tree Shaking</span>}
+      </div>
+
+      <div class="bundle-breakdown">
+        {bundle.components.map(comp => (
+          <div key={comp.name} class="bundle-item">
+            <div class="bundle-bar" style={{ width: `${comp.percentage}%` }}>
+              <span class="bundle-label">{comp.name}</span>
+            </div>
+            <span class="bundle-size">{(comp.size / 1024).toFixed(2)} KB ({comp.percentage.toFixed(1)}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  }
+
+  renderSidebar() {
+    if (!this.state.selectedComponent) {
+      return <div class="sidebar-empty">
+        <p>Select a component to view details</p>
+      </div>
+    }
+
+    const comp = this.state.metrics.components[this.state.selectedComponent];
+    if (!comp) return null;
+
+    return <div class="component-details">
+      <h2>{this.state.selectedComponent}</h2>
+      
+      <div class="health-score">
+        <div class={`health-indicator ${comp.health.status}`}>
+          {comp.health.overall.toFixed(0)}
+        </div>
+        <span>{comp.health.status}</span>
+      </div>
+
+      <div class="detail-section">
+        <h3>Performance</h3>
+        <div class="detail-row">
+          <span>Renders:</span>
+          <span>{comp.count}</span>
+        </div>
+        <div class="detail-row">
+          <span>Avg Time:</span>
+          <span>{comp.avgTime.toFixed(2)}ms</span>
+        </div>
+        <div class="detail-row">
+          <span>Total Time:</span>
+          <span>{comp.totalTime.toFixed(2)}ms</span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Memory</h3>
+        <div class="detail-row">
+          <span>Impact:</span>
+          <span>{(comp.memoryImpact / 1024).toFixed(2)}KB</span>
+        </div>
+      </div>
+
+      {comp.trends && (
+        <div class="detail-section">
+          <h3>Trends</h3>
+          <div class={`trend ${comp.trends.direction}`}>
+            {comp.trends.direction === 'improving' ? '📈' : '📉'}
+            {Math.abs(comp.trends.change).toFixed(1)}% {comp.trends.direction}
+          </div>
+        </div>
+      )}
+
+      <div class="detail-section">
+        <h3>Operations</h3>
+        {Object.entries(comp.operations || {}).map(([op, data]) => (
+          <div key={op} class="detail-row">
+            <span>{op}:</span>
+            <span>{data.count} calls, {(data.totalTime / data.count).toFixed(2)}ms avg</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  }
+
+  renderMemoryChart() {
+    // Implement memory chart visualization
+    return <svg width="100%" height="200">
+      <text x="50%" y="50%" text-anchor="middle">Memory Chart</text>
+    </svg>
+  }
+
+  getFlameColor(health) {
+    if (health >= 90) return '#51cf66';
+    if (health >= 70) return '#fab005';
+    if (health >= 50) return '#fd7e14';
+    return '#ff6b6b';
+  }
+
+  selectComponent(name) {
+    this.state.selectedComponent = name;
+  }
+
+  toggleRecording() {
+    this.state.recording = !this.state.recording;
+    if (this.state.recording) {
+      this.state.frames = [];
+    }
+  }
+
+  clearData() {
+    this.state.metrics = {};
+    this.state.frames = [];
+    this.state.selectedComponent = null;
+    if (this.state.perfStore) {
+      this.state.perfStore.clearMetrics();
+    }
+  }
+
+  exportData() {
+    const exportData = {
+      timestamp: Date.now(),
+      metrics: this.state.metrics,
+      frames: this.state.frames,
+      settings: this.state.settings
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `eghact-performance-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  onDestroy() {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
+  }
+}
+
+// Auto-mount if in DevTools context
+if (typeof chrome !== 'undefined' && chrome.devtools) {
+  const panel = new EghactDevToolsPanel();
+  panel._mount(document.getElementById('devtools-root'));
+}
+
+export default EghactDevToolsPanel;

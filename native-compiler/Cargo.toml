@@ -1,0 +1,59 @@
+[package]
+name = "eghact-native-compiler"
+version = "2.0.0"
+edition = "2021"
+authors = ["Eghact Core Team"]
+description = "Native compiler for .eg files - Direct to machine code"
+
+[[bin]]
+name = "eghc"
+path = "src/main.rs"
+
+[dependencies]
+# LLVM for native code generation
+inkwell = { version = "0.3", features = ["llvm17-0"] }
+llvm-sys = "170"
+
+# Cranelift as alternative backend
+cranelift = "0.104"
+cranelift-module = "0.104"
+cranelift-codegen = "0.104"
+cranelift-frontend = "0.104"
+cranelift-object = "0.104"
+
+# Parser and AST
+nom = "7.1"
+pest = "2.7"
+pest_derive = "2.7"
+
+# Code generation
+codegen = "0.2"
+
+# Optimization
+egg = "0.9" # e-graphs for optimization
+
+# Cross-compilation
+target-lexicon = "0.12"
+object = "0.32"
+
+# Utilities
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Parallel compilation
+rayon = "1.8"
+crossbeam = "0.8"
+
+# Memory management
+bumpalo = "3.14"
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+
+[[bench]]
+name = "compilation"
+harness = false

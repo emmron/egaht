@@ -10,6 +10,8 @@
     "./renderer": "./src/core/renderer.js",
     "./reactive": "./src/core/reactive.js",
     "./component": "./src/core/component.js",
+    "./component-profiled": "./src/core/component-with-profiling.js",
+    "./performance": "./src/performance/profiler.js",
     "./wasm": "./src/wasm-bridge.js"
   },
   "scripts": {

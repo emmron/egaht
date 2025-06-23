@@ -1,0 +1,456 @@
+// Eghact Performance Runtime Hook
+// Decoupled, self-contained performance monitoring
+// Injects into Eghact runtime without modifying core
+
+component PerformanceRuntimeHook {
+  state = {
+    originalMount: null,
+    originalRender: null,
+    perfStore: null,
+    config: {
+      autoInject: true,
+      profileAll: true,
+      sampleRate: 1.0
+    }
+  }
+
+  onMount() {
+    if (this.state.config.autoInject) {
+      this.injectIntoRuntime();
+    }
+  }
+
+  // Monkey-patch the Eghact runtime
+  injectIntoRuntime() {
+    // Store original methods
+    const Runtime = window.Eghact || window.EghactRuntime;
+    if (!Runtime) {
+      console.warn('[PerfHook] Eghact runtime not found');
+      return;
+    }
+
+    // Create performance store
+    this.state.perfStore = new PerformanceStore();
+
+    // Hook into Component class
+    if (Runtime.Component) {
+      this.hookComponentClass(Runtime.Component);
+    }
+
+    // Hook into createElement
+    if (Runtime.createElement) {
+      this.hookCreateElement(Runtime);
+    }
+
+    // Hook into render functions
+    if (Runtime.render) {
+      this.hookRender(Runtime);
+    }
+
+    console.log('[PerfHook] Successfully injected into Eghact runtime');
+  }
+
+  hookComponentClass(ComponentClass) {
+    const self = this;
+    
+    // Store original mount
+    const originalMount = ComponentClass.prototype._mount;
+    const originalRender = ComponentClass.prototype.render;
+
+    // Override mount
+    ComponentClass.prototype._mount = function(container) {
+      const componentName = this.constructor.name || 'Anonymous';
+      
+      if (self.shouldProfile()) {
+        const timerId = self.state.perfStore.startTimer(componentName, 'mount');
+        
+        try {
+          const result = originalMount.call(this, container);
+          self.state.perfStore.endTimer(timerId);
+          return result;
+        } catch (error) {
+          self.state.perfStore.endTimer(timerId, { error: true });
+          throw error;
+        }
+      } else {
+        return originalMount.call(this, container);
+      }
+    };
+
+    // Override render
+    ComponentClass.prototype.render = function() {
+      const componentName = this.constructor.name || 'Anonymous';
+      
+      if (self.shouldProfile()) {
+        const timerId = self.state.perfStore.startTimer(componentName, 'render');
+        
+        try {
+          const result = originalRender.call(this);
+          const metric = self.state.perfStore.endTimer(timerId);
+          
+          // Analyze render result
+          if (metric) {
+            self.analyzeRenderResult(result, metric);
+          }
+          
+          return result;
+        } catch (error) {
+          self.state.perfStore.endTimer(timerId, { error: true });
+          throw error;
+        }
+      } else {
+        return originalRender.call(this);
+      }
+    };
+
+    // Store references
+    this.state.originalMount = originalMount;
+    this.state.originalRender = originalRender;
+  }
+
+  hookCreateElement(Runtime) {
+    const self = this;
+    const originalCreateElement = Runtime.createElement;
+
+    Runtime.createElement = function(vnode) {
+      if (self.shouldProfile() && vnode?.type) {
+        const elementType = typeof vnode.type === 'string' ? vnode.type : vnode.type.name;
+        const timerId = self.state.perfStore.startTimer(elementType, 'createElement');
+        
+        try {
+          const element = originalCreateElement.call(this, vnode);
+          self.state.perfStore.endTimer(timerId);
+          
+          // Track DOM node count
+          if (element instanceof Element) {
+            self.state.perfStore.trackDOMNode(element);
+          }
+          
+          return element;
+        } catch (error) {
+          self.state.perfStore.endTimer(timerId, { error: true });
+          throw error;
+        }
+      } else {
+        return originalCreateElement.call(this, vnode);
+      }
+    };
+  }
+
+  hookRender(Runtime) {
+    const self = this;
+    const originalRender = Runtime.render;
+
+    Runtime.render = function(vnode, container) {
+      if (self.shouldProfile()) {
+        const timerId = self.state.perfStore.startTimer('App', 'fullRender');
+        
+        try {
+          const result = originalRender.call(this, vnode, container);
+          const metric = self.state.perfStore.endTimer(timerId);
+          
+          // Perform full app analysis
+          if (metric) {
+            self.performFullAnalysis();
+          }
+          
+          return result;
+        } catch (error) {
+          self.state.perfStore.endTimer(timerId, { error: true });
+          throw error;
+        }
+      } else {
+        return originalRender.call(this, vnode, container);
+      }
+    };
+  }
+
+  shouldProfile() {
+    // Sample-based profiling
+    return this.state.config.profileAll || Math.random() < this.state.config.sampleRate;
+  }
+
+  analyzeRenderResult(vnode, metric) {
+    // Count virtual nodes
+    const nodeCount = this.countVNodes(vnode);
+    
+    // Calculate efficiency
+    const efficiency = nodeCount > 0 ? metric.duration / nodeCount : 0;
+    
+    this.state.perfStore.recordEfficiency(metric.componentName, {
+      nodeCount,
+      duration: metric.duration,
+      efficiency,
+      timestamp: Date.now()
+    });
+  }
+
+  countVNodes(vnode) {
+    if (!vnode) return 0;
+    
+    let count = 1;
+    if (vnode.children) {
+      if (Array.isArray(vnode.children)) {
+        count += vnode.children.reduce((sum, child) => sum + this.countVNodes(child), 0);
+      } else {
+        count += this.countVNodes(vnode.children);
+      }
+    }
+    
+    return count;
+  }
+
+  performFullAnalysis() {
+    const metrics = this.state.perfStore.getMetrics();
+    
+    // Identify bottlenecks
+    const bottlenecks = this.identifyBottlenecks(metrics);
+    
+    // Memory analysis
+    const memoryAnalysis = this.analyzeMemory();
+    
+    // Component tree analysis
+    const treeAnalysis = this.analyzeComponentTree();
+    
+    // Emit comprehensive report
+    this.state.perfStore.emitReport({
+      timestamp: Date.now(),
+      bottlenecks,
+      memoryAnalysis,
+      treeAnalysis,
+      recommendations: this.generateRecommendations(bottlenecks, memoryAnalysis)
+    });
+  }
+
+  identifyBottlenecks(metrics) {
+    const components = Object.entries(metrics.components || {});
+    
+    return components
+      .filter(([_, data]) => data.avgTime > 16) // 60fps threshold
+      .sort((a, b) => b[1].avgTime - a[1].avgTime)
+      .slice(0, 5)
+      .map(([name, data]) => ({
+        component: name,
+        avgTime: data.avgTime,
+        renderCount: data.count,
+        impact: data.avgTime * data.count
+      }));
+  }
+
+  analyzeMemory() {
+    if (!performance.memory) return null;
+    
+    const snapshots = this.state.perfStore.memorySnapshots || [];
+    if (snapshots.length < 2) return null;
+    
+    const first = snapshots[0];
+    const last = snapshots[snapshots.length - 1];
+    const growth = last.used - first.used;
+    const growthRate = growth / (last.timestamp - first.timestamp) * 1000; // per second
+    
+    return {
+      totalGrowth: growth,
+      growthRate,
+      currentUsage: last.used,
+      peakUsage: Math.max(...snapshots.map(s => s.used)),
+      possibleLeak: growthRate > 1000000 // 1MB per second
+    };
+  }
+
+  analyzeComponentTree() {
+    // This would analyze the actual component tree
+    // For now, return mock analysis
+    return {
+      totalComponents: this.state.perfStore.getComponentCount(),
+      maxDepth: this.state.perfStore.getMaxTreeDepth(),
+      rerenderChains: this.state.perfStore.getRerenderChains()
+    };
+  }
+
+  generateRecommendations(bottlenecks, memoryAnalysis) {
+    const recommendations = [];
+    
+    // Performance recommendations
+    bottlenecks.forEach(bottleneck => {
+      if (bottleneck.avgTime > 50) {
+        recommendations.push({
+          type: 'performance',
+          severity: 'high',
+          component: bottleneck.component,
+          message: `Component renders take ${bottleneck.avgTime.toFixed(2)}ms on average. Consider optimization.`
+        });
+      }
+    });
+    
+    // Memory recommendations
+    if (memoryAnalysis?.possibleLeak) {
+      recommendations.push({
+        type: 'memory',
+        severity: 'high',
+        message: `Memory growing at ${(memoryAnalysis.growthRate / 1024 / 1024).toFixed(2)}MB/s. Possible memory leak.`
+      });
+    }
+    
+    return recommendations;
+  }
+
+  // Cleanup and restore
+  cleanup() {
+    if (this.state.originalMount) {
+      window.Eghact.Component.prototype._mount = this.state.originalMount;
+    }
+    if (this.state.originalRender) {
+      window.Eghact.Component.prototype.render = this.state.originalRender;
+    }
+    
+    console.log('[PerfHook] Cleaned up and restored original methods');
+  }
+
+  render() {
+    return <div class="perf-hook-status">
+      <span class="status-indicator" style={{ 
+        background: this.state.perfStore ? '#51cf66' : '#ff6b6b' 
+      }}></span>
+      Performance Hook {this.state.perfStore ? 'Active' : 'Inactive'}
+    </div>
+  }
+}
+
+// Performance Store implementation
+class PerformanceStore {
+  constructor() {
+    this.metrics = {
+      components: {},
+      dom: { nodeCount: 0, maxDepth: 0 },
+      memory: []
+    };
+    this.activeTimers = new Map();
+    this.subscribers = new Set();
+  }
+
+  startTimer(name, operation = 'render') {
+    const id = `${name}-${operation}-${Date.now()}-${Math.random()}`;
+    this.activeTimers.set(id, {
+      name,
+      operation,
+      startTime: performance.now(),
+      startMemory: performance.memory?.usedJSHeapSize || 0
+    });
+    return id;
+  }
+
+  endTimer(id, metadata = {}) {
+    const timer = this.activeTimers.get(id);
+    if (!timer) return null;
+
+    const duration = performance.now() - timer.startTime;
+    const memoryDelta = (performance.memory?.usedJSHeapSize || 0) - timer.startMemory;
+
+    const metric = {
+      componentName: timer.name,
+      operation: timer.operation,
+      duration,
+      memoryDelta,
+      ...metadata
+    };
+
+    // Update component metrics
+    if (!this.metrics.components[timer.name]) {
+      this.metrics.components[timer.name] = {
+        count: 0,
+        totalTime: 0,
+        avgTime: 0,
+        operations: {}
+      };
+    }
+
+    const comp = this.metrics.components[timer.name];
+    comp.count++;
+    comp.totalTime += duration;
+    comp.avgTime = comp.totalTime / comp.count;
+
+    if (!comp.operations[timer.operation]) {
+      comp.operations[timer.operation] = { count: 0, totalTime: 0 };
+    }
+    comp.operations[timer.operation].count++;
+    comp.operations[timer.operation].totalTime += duration;
+
+    this.activeTimers.delete(id);
+    this.emit('metric', metric);
+
+    return metric;
+  }
+
+  trackDOMNode(element) {
+    this.metrics.dom.nodeCount++;
+    const depth = this.getNodeDepth(element);
+    this.metrics.dom.maxDepth = Math.max(this.metrics.dom.maxDepth, depth);
+  }
+
+  getNodeDepth(element) {
+    let depth = 0;
+    let current = element;
+    while (current.parentElement) {
+      depth++;
+      current = current.parentElement;
+    }
+    return depth;
+  }
+
+  recordEfficiency(componentName, data) {
+    if (!this.metrics.components[componentName]) {
+      this.metrics.components[componentName] = {};
+    }
+    this.metrics.components[componentName].efficiency = data;
+  }
+
+  getMetrics() {
+    return this.metrics;
+  }
+
+  getComponentCount() {
+    return Object.keys(this.metrics.components).length;
+  }
+
+  getMaxTreeDepth() {
+    return this.metrics.dom.maxDepth;
+  }
+
+  getRerenderChains() {
+    // Analyze rerender patterns
+    return [];
+  }
+
+  emitReport(report) {
+    this.emit('report', report);
+  }
+
+  emit(type, data) {
+    this.subscribers.forEach(callback => callback({ type, data }));
+  }
+
+  subscribe(callback) {
+    this.subscribers.add(callback);
+    return () => this.subscribers.delete(callback);
+  }
+}
+
+// Auto-inject on load
+if (typeof window !== 'undefined') {
+  window.__EghactPerfHook = new PerformanceRuntimeHook();
+  
+  // Wait for Eghact to load
+  if (window.Eghact) {
+    window.__EghactPerfHook.injectIntoRuntime();
+  } else {
+    // Poll for Eghact
+    const checkInterval = setInterval(() => {
+      if (window.Eghact || window.EghactRuntime) {
+        window.__EghactPerfHook.injectIntoRuntime();
+        clearInterval(checkInterval);
+      }
+    }, 100);
+  }
+}
+
+export default PerformanceRuntimeHook;

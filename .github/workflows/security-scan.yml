@@ -1,0 +1,300 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          npm audit --production --audit-level=moderate
+          npm audit --production --json > npm-audit.json || true
+
+      - name: Upload npm audit results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: npm-audit-report
+          path: npm-audit.json
+
+      - name: Run Snyk vulnerability scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --json > snyk-report.json || true
+
+  code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript"
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/javascript
+            p/typescript
+            p/react
+            p/owasp-top-ten
+          generateSarif: true
+
+      - name: Upload Semgrep results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  rust-security:
+    name: Rust Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit
+        run: |
+          cd runtime-native
+          cargo audit --json > ../cargo-audit.json || true
+          cd ../cli-native
+          cargo audit || true
+          cd ../epkg
+          cargo audit || true
+
+      - name: Upload cargo audit results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cargo-audit-report
+          path: cargo-audit.json
+
+  security-headers:
+    name: Security Headers Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start dev server
+        run: |
+          npm run dev &
+          sleep 10
+
+      - name: Check security headers
+        run: |
+          # Check for required security headers
+          curl -s -I http://localhost:3000 | grep -E "(X-Frame-Options|X-Content-Type-Options|Strict-Transport-Security|Content-Security-Policy)"
+          
+          # Detailed header analysis
+          npx --yes security-headers-check http://localhost:3000
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check licenses
+        run: |
+          license-checker --production --excludePrivatePackages --json > licenses.json
+          # Fail if GPL or other incompatible licenses found
+          ! license-checker --production --excludePrivatePackages --onlyAllow "MIT;Apache-2.0;BSD-3-Clause;BSD-2-Clause;ISC;CC0-1.0"
+
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build -t eghact:${{ github.sha }} -f Dockerfile .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: eghact:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+  secrets-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  owasp-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'Eghact Framework'
+          path: '.'
+          format: 'ALL'
+          args: >
+            --enableRetired
+            --enableExperimental
+
+      - name: Upload OWASP results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: owasp-dependency-check-report
+          path: reports/
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-scan, code-analysis, rust-security, secrets-scan, owasp-check]
+    if: always()
+    steps:
+      - name: Generate Security Report
+        run: |
+          echo "# Security Scan Summary" > security-summary.md
+          echo "Run Date: $(date)" >> security-summary.md
+          echo "Commit: ${{ github.sha }}" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          echo "## Scan Results" >> security-summary.md
+          echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> security-summary.md
+          echo "- Code Analysis: ${{ needs.code-analysis.result }}" >> security-summary.md
+          echo "- Rust Security: ${{ needs.rust-security.result }}" >> security-summary.md
+          echo "- Secrets Scan: ${{ needs.secrets-scan.result }}" >> security-summary.md
+          echo "- OWASP Check: ${{ needs.owasp-check.result }}" >> security-summary.md
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-summary
+          path: security-summary.md
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const summary = `## 🔒 Security Scan Results
+            
+            | Check | Status |
+            |-------|--------|
+            | Dependencies | ${{ needs.dependency-scan.result }} |
+            | Code Analysis | ${{ needs.code-analysis.result }} |
+            | Rust Security | ${{ needs.rust-security.result }} |
+            | Secrets | ${{ needs.secrets-scan.result }} |
+            | OWASP | ${{ needs.owasp-check.result }} |
+            
+            View detailed reports in the workflow artifacts.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Fail if security issues found
+        if: |
+          needs.dependency-scan.result == 'failure' ||
+          needs.code-analysis.result == 'failure' ||
+          needs.secrets-scan.result == 'failure'
+        run: |
+          echo "Security issues detected! Please review the scan results."
+          exit 1

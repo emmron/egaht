@@ -1,0 +1,438 @@
+// Eghact Compiler v2 - Enhanced Parser
+// Handles all v2 syntax features
+
+@component EghactParser {
+  @state {
+    tokens: Array<Token> = []
+    current: number = 0
+    ast: AST = null
+    errors: Array<ParseError> = []
+  }
+
+  // Tokenizer with enhanced patterns
+  @pure tokenize(source: string) -> Array<Token> {
+    let patterns = [
+      // Decorators
+      { type: 'DECORATOR', pattern: /@\w+/ },
+      
+      // Keywords
+      { type: 'COMPONENT', pattern: /\bcomponent\b/ },
+      { type: 'STATE', pattern: /\bstate\b/ },
+      { type: 'PROPS', pattern: /\bprops\b/ },
+      { type: 'RENDER', pattern: /\brender\b/ },
+      { type: 'MATCH', pattern: /\bmatch\b/ },
+      { type: 'CASE', pattern: /\bcase\b/ },
+      { type: 'DEFAULT', pattern: /\bdefault\b/ },
+      { type: 'FOR', pattern: /\bfor\b/ },
+      { type: 'IN', pattern: /\bin\b/ },
+      { type: 'IF', pattern: /\bif\b/ },
+      { type: 'ELSE', pattern: /\belse\b/ },
+      { type: 'GUARD', pattern: /\bguard\b/ },
+      { type: 'ASYNC', pattern: /\basync\b/ },
+      { type: 'AWAIT', pattern: /\bawait\b/ },
+      { type: 'YIELD', pattern: /\byield\b/ },
+      
+      // Operators
+      { type: 'PIPELINE', pattern: /\|>/ },
+      { type: 'ARROW', pattern: /=>/ },
+      { type: 'SPREAD', pattern: /\.\.\./ },
+      { type: 'RANGE', pattern: /\.\./ },
+      { type: 'OPTIONAL', pattern: /\?\./ },
+      
+      // Literals
+      { type: 'NUMBER', pattern: /\d+(\.\d+)?/ },
+      { type: 'STRING', pattern: /"[^"]*"|'[^']*'|`[^`]*`/ },
+      { type: 'BOOLEAN', pattern: /\b(true|false)\b/ },
+      { type: 'NULL', pattern: /\bnull\b/ },
+      
+      // Identifiers
+      { type: 'IDENTIFIER', pattern: /[a-zA-Z_]\w*/ },
+      
+      // Symbols
+      { type: 'LPAREN', pattern: /\(/ },
+      { type: 'RPAREN', pattern: /\)/ },
+      { type: 'LBRACE', pattern: /\{/ },
+      { type: 'RBRACE', pattern: /\}/ },
+      { type: 'LBRACKET', pattern: /\[/ },
+      { type: 'RBRACKET', pattern: /\]/ },
+      { type: 'SEMICOLON', pattern: /;/ },
+      { type: 'COMMA', pattern: /,/ },
+      { type: 'DOT', pattern: /\./ },
+      { type: 'COLON', pattern: /:/ },
+      { type: 'QUESTION', pattern: /\?/ },
+      { type: 'AT', pattern: /@/ },
+      
+      // JSX
+      { type: 'JSX_OPEN', pattern: /<\w+/ },
+      { type: 'JSX_CLOSE', pattern: /<\/\w+>/ },
+      { type: 'JSX_SELF_CLOSE', pattern: /\/>/ },
+    ]
+
+    return @lexicalAnalysis(source, patterns)
+  }
+
+  // Recursive descent parser
+  @parse(source: string) -> AST {
+    @state.tokens = @tokenize(source)
+    @state.current = 0
+    @state.ast = @parseProgram()
+    
+    return @state.ast
+  }
+
+  // Program parser
+  @parseProgram() -> ProgramNode {
+    let declarations = []
+    
+    while !@isAtEnd() {
+      try {
+        declarations.push(@parseDeclaration())
+      } catch (error) {
+        @state.errors.push(error)
+        @synchronize()
+      }
+    }
+    
+    return {
+      type: 'Program',
+      declarations,
+      errors: @state.errors
+    }
+  }
+
+  // Declaration parser with pattern matching
+  @parseDeclaration() -> Declaration {
+    return match @peek().type {
+      case 'DECORATOR' => @parseDecoratedDeclaration()
+      case 'COMPONENT' => @parseComponent()
+      case 'TYPE' => @parseType()
+      case 'IMPORT' => @parseImport()
+      case 'EXPORT' => @parseExport()
+      default => @parseStatement()
+    }
+  }
+
+  // Component parser with decorators
+  @parseDecoratedDeclaration() -> Declaration {
+    let decorators = []
+    
+    while @check('DECORATOR') {
+      decorators.push(@parseDecorator())
+    }
+    
+    let declaration = @parseDeclaration()
+    declaration.decorators = decorators
+    
+    return declaration
+  }
+
+  // Enhanced component parser
+  @parseComponent() -> ComponentNode {
+    @consume('COMPONENT', "Expected 'component'")
+    let name = @consume('IDENTIFIER', "Expected component name")
+    
+    let typeParams = null
+    if @check('LT') {
+      typeParams = @parseTypeParameters()
+    }
+    
+    @consume('LBRACE', "Expected '{'")
+    
+    let body = {
+      props: null,
+      state: null,
+      computed: [],
+      methods: [],
+      lifecycle: [],
+      render: null
+    }
+    
+    while !@check('RBRACE') && !@isAtEnd() {
+      match {
+        case @match('DECORATOR', 'props') => {
+          body.props = @parseProps()
+        }
+        case @match('DECORATOR', 'state') => {
+          body.state = @parseState()
+        }
+        case @match('DECORATOR', 'computed') => {
+          body.computed.push(@parseComputed())
+        }
+        case @match('DECORATOR', 'lifecycle') => {
+          body.lifecycle.push(@parseLifecycle())
+        }
+        case @match('DECORATOR', 'render') => {
+          body.render = @parseRender()
+        }
+        default => {
+          body.methods.push(@parseMethod())
+        }
+      }
+    }
+    
+    @consume('RBRACE', "Expected '}'")
+    
+    return {
+      type: 'Component',
+      name: name.lexeme,
+      typeParams,
+      body
+    }
+  }
+
+  // Pattern matching parser
+  @parseMatch() -> MatchExpression {
+    @consume('MATCH', "Expected 'match'")
+    
+    let discriminant = null
+    if !@check('LBRACE') {
+      discriminant = @parseExpression()
+    }
+    
+    @consume('LBRACE', "Expected '{'")
+    
+    let cases = []
+    while !@check('RBRACE') && !@isAtEnd() {
+      cases.push(@parseCase())
+    }
+    
+    @consume('RBRACE', "Expected '}'")
+    
+    return {
+      type: 'MatchExpression',
+      discriminant,
+      cases
+    }
+  }
+
+  // Case parser with pattern support
+  @parseCase() -> CaseClause {
+    if @match('DEFAULT') {
+      @consume('ARROW', "Expected '=>'")
+      return {
+        type: 'DefaultCase',
+        consequent: @parseExpression()
+      }
+    }
+    
+    @consume('CASE', "Expected 'case'")
+    let pattern = @parsePattern()
+    
+    let guard = null
+    if @match('IF') {
+      guard = @parseExpression()
+    }
+    
+    @consume('ARROW', "Expected '=>'")
+    let consequent = @parseExpression()
+    
+    return {
+      type: 'CaseClause',
+      pattern,
+      guard,
+      consequent
+    }
+  }
+
+  // Pattern parser
+  @parsePattern() -> Pattern {
+    return match {
+      case @check('NUMBER') => @parseLiteralPattern()
+      case @check('STRING') => @parseLiteralPattern()
+      case @check('IDENTIFIER') && @checkNext('LPAREN') => @parseConstructorPattern()
+      case @check('LBRACKET') => @parseArrayPattern()
+      case @check('LBRACE') => @parseObjectPattern()
+      case @checkRange() => @parseRangePattern()
+      default => @parseIdentifierPattern()
+    }
+  }
+
+  // Array comprehension parser
+  @parseArrayComprehension() -> ArrayComprehension {
+    @consume('LBRACKET', "Expected '['")
+    @consume('FOR', "Expected 'for'")
+    
+    let element = @parsePattern()
+    @consume('IN', "Expected 'in'")
+    let iterable = @parseExpression()
+    
+    let condition = null
+    if @match('IF') {
+      condition = @parseExpression()
+    }
+    
+    @consume('ARROW', "Expected '=>'")
+    let expression = @parseExpression()
+    
+    @consume('RBRACKET', "Expected ']'")
+    
+    return {
+      type: 'ArrayComprehension',
+      element,
+      iterable,
+      condition,
+      expression
+    }
+  }
+
+  // Pipeline parser
+  @parsePipeline() -> PipelineExpression {
+    let left = @parsePrimary()
+    
+    while @match('PIPELINE') {
+      let operator = @parseExpression()
+      left = {
+        type: 'PipelineExpression',
+        left,
+        operator
+      }
+    }
+    
+    return left
+  }
+
+  // JSX parser with enhanced features
+  @parseJSX() -> JSXElement {
+    let opening = @parseJSXOpeningElement()
+    
+    if opening.selfClosing {
+      return {
+        type: 'JSXElement',
+        opening,
+        children: [],
+        closing: null
+      }
+    }
+    
+    let children = []
+    while !@checkJSXClosing(opening.name) {
+      children.push(@parseJSXChild())
+    }
+    
+    let closing = @parseJSXClosingElement()
+    
+    return {
+      type: 'JSXElement',
+      opening,
+      children,
+      closing
+    }
+  }
+
+  // JSX child parser with fragments and expressions
+  @parseJSXChild() -> JSXChild {
+    return match {
+      case @check('LBRACE') => @parseJSXExpression()
+      case @check('JSX_OPEN') => @parseJSX()
+      case @check('TEXT') => @parseJSXText()
+      case @checkFragment() => @parseJSXFragment()
+      default => @error("Unexpected token in JSX")
+    }
+  }
+
+  // Async generator parser
+  @parseAsyncGenerator() -> AsyncGeneratorFunction {
+    @consume('ASYNC', "Expected 'async'")
+    @consume('STAR', "Expected '*'")
+    
+    let name = @consume('IDENTIFIER', "Expected function name")
+    let params = @parseParameters()
+    let body = @parseBlock()
+    
+    return {
+      type: 'AsyncGeneratorFunction',
+      name: name.lexeme,
+      params,
+      body,
+      async: true,
+      generator: true
+    }
+  }
+
+  // Type annotation parser
+  @parseTypeAnnotation() -> TypeAnnotation {
+    @consume('COLON', "Expected ':'")
+    return @parseType()
+  }
+
+  // Type parser with unions and generics
+  @parseType() -> Type {
+    let type = @parsePrimaryType()
+    
+    while @match('PIPE') {
+      let right = @parsePrimaryType()
+      type = {
+        type: 'UnionType',
+        types: [type, right]
+      }
+    }
+    
+    return type
+  }
+
+  // Error recovery
+  @synchronize() {
+    @advance()
+    
+    while !@isAtEnd() {
+      if @previous().type === 'SEMICOLON' return
+      
+      match @peek().type {
+        case 'COMPONENT', 'TYPE', 'IMPORT', 'EXPORT' => return
+      }
+      
+      @advance()
+    }
+  }
+
+  // Helper methods
+  @peek() -> Token {
+    return @state.tokens[@state.current]
+  }
+
+  @previous() -> Token {
+    return @state.tokens[@state.current - 1]
+  }
+
+  @isAtEnd() -> boolean {
+    return @peek().type === 'EOF'
+  }
+
+  @advance() -> Token {
+    if !@isAtEnd() @state.current++
+    return @previous()
+  }
+
+  @check(type: TokenType) -> boolean {
+    if @isAtEnd() return false
+    return @peek().type === type
+  }
+
+  @match(...types: Array<TokenType>) -> boolean {
+    for type in types {
+      if @check(type) {
+        @advance()
+        return true
+      }
+    }
+    return false
+  }
+
+  @consume(type: TokenType, message: string) -> Token {
+    if @check(type) return @advance()
+    throw @error(message)
+  }
+
+  @error(message: string) -> ParseError {
+    return {
+      type: 'ParseError',
+      message,
+      token: @peek(),
+      line: @peek().line,
+      column: @peek().column
+    }
+  }
+}
+
+// Export parser
+@export default EghactParser

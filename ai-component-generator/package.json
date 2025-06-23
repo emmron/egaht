@@ -1,0 +1,34 @@
+{
+  "name": "@eghact/ai-component-generator",
+  "version": "1.0.0",
+  "description": "AI-powered component generator for Eghact framework",
+  "main": "src/index.js",
+  "bin": {
+    "eghact-ai-gen": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "echo 'No build step required for JS'"
+  },
+  "keywords": [
+    "eghact",
+    "ai",
+    "component",
+    "generator",
+    "llm"
+  ],
+  "author": "Eghact Team",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.20.0",
+    "commander": "^11.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,76 @@
+[package]
+name = "eghact-server"
+version = "1.0.0"
+edition = "2021"
+authors = ["Eghact Core Team"]
+description = "Native HTTP server for Eghact - Zero Node.js"
+
+[[bin]]
+name = "eghact-server"
+path = "src/main.rs"
+
+[dependencies]
+# HTTP server
+hyper = { version = "0.14", features = ["full"] }
+tokio = { version = "1.35", features = ["full"] }
+tower = { version = "0.4", features = ["full"] }
+tower-http = { version = "0.4", features = ["full"] }
+
+# HTTP/3 support
+quinn = "0.10"
+h3 = "0.0.3"
+
+# WebSocket support
+tokio-tungstenite = "0.21"
+
+# TLS
+rustls = "0.22"
+tokio-rustls = "0.25"
+rustls-pemfile = "2.0"
+
+# Routing
+matchit = "0.7"
+routerify = "3.0"
+
+# Static file serving
+mime_guess = "2.0"
+rust-embed = { version = "8.2", features = ["compression"] }
+
+# Templating
+askama = "0.12"
+
+# Session management
+async-session = "3.0"
+
+# Compression
+async-compression = { version = "0.4", features = ["all"] }
+
+# Caching
+moka = { version = "0.12", features = ["future"] }
+
+# Metrics
+prometheus = "0.13"
+
+# Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Configuration
+config = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Hot reloading
+notify = "6.1"
+notify-debouncer-mini = "0.4"
+
+# Process management
+nix = { version = "0.27", features = ["process"] }
+
+[dev-dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+criterion = "0.5"
+
+[[bench]]
+name = "server_bench"
+harness = false

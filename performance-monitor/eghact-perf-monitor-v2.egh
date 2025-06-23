@@ -1,0 +1,453 @@
+// Eghact Performance Monitor V2 - Enhanced Syntax
+// Pure Eghact with improved language features
+
+@component PerformanceMonitor {
+  // Enhanced state declaration with types
+  @state {
+    metrics: Map<string, ComponentMetrics> = new Map()
+    memorySnapshots: Array<MemorySnapshot> = []
+    activeTimers: Map<string, Timer> = new Map()
+    subscribers: Set<Function> = new Set()
+    config: {
+      maxHistory: 1000
+      memoryInterval: 1000
+      aggregationInterval: 100
+    }
+  }
+
+  // Pattern matching compute engine
+  @compute match(instruction, data) {
+    case ADD(a, b) => a + b
+    case SUB(a, b) => a - b
+    case MUL(a, b) => a * b
+    case DIV(a, b) => b !== 0 ? a / b : 0
+    case MOD(a, b) => a % b
+    
+    case EQ(a, b) => a === b
+    case NEQ(a, b) => a !== b
+    case GT(a, b) => a > b
+    case LT(a, b) => a < b
+    case GTE(a, b) => a >= b
+    case LTE(a, b) => a <= b
+    
+    case AND(a, b) => a && b
+    case OR(a, b) => a || b
+    case NOT(a) => !a
+    
+    case IF(cond, then, else) => cond ? @compute(then) : @compute(else)
+    case LOOP(count, body) => {
+      let result = null
+      for i in 0..count {
+        result = @compute(body, { index: i, prev: result })
+      }
+      result
+    }
+    
+    case GET(obj, key) => obj?.[key]
+    case SET(obj, key, val) => { obj[key] = val; obj }
+    case PUSH(arr, val) => { arr.push(val); arr }
+    case MAP(arr, fn) => arr.map(item => @compute(fn, item))
+    case FILTER(arr, fn) => arr.filter(item => @compute(fn, item))
+    case REDUCE(arr, fn, init) => arr.reduce((acc, item) => @compute(fn, { acc, item }), init)
+    
+    case TIMER_START(name) => @startTimer(name)
+    case TIMER_END(id) => @endTimer(id)
+    case MEMORY_SNAPSHOT() => @captureMemory()
+    case AGGREGATE(metrics) => @aggregateMetrics(metrics)
+    case EMIT(event) => @emit(event)
+    
+    default => instruction
+  }
+
+  // Stack-based VM with enhanced syntax
+  @execute(program: Array<Instruction>) -> ExecutionResult {
+    let stack = []
+    let memory = {}
+    let pc = 0
+    
+    while pc < program.length {
+      let inst = program[pc]
+      
+      match inst.type {
+        case PUSH => stack.push(inst.value)
+        case POP => memory[inst.name] = stack.pop()
+        case COMPUTE => {
+          let result = @compute(inst.op, inst.args)
+          stack.push(result)
+        }
+        case JUMP_IF => {
+          if stack.pop() {
+            pc = inst.target - 1
+          }
+        }
+        case CALL => {
+          let fn = memory[inst.function]
+          let args = stack.splice(-inst.arity)
+          let result = fn(...args)
+          stack.push(result)
+        }
+      }
+      pc++
+    }
+    
+    return { stack, memory }
+  }
+
+  // Reactive timer with automatic cleanup
+  @reactive startTimer(componentName: string) -> TimerId {
+    let id = `${componentName}-${Date.now()}-${Math.random()}`
+    
+    @effect {
+      @state.activeTimers[id] = {
+        componentName,
+        startTime: performance.now(),
+        startMemory: performance.memory?.usedJSHeapSize || 0
+      }
+    }
+    
+    return id
+  }
+
+  // End timer with automatic metric aggregation
+  @reactive endTimer(id: TimerId) -> Metric? {
+    let timer = @state.activeTimers[id]
+    if !timer return null
+
+    let endTime = performance.now()
+    let duration = endTime - timer.startTime
+    let endMemory = performance.memory?.usedJSHeapSize || 0
+    let memoryDelta = endMemory - timer.startMemory
+
+    let metric = {
+      componentName: timer.componentName,
+      duration,
+      memoryDelta,
+      timestamp: Date.now()
+    }
+
+    // Reactive state update with automatic aggregation
+    @state.metrics[timer.componentName] = @compute(AGGREGATE, [
+      @state.metrics[timer.componentName] || {},
+      metric
+    ])
+
+    delete @state.activeTimers[id]
+    
+    // Auto-emit event
+    @emit({ type: 'metric', data: metric })
+    
+    return metric
+  }
+
+  // Memory capture with compression
+  @reactive captureMemory() -> MemorySnapshot? {
+    if !performance.memory return null
+
+    let snapshot = {
+      timestamp: Date.now(),
+      used: performance.memory.usedJSHeapSize,
+      total: performance.memory.totalJSHeapSize,
+      limit: performance.memory.jsHeapSizeLimit
+    }
+
+    // Keep only recent snapshots using array comprehension
+    @state.memorySnapshots = [
+      ...@state.memorySnapshots.filter(s => 
+        Date.now() - s.timestamp < @state.config.maxHistory * 1000
+      ),
+      snapshot
+    ]
+
+    return snapshot
+  }
+
+  // Enhanced aggregation with pipeline operator
+  @pure aggregateMetrics(existing: ComponentMetrics = {}, newMetric: Metric) -> ComponentMetrics {
+    let count = (existing.count || 0) + 1
+    let totalTime = (existing.totalTime || 0) + newMetric.duration
+    
+    return {
+      count,
+      totalTime,
+      avgTime: totalTime / count,
+      minTime: Math.min(existing.minTime || Infinity, newMetric.duration),
+      maxTime: Math.max(existing.maxTime || 0, newMetric.duration),
+      memoryImpact: (existing.memoryImpact || 0) + newMetric.memoryDelta,
+      history: [...(existing.history || []), newMetric]
+        |> filter((_, idx, arr) => idx >= arr.length - 100)
+    }
+  }
+
+  // Event system with async support
+  @async subscribe(fn: Function) -> Unsubscribe {
+    @state.subscribers.add(fn)
+    return () => @state.subscribers.delete(fn)
+  }
+
+  @async emit(event: Event) {
+    for subscriber in @state.subscribers {
+      await subscriber(event)
+    }
+  }
+
+  // Advanced analysis with async generators
+  @async* analyzePerformance() {
+    // Yield slowest components
+    yield {
+      type: 'slowest',
+      data: Object.entries(@state.metrics)
+        |> map(([name, metrics]) => ({ name, avgTime: metrics.avgTime }))
+        |> sort((a, b) => b.avgTime - a.avgTime)
+        |> take(10)
+    }
+    
+    // Yield memory leaks
+    yield {
+      type: 'leaks',
+      data: @detectMemoryLeaks()
+        |> map(component => ({
+          component,
+          severity: match component.memoryGrowth {
+            case > 1000000 => 'high'
+            case > 100000 => 'medium'
+            default => 'low'
+          }
+        }))
+    }
+    
+    // Yield render patterns
+    yield {
+      type: 'patterns',
+      data: @analyzeRenderPatterns()
+    }
+  }
+
+  // Memory leak detection with array comprehension
+  @pure detectMemoryLeaks() -> Array<Leak> {
+    return [
+      for [name, metrics] in Object.entries(@state.metrics)
+      if metrics.history?.length >= 10
+      let recent = metrics.history.slice(-10)
+      let growth = recent[recent.length - 1].memoryDelta - recent[0].memoryDelta
+      if growth > 0
+      { component: name, memoryGrowth: growth }
+    ]
+  }
+
+  // Pattern analysis with pipeline
+  @pure analyzeRenderPatterns() -> PatternMap {
+    return Object.values(@state.metrics)
+      |> reduce((acc, metrics) => {
+        let pattern = @detectPattern(metrics.history || [])
+        if pattern {
+          acc[pattern.type] = (acc[pattern.type] || 0) + 1
+        }
+        return acc
+      }, {})
+  }
+
+  // Pattern detection with guards
+  @pure detectPattern(history: Array<Metric>) -> Pattern? {
+    guard history.length >= 3 else return null
+
+    let intervals = [
+      for i in 1..<history.length
+      history[i].timestamp - history[i-1].timestamp
+    ]
+
+    let avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length
+    let variance = intervals.reduce((sum, int) => sum + Math.pow(int - avgInterval, 2), 0) / intervals.length
+
+    return match {
+      case variance < 1000 => { type: 'regular', interval: avgInterval }
+      case history.some(h => h.duration > 100) => { type: 'slow-renders' }
+      default => { type: 'irregular' }
+    }
+  }
+
+  // Enhanced render with JSX spread and fragments
+  @render {
+    <div class="eghact-performance-monitor">
+      <h2>Performance Monitor V2</h2>
+      
+      <div class="monitor-controls">
+        <button @click={@startMonitoring}>Start</button>
+        <button @click={@stopMonitoring}>Stop</button>
+        <button @click={@clearMetrics}>Clear</button>
+        <button @click={@runAnalysis}>Analyze</button>
+      </div>
+
+      <div class="metrics-grid">
+        {for [name, metrics] in Object.entries(@state.metrics) (
+          <MetricCard key={name} {...metrics} name={name}>
+            <div class="metric-chart">
+              {@renderMiniChart(metrics.history || [])}
+            </div>
+          </MetricCard>
+        )}
+      </div>
+
+      <div class="memory-monitor">
+        <h3>Memory Usage</h3>
+        {@renderMemoryChart()}
+      </div>
+
+      {if @state.analysisResults (
+        <div class="analysis-results">
+          <h3>Performance Analysis</h3>
+          <pre>{JSON.stringify(@state.analysisResults, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  }
+
+  // Component for metric cards with slots
+  @component MetricCard {
+    @props {
+      name: string
+      count: number
+      avgTime: number
+      minTime: number
+      maxTime: number
+      memoryImpact: number
+    }
+
+    @render {
+      <div class="metric-card">
+        <h3>{@props.name}</h3>
+        <div class="metric-stats">
+          <span>Renders: {@props.count}</span>
+          <span>Avg: {@props.avgTime?.toFixed(2)}ms</span>
+          <span>Min/Max: {@props.minTime?.toFixed(2)}/{@props.maxTime?.toFixed(2)}ms</span>
+          <span>Memory: {(@props.memoryImpact / 1024).toFixed(2)}KB</span>
+        </div>
+        <slot />
+      </div>
+    }
+  }
+
+  // SVG chart with template literals
+  @pure renderMiniChart(history: Array<Metric>) -> JSX {
+    let width = 200
+    let height = 50
+    let max = Math.max(...history.map(h => h.duration), 1)
+    
+    return (
+      <svg width={width} height={height}>
+        {for (h, i) in history.slice(-20).entries() 
+          let x = (i / 20) * width
+          let barHeight = (h.duration / max) * height
+          (
+            <rect
+              key={i}
+              x={x}
+              y={height - barHeight}
+              width={width / 20 - 1}
+              height={barHeight}
+              fill="#4dabf7"
+            />
+          )
+        }
+      </svg>
+    )
+  }
+
+  // Memory chart with path interpolation
+  @pure renderMemoryChart() -> JSX {
+    let snapshots = @state.memorySnapshots.slice(-50)
+    guard snapshots.length > 0 else return <div>No memory data</div>
+
+    let width = 400
+    let height = 100
+    let max = Math.max(...snapshots.map(s => s.used))
+    
+    let points = snapshots
+      |> map((s, i) => {
+        let x = (i / snapshots.length) * width
+        let y = height - (s.used / max) * height
+        return `${x},${y}`
+      })
+      |> join(' ')
+
+    return (
+      <svg width={width} height={height}>
+        <polyline
+          points={points}
+          fill="none"
+          stroke="#51cf66"
+          stroke-width="2"
+        />
+      </svg>
+    )
+  }
+
+  // Lifecycle with async support
+  @lifecycle async mounted() {
+    if @state.config.autoInject {
+      await @injectIntoRuntime()
+    }
+    @startMemoryMonitoring()
+  }
+
+  @lifecycle unmounted() {
+    @stopMemoryMonitoring()
+    @cleanup()
+  }
+
+  // Private methods with visibility modifiers
+  private startMemoryMonitoring() {
+    @monitorInterval = setInterval(() => {
+      @captureMemory()
+    }, @state.config.memoryInterval)
+  }
+
+  private stopMemoryMonitoring() {
+    clearInterval(@monitorInterval)
+  }
+
+  private async runAnalysis() {
+    @state.analysisResults = {}
+    
+    for await (let result of @analyzePerformance()) {
+      @state.analysisResults[result.type] = result.data
+    }
+  }
+}
+
+// Type definitions with enhanced syntax
+@type ComponentMetrics {
+  count: number
+  totalTime: number
+  avgTime: number
+  minTime: number
+  maxTime: number
+  memoryImpact: number
+  history: Array<Metric>
+}
+
+@type Metric {
+  componentName: string
+  duration: number
+  memoryDelta: number
+  timestamp: number
+}
+
+@type MemorySnapshot {
+  timestamp: number
+  used: number
+  total: number
+  limit: number
+}
+
+@type Pattern {
+  type: 'regular' | 'slow-renders' | 'irregular'
+  interval?: number
+}
+
+// Export with metadata
+@export {
+  component: PerformanceMonitor
+  version: "2.0.0"
+  author: "Agent 2 v2.0"
+  features: ["turing-complete", "reactive", "async", "pattern-matching"]
+}

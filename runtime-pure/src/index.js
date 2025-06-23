@@ -17,6 +17,15 @@ export {
   useContext,
   provide
 } from './core/component.js';
+
+// Performance monitoring exports
+export {
+  performanceStore,
+  withPerformanceMonitoring,
+  usePerformance,
+  startMemoryMonitoring,
+  stopMemoryMonitoring
+} from './performance/profiler.js';
 export { 
   initWASM, 
   wasmDiff, 
@@ -74,6 +83,7 @@ export const runtime = {
     wasm: true,
     reactive: true,
     components: true,
+    performance: true, // Performance profiler enabled
     ssr: false, // To be implemented
     hydration: false // To be implemented
   }

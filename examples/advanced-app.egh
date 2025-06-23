@@ -1,0 +1,452 @@
+// Advanced Eghact Application
+// Demonstrates all v2 language features
+
+@import { reactive, computed, effect } from "@eghact/core"
+@import { Router, Route } from "@eghact/router"
+@import * as api from "./services/api"
+
+// Type definitions
+@type User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  roles: Array<'admin' | 'user' | 'guest'>
+}
+
+@type Task {
+  id: string
+  title: string
+  completed: boolean
+  priority: 'low' | 'medium' | 'high'
+  assignee?: User
+  dueDate?: Date
+}
+
+@type AppState {
+  user: User?
+  tasks: Array<Task>
+  filter: TaskFilter
+  loading: boolean
+  error: Error?
+}
+
+// Advanced component with all features
+@component TaskManager<T extends Task> {
+  @props {
+    initialTasks?: Array<T> = []
+    onTaskComplete?: (task: T) => void
+    maxTasks?: number = 100
+  }
+  
+  @state {
+    tasks: Array<T> = @props.initialTasks
+    filter: 'all' | 'active' | 'completed' = 'all'
+    searchQuery: string = ''
+    selectedTasks: Set<string> = new Set()
+    sortBy: 'priority' | 'dueDate' | 'title' = 'priority'
+    sortOrder: 'asc' | 'desc' = 'desc'
+  }
+  
+  // Computed properties with memoization
+  @computed get filteredTasks() {
+    return @state.tasks
+      |> filter(task => {
+        match @state.filter {
+          case 'active' => !task.completed
+          case 'completed' => task.completed
+          default => true
+        }
+      })
+      |> filter(task => 
+        task.title.toLowerCase().includes(@state.searchQuery.toLowerCase())
+      )
+      |> sort((a, b) => {
+        let result = match @state.sortBy {
+          case 'priority' => @comparePriority(a.priority, b.priority)
+          case 'dueDate' => @compareDates(a.dueDate, b.dueDate)
+          case 'title' => a.title.localeCompare(b.title)
+        }
+        return @state.sortOrder === 'asc' ? result : -result
+      })
+  }
+  
+  @computed get taskStats() {
+    let stats = @state.tasks.reduce((acc, task) => {
+      acc.total++
+      if task.completed {
+        acc.completed++
+      } else {
+        acc.active++
+        acc.byPriority[task.priority]++
+      }
+      return acc
+    }, {
+      total: 0,
+      active: 0,
+      completed: 0,
+      byPriority: { low: 0, medium: 0, high: 0 }
+    })
+    
+    return {
+      ...stats,
+      completionRate: stats.total > 0 ? (stats.completed / stats.total) * 100 : 0
+    }
+  }
+  
+  // Async methods with error handling
+  @async loadTasks() {
+    try {
+      @state.loading = true
+      let response = await api.getTasks()
+      @state.tasks = response.data
+    } catch (error) {
+      @handleError(error)
+    } finally {
+      @state.loading = false
+    }
+  }
+  
+  @async createTask(title: string, priority: Task['priority'] = 'medium') {
+    guard title.trim() else return
+    
+    let newTask: T = {
+      id: @generateId(),
+      title: title.trim(),
+      completed: false,
+      priority,
+      dueDate: null
+    }
+    
+    // Optimistic update
+    @state.tasks = [...@state.tasks, newTask]
+    
+    try {
+      let created = await api.createTask(newTask)
+      // Update with server response
+      @state.tasks = @state.tasks.map(t => 
+        t.id === newTask.id ? created : t
+      )
+    } catch (error) {
+      // Rollback on error
+      @state.tasks = @state.tasks.filter(t => t.id !== newTask.id)
+      @handleError(error)
+    }
+  }
+  
+  // Pattern matching for priority comparison
+  @pure comparePriority(a: Task['priority'], b: Task['priority']) -> number {
+    let priorityValue = (p) => match p {
+      case 'high' => 3
+      case 'medium' => 2
+      case 'low' => 1
+    }
+    
+    return priorityValue(a) - priorityValue(b)
+  }
+  
+  // Batch operations with transactions
+  @async batchUpdate(updates: Array<{id: string, changes: Partial<T>}>) {
+    let rollback = @state.tasks
+    
+    try {
+      // Apply updates optimistically
+      @state.tasks = @state.tasks.map(task => {
+        let update = updates.find(u => u.id === task.id)
+        return update ? { ...task, ...update.changes } : task
+      })
+      
+      // Send to server
+      await api.batchUpdateTasks(updates)
+    } catch (error) {
+      // Rollback all changes
+      @state.tasks = rollback
+      @handleError(error)
+    }
+  }
+  
+  // Generator for pagination
+  @async* paginateTasks(pageSize: number = 10) {
+    let offset = 0
+    
+    while offset < @filteredTasks.length {
+      let page = @filteredTasks.slice(offset, offset + pageSize)
+      let hasMore = offset + pageSize < @filteredTasks.length
+      
+      yield {
+        items: page,
+        offset,
+        hasMore,
+        total: @filteredTasks.length
+      }
+      
+      offset += pageSize
+    }
+  }
+  
+  // Event handlers with pattern matching
+  @handleKeyPress(event: KeyboardEvent) {
+    match [event.key, event.ctrlKey, event.shiftKey] {
+      case ['a', true, false] => @selectAll()
+      case ['d', true, false] => @deleteSelected()
+      case ['n', true, false] => @focusNewTask()
+      case ['/', false, false] => @focusSearch()
+      case ['Escape', _, _] => @clearSelection()
+    }
+  }
+  
+  // Lifecycle hooks
+  @lifecycle async mounted() {
+    await @loadTasks()
+    
+    // Set up keyboard shortcuts
+    document.addEventListener('keydown', @handleKeyPress)
+    
+    // Auto-save effect
+    @effect {
+      if @state.tasks.length > 0 {
+        localStorage.setItem('tasks', JSON.stringify(@state.tasks))
+      }
+    }
+  }
+  
+  @lifecycle unmounted() {
+    document.removeEventListener('keydown', @handleKeyPress)
+  }
+  
+  @lifecycle updated(prevProps, prevState) {
+    if prevState.tasks !== @state.tasks && @props.onTaskComplete {
+      let completed = @state.tasks.filter(t => 
+        t.completed && !prevState.tasks.find(pt => pt.id === t.id && pt.completed)
+      )
+      
+      for task in completed {
+        @props.onTaskComplete(task)
+      }
+    }
+  }
+  
+  // Render with all JSX features
+  @render {
+    <div class="task-manager" @keydown={@handleKeyPress}>
+      <Header 
+        stats={@taskStats}
+        onSearch={query => @state.searchQuery = query}
+      />
+      
+      <div class="task-filters">
+        {for filter in ['all', 'active', 'completed'] (
+          <button
+            key={filter}
+            class={{ active: @state.filter === filter }}
+            @click={() => @state.filter = filter}
+          >
+            {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            {filter !== 'all' && (
+              <span class="count">
+                ({filter === 'active' ? @taskStats.active : @taskStats.completed})
+              </span>
+            )}
+          </button>
+        )}
+      </div>
+      
+      <div class="task-list">
+        {if @state.loading (
+          <LoadingSpinner />
+        ) else if @filteredTasks.length === 0 (
+          <EmptyState 
+            message={@state.searchQuery ? "No tasks match your search" : "No tasks yet"}
+          />
+        ) else (
+          <TransitionGroup name="task">
+            {for task in @filteredTasks (
+              <TaskItem
+                key={task.id}
+                task={task}
+                selected={@state.selectedTasks.has(task.id)}
+                onToggle={() => @toggleTask(task.id)}
+                onSelect={() => @toggleSelection(task.id)}
+                onDelete={() => @deleteTask(task.id)}
+                onEdit={changes => @updateTask(task.id, changes)}
+              />
+            )}
+          </TransitionGroup>
+        )}
+      </div>
+      
+      <TaskInput
+        @ref={input => @taskInput = input}
+        onSubmit={@createTask}
+        disabled={@state.tasks.length >= @props.maxTasks}
+      />
+      
+      {if @state.error (
+        <ErrorBoundary @catch={@handleError}>
+          <ErrorMessage error={@state.error} onDismiss={() => @state.error = null} />
+        </ErrorBoundary>
+      )}
+    </div>
+  }
+}
+
+// Functional component with hooks
+@component TaskItem {
+  @props {
+    task: Task
+    selected: boolean = false
+    onToggle: () => void
+    onSelect: () => void
+    onDelete: () => void
+    onEdit: (changes: Partial<Task>) => void
+  }
+  
+  let [isEditing, setEditing] = @useState(false)
+  let [editTitle, setEditTitle] = @useState(@props.task.title)
+  
+  @effect {
+    setEditTitle(@props.task.title)
+  }, [@props.task.title]
+  
+  let priorityColor = @computed(() => match @props.task.priority {
+    case 'high' => '#ff6b6b'
+    case 'medium' => '#fab005'
+    case 'low' => '#51cf66'
+  })
+  
+  @render {
+    <div 
+      class={{
+        'task-item': true,
+        'completed': @props.task.completed,
+        'selected': @props.selected,
+        'editing': isEditing
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={@props.selected}
+        @change={@props.onSelect}
+      />
+      
+      <div 
+        class="priority-indicator"
+        style={{ background: priorityColor() }}
+        title={`${@props.task.priority} priority`}
+      />
+      
+      {if isEditing (
+        <input
+          class="task-edit"
+          value={editTitle}
+          @change={e => setEditTitle(e.target.value)}
+          @blur={() => {
+            @props.onEdit({ title: editTitle })
+            setEditing(false)
+          }}
+          @keydown={e => {
+            match e.key {
+              case 'Enter' => {
+                @props.onEdit({ title: editTitle })
+                setEditing(false)
+              }
+              case 'Escape' => {
+                setEditTitle(@props.task.title)
+                setEditing(false)
+              }
+            }
+          }}
+          autoFocus
+        />
+      ) else (
+        <>
+          <label 
+            class={{ 'task-title': true, 'completed': @props.task.completed }}
+            @dblclick={() => setEditing(true)}
+          >
+            <input
+              type="checkbox"
+              checked={@props.task.completed}
+              @change={@props.onToggle}
+            />
+            <span>{@props.task.title}</span>
+          </label>
+          
+          <div class="task-actions">
+            <button @click={() => setEditing(true)} title="Edit">
+              ✏️
+            </button>
+            <button @click={@props.onDelete} title="Delete">
+              🗑️
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  }
+}
+
+// Main App component
+@component App {
+  @state {
+    currentUser: User? = null
+    theme: 'light' | 'dark' = 'light'
+  }
+  
+  @lifecycle async mounted() {
+    // Load user from session
+    try {
+      let user = await api.getCurrentUser()
+      @state.currentUser = user
+    } catch {
+      // Redirect to login
+    }
+    
+    // Set up theme
+    let savedTheme = localStorage.getItem('theme')
+    if savedTheme in ['light', 'dark']) {
+      @state.theme = savedTheme
+    }
+  }
+  
+  @effect {
+    document.body.className = `theme-${@state.theme}`
+  }, [@state.theme]
+  
+  @render {
+    <Router>
+      <div class="app">
+        <NavBar 
+          user={@state.currentUser}
+          theme={@state.theme}
+          onThemeToggle={() => {
+            @state.theme = @state.theme === 'light' ? 'dark' : 'light'
+            localStorage.setItem('theme', @state.theme)
+          }}
+        />
+        
+        <main>
+          <Route path="/" exact>
+            <TaskManager 
+              maxTasks={100}
+              onTaskComplete={task => {
+                @showNotification(`Task "${task.title}" completed!`)
+              }}
+            />
+          </Route>
+          
+          <Route path="/profile">
+            <UserProfile user={@state.currentUser} />
+          </Route>
+          
+          <Route path="/settings">
+            <Settings />
+          </Route>
+        </main>
+      </div>
+    </Router>
+  }
+}
+
+// Export the app
+@export default App

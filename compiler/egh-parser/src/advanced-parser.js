@@ -4,7 +4,7 @@
  * templates, two-way binding, conditionals, loops, and more.
  */
 
-import { Lexer, TokenType } from './lexer.js';
+import { Lexer, TokenType } from './lexer.ts';
 
 export const NodeType = {
   // Top level

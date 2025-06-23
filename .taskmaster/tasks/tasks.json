@@ -782,7 +782,17 @@
         "priority": "medium",
         "dependencies": [],
         "status": "in-progress",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up React codemod infrastructure",
+            "description": "Install jscodeshift, create test React components corpus",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13
+          }
+        ]
       },
       {
         "id": 14,
@@ -792,7 +802,7 @@
         "testStrategy": "Create a sample component library and write stories for each component. Launch the playground and verify that all components are discoverable and render correctly. Test the interactive prop controls and ensure HMR updates the component without a full reload.",
         "priority": "medium",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -888,7 +898,53 @@
           5
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Conduct and Document Threat Model using STRIDE",
+            "description": "Perform a formal threat modeling exercise for the Eghact framework, covering the compiler, runtime, and official extensions. The findings will be documented and used to guide all subsequent security efforts.",
+            "dependencies": [],
+            "details": "Use the STRIDE methodology (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege). Create data flow diagrams for key components like the template compiler and the client-side runtime. Document identified threats, potential impacts, and proposed mitigations in a markdown file within a new `docs/security` directory. This document will serve as the foundation for other security tasks.",
+            "status": "done",
+            "testStrategy": "Review the threat model document with the core team to ensure comprehensive coverage of components and accuracy of potential threats."
+          },
+          {
+            "id": 2,
+            "title": "Create Comprehensive SECURITY.md File",
+            "description": "Establish the primary security documentation for the project in a `SECURITY.md` file at the repository root. This file will outline the security policy, architecture, best practices for developers, and the vulnerability disclosure process.",
+            "dependencies": [],
+            "details": "The file must include: 1. An overview of the security architecture, referencing findings from the threat model (ID 18). 2. A clear, private process for reporting vulnerabilities (e.g., using GitHub Security Advisories). 3. A section on 'Security Best Practices' for developers using the framework, explicitly warning against common pitfalls like `dangerouslySetInnerHTML`, un-sanitized data binding, and insecure API usage.",
+            "status": "done",
+            "testStrategy": "Peer review the document for clarity, completeness, and accuracy. Test the vulnerability reporting process by creating a draft security advisory to ensure the workflow is understood."
+          },
+          {
+            "id": 3,
+            "title": "Integrate SAST and Dependency Scanning into CI/CD",
+            "description": "Enhance the CI/CD pipeline by integrating automated security scanning tools to proactively identify vulnerabilities in the framework's codebase and its third-party dependencies.",
+            "dependencies": [],
+            "details": "Configure the project's CI/CD pipeline (e.g., GitHub Actions) to: 1. Use a tool like CodeQL for Static Application Security Testing (SAST) to scan the codebase on every pull request. 2. Integrate Dependabot or Snyk to automatically scan for vulnerable dependencies and create pull requests for updates. The pipeline should be configured to alert the team or fail the build on newly discovered high-severity findings.",
+            "status": "done",
+            "testStrategy": "Create a test pull request with a temporary, known vulnerability (e.g., an insecure function call) to verify that the SAST scan correctly identifies it and reports the issue. Confirm that Dependabot is correctly configured and scanning dependencies."
+          },
+          {
+            "id": 4,
+            "title": "Review and Harden CSP and XSS/CSRF Protections",
+            "description": "Perform a targeted review and hardening of the framework's existing security mechanisms, specifically focusing on Content Security Policy (CSP) generation and protections against Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF).",
+            "dependencies": [],
+            "details": "Based on the threat model (ID 18) and initial SAST findings (ID 20), review the code responsible for CSP generation (Task 4) and default XSS/CSRF protections (Task 5). Implement stricter default CSP directives (e.g., `script-src 'self'`). Ensure all user-generated content rendered by the framework is properly sanitized or escaped by default. Verify that anti-CSRF token mechanisms are robust and correctly implemented where state-changing actions occur.",
+            "status": "pending",
+            "testStrategy": "Manually attempt common XSS injection attacks on components that handle user input. Use browser developer tools to inspect and validate the generated CSP headers against the expected stricter policies. Write unit tests to confirm that string sanitization functions correctly neutralize malicious payloads."
+          },
+          {
+            "id": 5,
+            "title": "Implement a Dedicated Security Test Suite",
+            "description": "Create a new suite of automated tests specifically designed to validate the framework's security posture and prevent regressions. These tests will target the threats identified in the threat model and the hardening measures implemented.",
+            "dependencies": [],
+            "details": "Create a new test directory, e.g., `tests/security`. Add unit and integration tests that: 1. Attempt to inject malicious script payloads into components and assert that they are properly escaped or rejected. 2. Verify that security-related headers (like CSP) are generated correctly under various configurations. 3. Test for potential bypasses of security mechanisms as identified in the threat model (ID 18). 4. Add regression tests for any security fixes implemented in this task (ID 21).",
+            "status": "pending",
+            "testStrategy": "Integrate the new security test suite into the main CI pipeline. The suite must pass before any pull request can be merged. The tests should provide clear failure messages that help developers understand the security implication of their changes."
+          }
+        ]
       },
       {
         "id": 18,
@@ -940,7 +996,53 @@
         "status": "in-progress",
         "dependencies": [],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set Up Core NLP to Eghact Component Scaffolding",
+            "description": "Create the basic pipeline to take a simple natural language prompt (e.g., 'a login form') and generate a valid, but minimal, Eghact functional component file. This initial version will focus on parsing the primary intent and generating the basic JSX structure without complex logic or styling.",
+            "dependencies": [],
+            "details": "Use a Large Language Model (LLM) API (like GPT-4 or Claude). Craft a system prompt that instructs the model to act as an expert Eghact developer. The prompt should specify the output format (a single Eghact component in a .jsx file). The input will be the user's natural language description. The initial focus is on generating the correct file structure, function definition, and a basic return statement with placeholder JSX.",
+            "status": "done",
+            "testStrategy": "Unit test the service with a set of simple prompts ('a button', 'a header', 'an image card'). Verify that the output is syntactically valid Eghact code and that the root element matches the requested component type."
+          },
+          {
+            "id": 2,
+            "title": "Implement Smart Prop Inference from Text",
+            "description": "Enhance the NLP model to identify and extract component properties (props) and their values from the user's description. This includes simple HTML attributes like `className`, `id`, and `placeholder`, as well as inferring logical props like `label` or `variant` (e.g., 'a blue primary button' -> variant='primary').",
+            "dependencies": [],
+            "details": "Refine the LLM system prompt to explicitly ask for prop extraction. Instruct the model to destructure the inferred props in the function signature. The prompt should guide the model to map descriptive words (e.g., 'large', 'small') to specific prop values (e.g., `size='lg'`, `size='sm'`). Handle boolean props like 'disabled' or 'checked'.",
+            "status": "done",
+            "testStrategy": "Expand unit tests to include prompts with descriptive adjectives and attributes. Assert that the generated component's function signature includes the correct props and that they are used appropriately within the JSX."
+          },
+          {
+            "id": 3,
+            "title": "Introduce State Management Scaffolding",
+            "description": "Augment the generator to detect keywords related to stateful behavior (e.g., 'counter that increments', 'toggle switch', 'form input that tracks value'). Based on this, automatically scaffold the necessary `useState` hooks and basic event handlers (`onClick`, `onChange`).",
+            "dependencies": [],
+            "details": "Update the LLM prompt to look for verbs and nouns indicating interactivity and state. Instruct the model to import `useState` from 'eghact' and initialize state variables appropriately (e.g., `const [count, setCount] = useState(0);`). It should also generate placeholder handler functions that update the state.",
+            "status": "done",
+            "testStrategy": "Test with prompts describing stateful components. For a 'counter' prompt, verify the presence of `useState` and a `setCount` call within a handler. For a 'text input' prompt, check for `useState` and an `onChange` handler that updates the value."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Automated Accessibility (A11y) Enhancements",
+            "description": "Add a layer to the generation process that automatically includes essential accessibility attributes. This involves inferring ARIA roles, adding `aria-label` from context for icon-only buttons, and associating labels with inputs using `htmlFor`.",
+            "dependencies": [],
+            "details": "This can be a combination of prompt engineering and a post-processing step. Update the LLM prompt to follow accessibility best practices (e.g., 'Always add a role to a button-like div'). Alternatively, create a separate function that parses the generated code's AST (Abstract Syntax Tree) and injects/modifies attributes to improve accessibility. For example, if a `<label>` and `<input>` are generated, ensure the `htmlFor` and `id` attributes match.",
+            "status": "pending",
+            "testStrategy": "Run an automated accessibility checker (like axe-core) on the generated component output. Test with components that have common accessibility pitfalls, like icon buttons or form fields, and assert that the generated code passes a baseline level of a11y checks."
+          },
+          {
+            "id": 5,
+            "title": "Develop Vision Model for Wireframe/Screenshot Analysis",
+            "description": "Implement a module that accepts an image (wireframe or design screenshot) and uses a vision-language model (VLM) to produce a structured description of the UI. This description should be in a format that can be fed directly into the existing text-to-component pipeline.",
+            "dependencies": [],
+            "details": "Use a multimodal LLM API like GPT-4V. Create a specific prompt that instructs the model to analyze the provided image and output a detailed, structured description of the components, their layout, and their styling. The output format could be a JSON object or a detailed natural language description designed to be an ideal input for the pipeline built in subtasks 22-25. This decouples the vision analysis from the code generation.",
+            "status": "done",
+            "testStrategy": "Provide a set of sample wireframe images (e.g., a simple login form, a product card). Manually verify that the structured text output from the vision model accurately describes the components, their text content, and their relative positions. The ultimate integration test is to see if the end-to-end image-to-code process produces a visually similar component."
+          }
+        ]
       },
       {
         "id": 22,
@@ -1044,10 +1146,63 @@
         "description": "Real-time performance profiler that visualizes component render times, memory usage, and bundle impact in the browser dev tools",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Core Component Render Time Profiler",
+            "description": "Create the foundational data collection script that hooks into the application's rendering lifecycle to measure how long each component takes to render or update. This script will be injected into the inspected page.",
+            "dependencies": [],
+            "details": "Use a technique like monkey-patching the framework's core rendering function (e.g., `React.createElement`) or leveraging a built-in Profiler API if available. For each component render, capture the component name, a unique ID, and the start/end timestamps using `performance.now()`. Store these raw timing events in a temporary global buffer for later processing.",
+            "status": "done",
+            "testStrategy": "Create a simple test application with a few components. Manually inject the profiler script and verify in the browser console that render events with correct component names and positive duration values are being logged to the buffer."
+          },
+          {
+            "id": 2,
+            "title": "Develop In-Memory Data Aggregation and Memory Usage Tracking",
+            "description": "Create a data manager service that processes the raw render events from the buffer and tracks memory usage. This service will aggregate data into a structured format suitable for visualization.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement a singleton or a global service that periodically (e.g., every 500ms) processes the raw events from the buffer created in subtask 1. It should aggregate timings per component (e.g., calculating total time, average time, and render count). This service should also use the `performance.memory` API (if available) to capture JS heap size at the same interval. The processed data should be stored in a structured in-memory object.",
+            "status": "done",
+            "testStrategy": "Unit test the aggregation logic: feed it a sample array of raw render events and assert that the resulting aggregated object has the correct average/total times and counts. For memory, mock the `performance.memory` object and verify that the service correctly records its values."
+          },
+          {
+            "id": 3,
+            "title": "Create the Basic Custom Browser DevTools Panel",
+            "description": "Set up the necessary extension files and configuration to create a new panel within the browser's developer tools. This subtask focuses on the boilerplate and UI shell, not the data visualization itself.",
+            "dependencies": [],
+            "details": "Update the `manifest.json` to include the `devtools_page` permission and point to a `devtools.html` file. Create `devtools.html` and an associated `devtools.js` script that uses the `chrome.devtools.panels.create` API to add a new panel named 'Performance Monitor'. Design the basic HTML structure for the panel, including placeholder elements for a component render table and a memory chart.",
+            "status": "done",
+            "testStrategy": "Load the extension into the browser. Open the developer tools on any webpage and verify that the 'Performance Monitor' panel appears correctly with its basic static HTML structure."
+          },
+          {
+            "id": 4,
+            "title": "Connect Data Source and Visualize Runtime Metrics in Panel",
+            "description": "Establish a communication channel between the data aggregation service on the inspected page and the DevTools panel, and implement the UI to visualize the collected data.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Use `chrome.runtime.connect` to create a long-lived message passing port between the content script (running the aggregator) and the devtools panel script. Periodically send the aggregated performance and memory data (from subtask 2) over this port. In the panel's JavaScript, listen for these messages and update the DOM. Implement a table to display the component render statistics and use a simple charting library (e.g., Chart.js) to render the memory usage data as a line graph.",
+            "status": "done",
+            "testStrategy": "In the test application, trigger multiple component re-renders. Observe the DevTools panel and verify that the component table updates in near real-time with the correct data. Check that the memory chart plots new data points over time."
+          },
+          {
+            "id": 5,
+            "title": "Implement and Display Bundle Impact Analysis",
+            "description": "Add a new feature to the panel that analyzes the application's JavaScript bundles to show the size contribution of different modules and dependencies.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add a new 'Bundle' tab to the DevTools panel UI. The panel will execute a script in the inspected window (`chrome.devtools.inspectedWindow.eval`) that analyzes the page's loaded scripts. This script can look for a webpack stats JSON file or analyze source maps to build a dependency graph and calculate the size of each module. Send this data back to the panel and display it in a user-friendly format, such as a tree map or a sortable table, showing module name, size, and percentage of total bundle size.",
+            "status": "done",
+            "testStrategy": "Test against a project with a known webpack configuration and source maps. Verify that the 'Bundle' tab correctly identifies the main modules and that their displayed sizes are accurate when compared to the build output."
+          }
+        ]
       },
       {
         "id": 25,
@@ -1322,7 +1477,7 @@
         "description": "Bidirectional real-time synchronization between client components and database with conflict resolution, offline queuing, and optimistic updates",
         "details": "",
         "testStrategy": "",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [],
         "priority": "high",
         "subtasks": []
@@ -1436,11 +1591,106 @@
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 44,
+        "title": "Phase 4: Total Node Decoupling & EghQL Revolution",
+        "description": "Complete decoupling from Node.js ecosystem. Create EghQL - a GraphQL replacement using data-attributes. Introduce .eg files - structured markdown that compiles to reactive components. Full red-pill paradigm shift.",
+        "details": "",
+        "testStrategy": "",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "critical",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define .eg File Format and Implement AST Parser",
+            "description": "Formalize the .eg file specification, which combines YAML frontmatter for metadata/state, Markdown for the template, and fenced code blocks for logic. Implement a Rust parser to convert .eg file content into a structured Abstract Syntax Tree (AST).",
+            "dependencies": [],
+            "details": "Use `serde_yaml` for frontmatter parsing and a Markdown parser like `pulldown-cmark` for the body. Define a set of Rust structs to represent the AST, including nodes for frontmatter, template elements, and logic blocks. The parser must produce a consistent AST structure and handle errors for malformed files.",
+            "status": "done",
+            "testStrategy": "Unit test the parser with a suite of .eg files covering valid syntax, edge cases (e.g., empty frontmatter, no logic), and invalid syntax to ensure robust error reporting."
+          },
+          {
+            "id": 2,
+            "title": "Implement .eg AST to Rust Code Generator",
+            "description": "Create a compiler that traverses the .eg AST (from subtask 45) and generates corresponding Rust source code. This generated code will define a struct for the component, its state, and a `render` method that constructs the UI representation.",
+            "dependencies": [],
+            "details": "The generator will map Markdown AST nodes to Rust code that calls a future UI rendering API. Frontmatter state will become fields on the component's struct. Logic from code blocks will be embedded as methods on the struct. The output should be a valid, formattable .rs file, ready for compilation.",
+            "status": "done",
+            "testStrategy": "Use snapshot testing. For a given set of input .eg ASTs, verify that the generated Rust code matches a known-good snapshot. This ensures changes to the generator are intentional."
+          },
+          {
+            "id": 3,
+            "title": "Build Core Eghact Runtime and Native UI Renderer",
+            "description": "Develop the foundational Eghact runtime in Rust. This includes a mechanism to take the generated Rust component code (from subtask 46), manage its lifecycle, and render its output to a native window. This initial version will focus on rendering static, non-interactive components.",
+            "dependencies": [],
+            "details": "Use the `winit` crate for window creation and event loop management. For rendering, a simple 2D graphics library or even a terminal UI renderer can be used to prove the concept. The runtime needs an entry point that initializes a root component and runs the main application loop.",
+            "status": "done",
+            "testStrategy": "Manually test by compiling a simple, hard-coded .eg file through the parser and generator, then compiling the output with the runtime. Verify that a native window appears displaying the correct static content."
+          },
+          {
+            "id": 4,
+            "title": "Implement Fine-Grained Reactivity Engine",
+            "description": "Integrate a reactivity system into the Eghact runtime. State defined in components should be wrapped in reactive primitives (e.g., signals). The rendering logic must subscribe to changes in these primitives to automatically and efficiently update only the necessary parts of the UI.",
+            "dependencies": [],
+            "details": "Implement or adapt a signal-based reactivity library (inspired by `leptos_reactive` or `solid-js`). Update the code generator (subtask 46) to wrap state variables in reactive types. The runtime's rendering function will use the reactivity graph to perform targeted UI updates instead of full re-renders.",
+            "status": "done",
+            "testStrategy": "Unit test the reactivity system primitives (signals, effects, memos). Write integration tests where a component's state is updated programmatically (e.g., via a timer) and verify the UI updates correctly without a full redraw."
+          },
+          {
+            "id": 5,
+            "title": "Design and Implement EghQL Attribute Parser and Executor",
+            "description": "Design the EghQL query syntax for use in `data-eghql` attributes. Implement the runtime logic to scan for these attributes, parse the queries, and execute them against a local Markdown file data source.",
+            "dependencies": [],
+            "details": "Define a simple query syntax, e.g., `data-eghql=\"from 'posts.md' select title, date\"`. The executor will read the specified .md file, parse its frontmatter using `serde_yaml`, and return the requested data. This logic should be integrated into the runtime's component processing.",
+            "status": "pending",
+            "testStrategy": "Unit test the EghQL parser with various valid and invalid query strings. Test the executor by creating sample .md data files and asserting that the correct data is fetched and returned."
+          },
+          {
+            "id": 6,
+            "title": "Integrate EghQL Data Fetching with the Reactive UI",
+            "description": "Connect the EghQL executor (from subtask 49) to the reactivity engine (from subtask 48). When a component with a `data-eghql` attribute is mounted, the query should execute, and the resulting data should populate a reactive signal, causing the UI to render the data automatically.",
+            "dependencies": [],
+            "details": "The runtime will manage the lifecycle of EghQL queries. Fetched data will be placed into a signal that the component's template can read from. Implement basic loading and error states for the data fetching process and expose them to the component.",
+            "status": "pending",
+            "testStrategy": "Create an .eg component that uses `data-eghql` to fetch and display data from a local .md file. Verify that the data appears correctly in the rendered native application. Test loading and error states by introducing artificial delays or pointing to non-existent files."
+          },
+          {
+            "id": 7,
+            "title": "Develop Native Package Manager (`egpm`) Scaffolding",
+            "description": "Create the `egpm` command-line tool in Rust. Implement the initial set of commands: `egpm init` to scaffold a new project, `egpm add <git-url>` to manage dependencies, and a placeholder `egpm build` command.",
+            "dependencies": [],
+            "details": "Use a `eghact.toml` file for project configuration and dependencies. `egpm add` will clone git repositories into a designated `eg_modules` directory. `egpm init` creates a boilerplate `main.eg` and `eghact.toml`. Use a crate like `clap` for the CLI interface.",
+            "status": "pending",
+            "testStrategy": "Test the CLI tool from the command line. Verify that `init` creates the correct file structure and that `add` successfully clones a test git repository. Check for correct error handling with invalid commands."
+          },
+          {
+            "id": 8,
+            "title": "Integrate Full Build Pipeline via `egpm build`",
+            "description": "Fully implement the `egpm build` command to orchestrate the entire compilation process. The command will manage parsing, compiling to Rust, invoking `rustc` with the runtime, and producing a final, self-contained native executable.",
+            "dependencies": [],
+            "details": "The `egpm build` logic will: 1. Read `eghact.toml`. 2. Invoke the parser (subtask 45) and compiler (subtask 46) for all source files. 3. Generate a `main.rs` file to initialize the runtime. 4. Invoke `rustc` via `std::process::Command`, passing all generated files and runtime code to produce a single binary in a `target` directory.",
+            "status": "pending",
+            "testStrategy": "Create a sample multi-file Eghact project. Run `egpm build` and verify that a single, runnable executable is produced. Running the executable should launch the fully functional native application as defined by the .eg files."
+          }
+        ]
+      },
+      {
+        "id": 45,
+        "title": "Phase 4: Total Node Decoupling & EghQL Revolution",
+        "description": "Complete decoupling from Node.js ecosystem. Create EghQL - a GraphQL replacement that uses data attributes and structured markdown (.eg files). Build native runtime with zero JS dependencies.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "critical",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-06-22T06:10:55.828Z",
-      "updated": "2025-06-22T11:09:41.636Z",
+      "updated": "2025-06-23T12:58:44.450Z",
       "description": "Tasks for phase3 context"
     }
   }

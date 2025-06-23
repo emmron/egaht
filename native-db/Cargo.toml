@@ -1,0 +1,62 @@
+[package]
+name = "eghactdb"
+version = "1.0.0"
+edition = "2021"
+authors = ["Eghact Core Team"]
+description = "Native database for Eghact - No external dependencies"
+
+[lib]
+name = "eghactdb"
+crate-type = ["cdylib", "rlib", "staticlib"]
+
+[dependencies]
+# Core functionality
+sled = "0.34"  # Embedded database
+tantivy = "0.21"  # Full-text search
+bincode = "1.3"  # Serialization
+rkyv = { version = "0.7", features = ["validation"] }  # Zero-copy serialization
+
+# Query engine
+pest = "2.7"
+pest_derive = "2.7"
+lalrpop = "0.20"
+lalrpop-util = "0.20"
+
+# Indexing
+roaring = "0.10"  # Bitmap indexes
+heed = "0.20"  # LMDB bindings
+
+# Compression
+lz4 = "1.24"
+zstd = "0.13"
+
+# Cryptography
+blake3 = "1.5"
+chacha20poly1305 = "0.10"
+
+# Memory management
+crossbeam-epoch = "0.9"
+parking_lot = "0.12"
+
+# Time series
+chronograph = "0.1"
+
+# Networking (for replication)
+quinn = "0.10"  # QUIC protocol
+tokio = { version = "1.35", features = ["full"] }
+
+# Schema management
+schemars = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI tools
+clap = { version = "4.4", features = ["derive"] }
+rustyline = "13.0"
+
+[build-dependencies]
+lalrpop = "0.20"
+
+[[bin]]
+name = "eghactdb-cli"
+path = "src/cli.rs"
