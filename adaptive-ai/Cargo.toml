@@ -1,0 +1,97 @@
+[package]
+name = "eghact-adaptive-ai"
+version = "1.0.0"
+edition = "2021"
+authors = ["Eghact Core Team"]
+description = "AI-powered adaptive component optimization system"
+
+[dependencies]
+# Core async runtime
+tokio = { version = "1.35", features = ["full"] }
+futures = "0.3"
+async-trait = "0.1"
+
+# Machine Learning
+candle-core = "0.3"  # Rust-native ML framework
+candle-nn = "0.3"
+candle-transformers = "0.3"
+tch = "0.14"  # PyTorch bindings for complex models
+linfa = "0.7"  # Classical ML algorithms
+smartcore = "0.3"
+
+# Neural Architecture Search
+genetic = "1.2"
+rand = "0.8"
+rand_distr = "0.4"
+
+# Real-time Analytics
+apache-arrow = "49.0"
+datafusion = "34.0"
+polars = { version = "0.35", features = ["lazy", "temporal", "parquet"] }
+
+# Pattern Detection
+regex = "1.10"
+aho-corasick = "1.1"
+suffix = "1.2"
+
+# WebAssembly for browser-side ML
+wasm-bindgen = "0.2"
+web-sys = "0.3"
+js-sys = "0.3"
+
+# Metrics & Telemetry
+prometheus = "0.13"
+opentelemetry = "0.21"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+rkyv = { version = "0.7", features = ["validation"] }
+
+# Database
+sled = "0.34"
+rocksdb = "0.21"
+
+# Compression
+lz4 = "1.24"
+zstd = "0.13"
+
+# Time series
+tslearn = "0.1"
+chrono = "0.4"
+
+# Statistical analysis
+statrs = "0.16"
+ndarray = { version = "0.15", features = ["serde"] }
+ndarray-stats = "0.5"
+
+# Performance
+rayon = "1.8"
+crossbeam = "0.8"
+dashmap = "5.5"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4"
+getrandom = { version = "0.2", features = ["js"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+
+[build-dependencies]
+cc = "1.0"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+[features]
+default = ["neural", "classical", "edge"]
+neural = ["tch", "candle-transformers"]
+classical = ["linfa", "smartcore"]
+edge = []  # Lightweight models for edge devices
+gpu = ["candle-core/cuda", "tch/cuda"]

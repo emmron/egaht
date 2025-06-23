@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eghact Component Generator - Zero Dependencies</title>
+    <style>
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .preview {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        #dragArea {
+            border: 2px dashed #007bff;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            background: #e3f2fd;
+            cursor: pointer;
+        }
+        #dragArea.drag-over {
+            background: #bbdefb;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+        }
+        .tab.active {
+            background: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Eghact Component Generator - Pure Browser Edition</h1>
+    <p>Generate Turing-complete .egh components with ZERO server dependencies!</p>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Input</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('text')">Text Prompt</button>
+                <button class="tab" onclick="switchTab('image')">Image Upload</button>
+                <button class="tab" onclick="switchTab('patterns')">Pattern Library</button>
+            </div>
+            
+            <div id="textTab" class="tab-content active">
+                <input type="text" id="prompt" placeholder="Describe your component (e.g., 'a todo list with filters')" />
+                <button onclick="generateFromText()">Generate Component</button>
+            </div>
+            
+            <div id="imageTab" class="tab-content">
+                <div id="dragArea">
+                    Drag & drop a wireframe/screenshot here<br>
+                    or click to select
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+                <canvas id="imageCanvas" style="display: none; max-width: 100%; margin-top: 20px;"></canvas>
+                <button onclick="generateFromImage()" style="display: none;" id="analyzeBtn">Analyze & Generate</button>
+            </div>
+            
+            <div id="patternsTab" class="tab-content">
+                <select id="patternSelect">
+                    <option value="">Select a pattern...</option>
+                    <option value="counter">Counter with Factorial</option>
+                    <option value="todo">Todo List with Filters</option>
+                    <option value="form">Form with Validation</option>
+                    <option value="calculator">Calculator</option>
+                    <option value="timer">Countdown Timer</option>
+                    <option value="search">Search with Results</option>
+                    <option value="tabs">Tabbed Interface</option>
+                    <option value="accordion">Accordion</option>
+                </select>
+                <button onclick="generateFromPattern()">Generate Pattern</button>
+            </div>
+            
+            <h3>Options</h3>
+            <label>
+                <input type="checkbox" id="includeTests" checked> Include Test Cases
+            </label>
+            <label>
+                <input type="checkbox" id="includeA11y" checked> Add Accessibility Features
+            </label>
+            <label>
+                <input type="checkbox" id="includeTypes" checked> Add TypeScript Types
+            </label>
+        </div>
+        
+        <div class="panel">
+            <h2>Generated .egh Component</h2>
+            <pre id="output">// Your component will appear here...</pre>
+            
+            <button onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+            <button onclick="downloadComponent()">💾 Download .egh File</button>
+            
+            <div class="preview" id="preview">
+                <h3>Live Preview (Simulated)</h3>
+                <div id="previewContent">Preview will appear here...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Pure browser-based Eghact component generator
+        class EghactGenerator {
+            constructor() {
+                this.patterns = {
+                    counter: this.generateCounter,
+                    todo: this.generateTodo,
+                    form: this.generateForm,
+                    calculator: this.generateCalculator,
+                    timer: this.generateTimer,
+                    search: this.generateSearch,
+                    tabs: this.generateTabs,
+                    accordion: this.generateAccordion
+                };
+            }
+            
+            analyze(prompt) {
+                const lower = prompt.toLowerCase();
+                const features = {
+                    type: 'component',
+                    patterns: [],
+                    props: {},
+                    state: [],
+                    handlers: [],
+                    reactive: []
+                };
+                
+                // Pattern detection
+                if (lower.includes('counter')) features.patterns.push('counter');
+                if (lower.includes('list') || lower.includes('todo')) features.patterns.push('todo');
+                if (lower.includes('form')) features.patterns.push('form');
+                if (lower.includes('calculator')) features.patterns.push('calculator');
+                if (lower.includes('timer') || lower.includes('countdown')) features.patterns.push('timer');
+                if (lower.includes('search')) features.patterns.push('search');
+                if (lower.includes('tab')) features.patterns.push('tabs');
+                if (lower.includes('accordion') || lower.includes('collapsible')) features.patterns.push('accordion');
+                
+                // Extract quoted values
+                const quotes = prompt.match(/["']([^"']+)["']/g);
+                if (quotes) {
+                    quotes.forEach((q, i) => {
+                        const value = q.slice(1, -1);
+                        if (prompt.includes('label') && q) {
+                            features.props.label = value;
+                        } else if (prompt.includes('title') && q) {
+                            features.props.title = value;
+                        } else if (prompt.includes('placeholder') && q) {
+                            features.props.placeholder = value;
+                        }
+                    });
+                }
+                
+                // Detect features
+                if (lower.includes('validation')) features.state.push('errors');
+                if (lower.includes('loading')) features.state.push('isLoading');
+                if (lower.includes('filter')) features.state.push('filter');
+                
+                return features;
+            }
+            
+            generate(prompt, options = {}) {
+                const features = this.analyze(prompt);
+                
+                // If we have a specific pattern, use it
+                if (features.patterns.length > 0) {
+                    const pattern = features.patterns[0];
+                    if (this.patterns[pattern]) {
+                        return this.patterns[pattern].call(this, features, options);
+                    }
+                }
+                
+                // Otherwise generate a generic component
+                return this.generateGeneric(features, options);
+            }
+            
+            generateGeneric(features, options) {
+                const { includeTests, includeA11y, includeTypes } = options;
+                
+                let component = '<component>\n';
+                
+                // Props
+                component += '  <prop name="title" type="string" default="Component" />\n';
+                Object.entries(features.props).forEach(([name, value]) => {
+                    component += `  <prop name="${name}" type="string" default="${value}" />\n`;
+                });
+                
+                // State
+                component += '\n  <state>\n';
+                component += '    let mounted = false;\n';
+                features.state.forEach(state => {
+                    if (state === 'errors') component += '    let errors = {};\n';
+                    else if (state === 'isLoading') component += '    let isLoading = false;\n';
+                    else if (state === 'filter') component += '    let filter = "all";\n';
+                });
+                component += '  </state>\n';
+                
+                // Lifecycle
+                component += '\n  onMount(() => {\n    mounted = true;\n  });\n';
+                
+                // Reactive
+                component += '\n  $: componentClass = mounted ? "mounted" : "mounting";\n';
+                
+                // Template
+                component += '\n  <template>\n';
+                component += '    <div class="component {componentClass}">\n';
+                component += '      <h2>{title}</h2>\n';
+                
+                if (includeA11y) {
+                    component += '      <main role="main" aria-label={title}>\n';
+                    component += '        <p>Content goes here</p>\n';
+                    component += '      </main>\n';
+                } else {
+                    component += '      <p>Content goes here</p>\n';
+                }
+                
+                component += '    </div>\n';
+                component += '  </template>\n';
+                
+                // Style
+                component += '\n  <style>\n';
+                component += '    .component {\n';
+                component += '      padding: 20px;\n';
+                component += '      border: 1px solid #ddd;\n';
+                component += '      border-radius: 4px;\n';
+                component += '      transition: opacity 0.3s;\n';
+                component += '    }\n';
+                component += '    .mounting { opacity: 0; }\n';
+                component += '    .mounted { opacity: 1; }\n';
+                component += '  </style>\n';
+                
+                component += '</component>';
+                
+                if (includeTypes) {
+                    component += '\n\n// TypeScript types\n';
+                    component += '/*\ninterface Props {\n  title?: string;\n}\n*/';
+                }
+                
+                if (includeTests) {
+                    component += '\n\n// Test cases\n';
+                    component += '/*\ndescribe("Component", () => {\n';
+                    component += '  test("renders title", () => {\n';
+                    component += '    const { getByText } = render(Component, { title: "Test" });\n';
+                    component += '    expect(getByText("Test")).toBeInTheDocument();\n';
+                    component += '  });\n});\n*/';
+                }
+                
+                return component;
+            }
+            
+            generateCounter(features, options) {
+                return `<component>
+  <prop name="initialValue" type="number" default={0} />
+  <prop name="step" type="number" default={1} />
+  
+  <state>
+    let count = initialValue;
+    let history = [initialValue];
+  </state>
+  
+  $: doubled = count * 2;
+  $: tripled = count * 3;
+  $: isEven = count % 2 === 0;
+  $: isPositive = count > 0;
+  $: isNegative = count < 0;
+  
+  // Recursive factorial (capped at 20 for performance)
+  $: factorial = ((n) => {
+    if (n < 0) return 0;
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+  })(Math.min(Math.abs(count), 20));
+  
+  // Fibonacci at position count
+  $: fibonacci = ((n) => {
+    if (n <= 1) return n;
+    let a = 0, b = 1;
+    for (let i = 2; i <= n; i++) {
+      [a, b] = [b, a + b];
+    }
+    return b;
+  })(Math.abs(count));
+  
+  const increment = () => {
+    count += step;
+    history = [...history, count];
+  };
+  
+  const decrement = () => {
+    count -= step;
+    history = [...history, count];
+  };
+  
+  const reset = () => {
+    count = initialValue;
+    history = [initialValue];
+  };
+  
+  const setCount = (value) => {
+    const num = parseInt(value);
+    if (!isNaN(num)) {
+      count = num;
+      history = [...history, count];
+    }
+  };
+  
+  <template>
+    <div class="counter">
+      <h2>Turing-Complete Counter</h2>
+      
+      <div class="display">
+        <div class="main-count" class:even={isEven} class:odd={!isEven}>
+          {count}
+        </div>
+        
+        <div class="calculations">
+          <p>Doubled: {doubled}</p>
+          <p>Tripled: {tripled}</p>
+          <p>Factorial: {factorial}</p>
+          <p>Fibonacci: {fibonacci}</p>
+        </div>
+      </div>
+      
+      <div class="controls">
+        <button @click="decrement">- {step}</button>
+        <button @click="reset">Reset</button>
+        <button @click="increment">+ {step}</button>
+      </div>
+      
+      <div class="input-control">
+        <input 
+          type="number" 
+          value={count}
+          @input="(e) => setCount(e.target.value)"
+          aria-label="Set count directly"
+        />
+      </div>
+      
+      #if (isPositive)
+        <p class="status positive">Positive number! ✨</p>
+      #elseif (isNegative)
+        <p class="status negative">Negative number! 🔻</p>
+      #else
+        <p class="status zero">Zero! Perfect balance 🎯</p>
+      #/if
+      
+      <details>
+        <summary>History ({history.length} values)</summary>
+        <div class="history">
+          #each (history as value, index)
+            <span class="history-item">{value}</span>
+            #if (index < history.length - 1)
+              <span>→</span>
+            #/if
+          #/each
+        </div>
+      </details>
+    </div>
+  </template>
+  
+  <style>
+    .counter {
+      text-align: center;
+      padding: 30px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .display {
+      margin: 30px 0;
+    }
+    
+    .main-count {
+      font-size: 72px;
+      font-weight: bold;
+      margin: 20px 0;
+      transition: all 0.3s;
+    }
+    
+    .main-count.even {
+      color: #007bff;
+    }
+    
+    .main-count.odd {
+      color: #28a745;
+    }
+    
+    .calculations {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    
+    .calculations p {
+      margin: 5px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    .input-control {
+      margin: 20px 0;
+    }
+    
+    input[type="number"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      text-align: center;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .status {
+      font-size: 18px;
+      margin: 20px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .status.positive {
+      color: #28a745;
+      background: #d4edda;
+    }
+    
+    .status.negative {
+      color: #dc3545;
+      background: #f8d7da;
+    }
+    
+    .status.zero {
+      color: #6c757d;
+      background: #e2e3e5;
+    }
+    
+    details {
+      margin-top: 30px;
+      text-align: left;
+    }
+    
+    summary {
+      cursor: pointer;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    
+    .history {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+    
+    .history-item {
+      padding: 4px 8px;
+      background: #e9ecef;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</component>`;
+            }
+            
+            generateTodo(features, options) {
+                const title = features.props.title || 'Todo List';
+                return `<component>
+  <prop name="title" type="string" default="${title}" />
+  <prop name="allowEdit" type="boolean" default={true} />
+  
+  <state>
+    let items = [];
+    let newItem = "";
+    let filter = "all"; // all, active, completed
+    let editingId = null;
+    let editingText = "";
+    let sortBy = "created"; // created, text, status
+  </state>
+  
+  $: filteredItems = (() => {
+    let filtered = items;
+    
+    // Apply filter
+    switch(filter) {
+      case "active":
+        filtered = items.filter(item => !item.completed);
+        break;
+      case "completed":
+        filtered = items.filter(item => item.completed);
+        break;
+    }
+    
+    // Apply sort
+    return filtered.sort((a, b) => {
+      switch(sortBy) {
+        case "text":
+          return a.text.localeCompare(b.text);
+        case "status":
+          return a.completed - b.completed;
+        default:
+          return b.created - a.created;
+      }
+    });
+  })();
+  
+  $: stats = {
+    total: items.length,
+    active: items.filter(i => !i.completed).length,
+    completed: items.filter(i => i.completed).length
+  };
+  
+  $: isEmpty = items.length === 0;
+  $: allCompleted = items.length > 0 && stats.active === 0;
+  
+  const addItem = () => {
+    if (newItem.trim()) {
+      items = [...items, {
+        id: Date.now(),
+        text: newItem.trim(),
+        completed: false,
+        created: Date.now()
+      }];
+      newItem = "";
+    }
+  };
+  
+  const toggleItem = (id) => {
+    items = items.map(item =>
+      item.id === id ? { ...item, completed: !item.completed } : item
+    );
+  };
+  
+  const removeItem = (id) => {
+    items = items.filter(item => item.id !== id);
+    if (editingId === id) {
+      editingId = null;
+      editingText = "";
+    }
+  };
+  
+  const startEditing = (id, text) => {
+    if (allowEdit) {
+      editingId = id;
+      editingText = text;
+    }
+  };
+  
+  const saveEdit = () => {
+    if (editingText.trim() && editingId) {
+      items = items.map(item =>
+        item.id === editingId ? { ...item, text: editingText.trim() } : item
+      );
+    }
+    editingId = null;
+    editingText = "";
+  };
+  
+  const cancelEdit = () => {
+    editingId = null;
+    editingText = "";
+  };
+  
+  const clearCompleted = () => {
+    items = items.filter(item => !item.completed);
+  };
+  
+  const toggleAll = () => {
+    const shouldComplete = stats.active > 0;
+    items = items.map(item => ({ ...item, completed: shouldComplete }));
+  };
+  
+  <template>
+    <div class="todo-list">
+      <h1>{title}</h1>
+      
+      <div class="input-section">
+        <input
+          type="text"
+          placeholder="What needs to be done?"
+          value={newItem}
+          @input="(e) => newItem = e.target.value"
+          @keydown="(e) => e.key === 'Enter' && addItem()"
+          aria-label="New todo item"
+        />
+        <button @click="addItem" :disabled={!newItem.trim()}>
+          Add
+        </button>
+      </div>
+      
+      #if (!isEmpty)
+        <div class="controls">
+          <div class="filters">
+            <button 
+              class:active={filter === 'all'} 
+              @click="() => filter = 'all'"
+              aria-pressed={filter === 'all'}
+            >
+              All ({stats.total})
+            </button>
+            <button 
+              class:active={filter === 'active'} 
+              @click="() => filter = 'active'"
+              aria-pressed={filter === 'active'}
+            >
+              Active ({stats.active})
+            </button>
+            <button 
+              class:active={filter === 'completed'} 
+              @click="() => filter = 'completed'"
+              aria-pressed={filter === 'completed'}
+            >
+              Completed ({stats.completed})
+            </button>
+          </div>
+          
+          <div class="sort">
+            <select value={sortBy} @change="(e) => sortBy = e.target.value">
+              <option value="created">Sort by Date</option>
+              <option value="text">Sort by Name</option>
+              <option value="status">Sort by Status</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="batch-actions">
+          <button @click="toggleAll" class="batch-btn">
+            {stats.active > 0 ? 'Complete All' : 'Uncomplete All'}
+          </button>
+          #if (stats.completed > 0)
+            <button @click="clearCompleted" class="batch-btn danger">
+              Clear Completed ({stats.completed})
+            </button>
+          #/if
+        </div>
+        
+        <ul class="items" role="list">
+          #each (filteredItems as item)
+            <li 
+              key={item.id} 
+              class:completed={item.completed}
+              role="listitem"
+            >
+              #if (editingId === item.id)
+                <input
+                  type="text"
+                  value={editingText}
+                  @input="(e) => editingText = e.target.value"
+                  @keydown="(e) => {
+                    if (e.key === 'Enter') saveEdit();
+                    if (e.key === 'Escape') cancelEdit();
+                  }"
+                  @blur="saveEdit"
+                  class="edit-input"
+                  autofocus
+                />
+              #else
+                <label class="item-content">
+                  <input 
+                    type="checkbox" 
+                    checked={item.completed}
+                    @change="() => toggleItem(item.id)"
+                    aria-label="Toggle todo completion"
+                  />
+                  <span 
+                    class="item-text"
+                    @dblclick="() => startEditing(item.id, item.text)"
+                  >
+                    {item.text}
+                  </span>
+                </label>
+                <button 
+                  @click="() => removeItem(item.id)"
+                  class="remove-btn"
+                  aria-label="Remove todo item"
+                >
+                  ×
+                </button>
+              #/if
+            </li>
+          #/each
+        </ul>
+        
+        #if (allCompleted)
+          <p class="completion-message">
+            🎉 All tasks completed! Great job!
+          </p>
+        #/if
+      #else
+        <div class="empty-state">
+          <p>No todos yet. Add one above to get started!</p>
+        </div>
+      #/if
+    </div>
+  </template>
+  
+  <style>
+    .todo-list {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    
+    .input-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .input-section input {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .input-section button {
+      padding: 12px 24px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .input-section button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .filters button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .filters button.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    
+    .sort select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .batch-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .batch-btn {
+      padding: 8px 16px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .batch-btn.danger {
+      background: #dc3545;
+    }
+    
+    .items {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .items li {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s;
+    }
+    
+    .items li:hover {
+      background: #f8f9fa;
+    }
+    
+    .item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    
+    .item-content input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    
+    .item-text {
+      flex: 1;
+      user-select: none;
+    }
+    
+    .items li.completed .item-text {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+    
+    .edit-input {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+      border: 2px solid #007bff;
+      border-radius: 4px;
+    }
+    
+    .remove-btn {
+      padding: 5px 10px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6c757d;
+    }
+    
+    .completion-message {
+      text-align: center;
+      padding: 20px;
+      color: #28a745;
+      font-size: 18px;
+      animation: bounce 0.5s;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</component>`;
+            }
+            
+            generateForm(features, options) {
+                return `<component>
+  <prop name="submitUrl" type="string" default="/api/submit" />
+  <prop name="fields" type="array" default={[
+    { name: "name", label: "Name", type: "text", required: true },
+    { name: "email", label: "Email", type: "email", required: true },
+    { name: "message", label: "Message", type: "textarea", required: false }
+  ]} />
+  
+  <state>
+    let formData = {};
+    let errors = {};
+    let touched = {};
+    let isSubmitting = false;
+    let submitStatus = null; // null, 'success', 'error'
+  </state>
+  
+  // Initialize form data
+  onMount(() => {
+    fields.forEach(field => {
+      formData[field.name] = "";
+    });
+  });
+  
+  $: isValid = (() => {
+    // Check all required fields are filled and no errors
+    return fields.every(field => {
+      if (field.required && !formData[field.name]) return false;
+      if (errors[field.name]) return false;
+      return true;
+    });
+  })();
+  
+  const validateField = (name, value) => {
+    const field = fields.find(f => f.name === name);
+    if (!field) return;
+    
+    // Clear error first
+    delete errors[name];
+    
+    // Required validation
+    if (field.required && !value.trim()) {
+      errors[name] = \`\${field.label} is required\`;
+      return;
+    }
+    
+    // Type-specific validation
+    switch (field.type) {
+      case 'email':
+        if (value && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) {
+          errors[name] = 'Invalid email address';
+        }
+        break;
+      case 'tel':
+        if (value && !/^[\\d\\s\\-\\+\\(\\)]+$/.test(value)) {
+          errors[name] = 'Invalid phone number';
+        }
+        break;
+      case 'url':
+        try {
+          if (value) new URL(value);
+        } catch {
+          errors[name] = 'Invalid URL';
+        }
+        break;
+    }
+    
+    // Force reactivity update
+    errors = { ...errors };
+  };
+  
+  const handleInput = (name, value) => {
+    formData[name] = value;
+    if (touched[name]) {
+      validateField(name, value);
+    }
+  };
+  
+  const handleBlur = (name) => {
+    touched[name] = true;
+    touched = { ...touched };
+    validateField(name, formData[name]);
+  };
+  
+  const handleSubmit = async () => {
+    // Validate all fields
+    fields.forEach(field => {
+      touched[field.name] = true;
+      validateField(field.name, formData[field.name]);
+    });
+    touched = { ...touched };
+    
+    if (!isValid) return;
+    
+    isSubmitting = true;
+    submitStatus = null;
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Random success/failure for demo
+      if (Math.random() > 0.3) {
+        submitStatus = 'success';
+        // Reset form on success
+        fields.forEach(field => {
+          formData[field.name] = "";
+        });
+        touched = {};
+        errors = {};
+      } else {
+        throw new Error('Submission failed');
+      }
+    } catch (error) {
+      submitStatus = 'error';
+      errors.submit = 'Failed to submit form. Please try again.';
+    } finally {
+      isSubmitting = false;
+    }
+  };
+  
+  const getFieldElement = (field) => {
+    const baseProps = {
+      id: field.name,
+      name: field.name,
+      value: formData[field.name] || "",
+      disabled: isSubmitting,
+      'aria-invalid': !!errors[field.name],
+      'aria-describedby': errors[field.name] ? \`\${field.name}-error\` : undefined
+    };
+    
+    switch (field.type) {
+      case 'textarea':
+        return \`<textarea 
+          {...baseProps}
+          @input="(e) => handleInput('\${field.name}', e.target.value)"
+          @blur="() => handleBlur('\${field.name}')"
+          rows="4"
+        ></textarea>\`;
+      case 'select':
+        return \`<select 
+          {...baseProps}
+          @change="(e) => handleInput('\${field.name}', e.target.value)"
+          @blur="() => handleBlur('\${field.name}')"
+        >
+          <option value="">Select...</option>
+          \${field.options?.map(opt => \`<option value="\${opt}">\${opt}</option>\`).join('')}
+        </select>\`;
+      default:
+        return \`<input 
+          type="\${field.type || 'text'}"
+          {...baseProps}
+          @input="(e) => handleInput('\${field.name}', e.target.value)"
+          @blur="() => handleBlur('\${field.name}')"
+        />\`;
+    }
+  };
+  
+  <template>
+    <form @submit="(e) => { e.preventDefault(); handleSubmit(); }" class="form">
+      <h2>Contact Form</h2>
+      
+      #if (submitStatus === 'success')
+        <div class="alert success" role="alert">
+          ✅ Form submitted successfully!
+        </div>
+      #/if
+      
+      #if (submitStatus === 'error')
+        <div class="alert error" role="alert">
+          ❌ {errors.submit || 'Submission failed. Please try again.'}
+        </div>
+      #/if
+      
+      #each (fields as field)
+        <div class="form-group" class:has-error={touched[field.name] && errors[field.name]}>
+          <label for={field.name}>
+            {field.label}
+            #if (field.required)
+              <span class="required" aria-label="required">*</span>
+            #/if
+          </label>
+          
+          #if (field.type === 'textarea')
+            <textarea
+              id={field.name}
+              name={field.name}
+              value={formData[field.name] || ""}
+              @input="(e) => handleInput(field.name, e.target.value)"
+              @blur="() => handleBlur(field.name)"
+              rows="4"
+              :disabled={isSubmitting}
+              aria-invalid={!!errors[field.name]}
+              aria-describedby={errors[field.name] ? field.name + '-error' : undefined}
+            ></textarea>
+          #else
+            <input
+              type={field.type || 'text'}
+              id={field.name}
+              name={field.name}
+              value={formData[field.name] || ""}
+              @input="(e) => handleInput(field.name, e.target.value)"
+              @blur="() => handleBlur(field.name)"
+              :disabled={isSubmitting}
+              aria-invalid={!!errors[field.name]}
+              aria-describedby={errors[field.name] ? field.name + '-error' : undefined}
+            />
+          #/if
+          
+          #if (touched[field.name] && errors[field.name])
+            <span class="error-message" id="{field.name}-error" role="alert">
+              {errors[field.name]}
+            </span>
+          #/if
+        </div>
+      #/each
+      
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          :disabled={!isValid || isSubmitting}
+          class="submit-btn"
+        >
+          #if (isSubmitting)
+            <span class="spinner"></span>
+            Submitting...
+          #else
+            Submit
+          #/if
+        </button>
+        
+        <button 
+          type="button" 
+          @click="() => {
+            fields.forEach(field => {
+              formData[field.name] = '';
+            });
+            touched = {};
+            errors = {};
+          }"
+          :disabled={isSubmitting}
+          class="reset-btn"
+        >
+          Reset
+        </button>
+      </div>
+    </form>
+  </template>
+  
+  <style>
+    .form {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    h2 {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .alert {
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .required {
+      color: #dc3545;
+      margin-left: 4px;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    
+    input:disabled, textarea:disabled, select:disabled {
+      background: #e9ecef;
+      cursor: not-allowed;
+    }
+    
+    .form-group.has-error input,
+    .form-group.has-error textarea,
+    .form-group.has-error select {
+      border-color: #dc3545;
+    }
+    
+    .error-message {
+      display: block;
+      margin-top: 5px;
+      color: #dc3545;
+      font-size: 14px;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .submit-btn {
+      background: #007bff;
+      color: white;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      background: #0056b3;
+    }
+    
+    .submit-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .reset-btn {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .reset-btn:hover:not(:disabled) {
+      background: #5a6268;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</component>`;
+            }
+            
+            // Add more pattern generators...
+            generateCalculator() {
+                return `<component>
+  <state>
+    let display = "0";
+    let previousValue = null;
+    let operation = null;
+    let waitingForOperand = false;
+  </state>
+  
+  const inputDigit = (digit) => {
+    if (waitingForOperand) {
+      display = String(digit);
+      waitingForOperand = false;
+    } else {
+      display = display === "0" ? String(digit) : display + digit;
+    }
+  };
+  
+  const inputDecimal = () => {
+    if (waitingForOperand) {
+      display = "0.";
+      waitingForOperand = false;
+    } else if (display.indexOf(".") === -1) {
+      display += ".";
+    }
+  };
+  
+  const clear = () => {
+    display = "0";
+    previousValue = null;
+    operation = null;
+    waitingForOperand = false;
+  };
+  
+  const performOperation = (nextOperation) => {
+    const inputValue = parseFloat(display);
+    
+    if (previousValue === null) {
+      previousValue = inputValue;
+    } else if (operation) {
+      const currentValue = previousValue || 0;
+      const newValue = calculate(currentValue, inputValue, operation);
+      
+      display = String(newValue);
+      previousValue = newValue;
+    }
+    
+    waitingForOperand = true;
+    operation = nextOperation;
+  };
+  
+  const calculate = (firstValue, secondValue, operation) => {
+    switch (operation) {
+      case '+': return firstValue + secondValue;
+      case '-': return firstValue - secondValue;
+      case '*': return firstValue * secondValue;
+      case '/': return secondValue !== 0 ? firstValue / secondValue : 0;
+      case '=': return secondValue;
+      default: return secondValue;
+    }
+  };
+  
+  <template>
+    <div class="calculator">
+      <div class="display">{display}</div>
+      
+      <div class="buttons">
+        <button @click="clear" class="btn-clear">C</button>
+        <button @click="() => performOperation('/')" class="btn-op">÷</button>
+        
+        <button @click="() => inputDigit(7)">7</button>
+        <button @click="() => inputDigit(8)">8</button>
+        <button @click="() => inputDigit(9)">9</button>
+        <button @click="() => performOperation('*')" class="btn-op">×</button>
+        
+        <button @click="() => inputDigit(4)">4</button>
+        <button @click="() => inputDigit(5)">5</button>
+        <button @click="() => inputDigit(6)">6</button>
+        <button @click="() => performOperation('-')" class="btn-op">-</button>
+        
+        <button @click="() => inputDigit(1)">1</button>
+        <button @click="() => inputDigit(2)">2</button>
+        <button @click="() => inputDigit(3)">3</button>
+        <button @click="() => performOperation('+')" class="btn-op">+</button>
+        
+        <button @click="() => inputDigit(0)" class="btn-zero">0</button>
+        <button @click="inputDecimal">.</button>
+        <button @click="() => performOperation('=')" class="btn-equals">=</button>
+      </div>
+    </div>
+  </template>
+  
+  <style>
+    .calculator {
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #333;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .display {
+      background: #444;
+      color: white;
+      font-size: 2em;
+      padding: 10px;
+      text-align: right;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      min-height: 40px;
+      overflow: hidden;
+    }
+    
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    
+    button {
+      padding: 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #666;
+      color: white;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #777;
+    }
+    
+    button:active {
+      background: #555;
+    }
+    
+    .btn-clear {
+      grid-column: span 3;
+      background: #f44336;
+    }
+    
+    .btn-clear:hover {
+      background: #d32f2f;
+    }
+    
+    .btn-op {
+      background: #ff9800;
+    }
+    
+    .btn-op:hover {
+      background: #f57c00;
+    }
+    
+    .btn-zero {
+      grid-column: span 2;
+    }
+    
+    .btn-equals {
+      background: #4caf50;
+    }
+    
+    .btn-equals:hover {
+      background: #388e3c;
+    }
+  </style>
+</component>`;
+            }
+            
+            generateTimer() {
+                return `<component>
+  <prop name="initialMinutes" type="number" default={5} />
+  
+  <state>
+    let totalSeconds = initialMinutes * 60;
+    let timeLeft = totalSeconds;
+    let isRunning = false;
+    let timerId = null;
+  </state>
+  
+  $: minutes = Math.floor(timeLeft / 60);
+  $: seconds = timeLeft % 60;
+  $: displayTime = \`\${minutes.toString().padStart(2, '0')}:\${seconds.toString().padStart(2, '0')}\`;
+  $: progress = ((totalSeconds - timeLeft) / totalSeconds) * 100;
+  $: isComplete = timeLeft === 0;
+  
+  const start = () => {
+    if (!isRunning && timeLeft > 0) {
+      isRunning = true;
+      timerId = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+        } else {
+          stop();
+        }
+      }, 1000);
+    }
+  };
+  
+  const stop = () => {
+    isRunning = false;
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  };
+  
+  const reset = () => {
+    stop();
+    timeLeft = totalSeconds;
+  };
+  
+  const adjustTime = (minutes) => {
+    if (!isRunning) {
+      totalSeconds = Math.max(60, totalSeconds + (minutes * 60));
+      timeLeft = totalSeconds;
+    }
+  };
+  
+  onDestroy(() => {
+    stop();
+  });
+  
+  <template>
+    <div class="timer">
+      <div class="display" class:complete={isComplete}>
+        <div class="time">{displayTime}</div>
+        <div class="progress-ring">
+          <svg width="200" height="200">
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke="#e0e0e0"
+              stroke-width="10"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="90"
+              fill="none"
+              stroke={isComplete ? '#f44336' : '#4caf50'}
+              stroke-width="10"
+              stroke-dasharray={\`\${2 * Math.PI * 90}\`}
+              stroke-dashoffset={\`\${2 * Math.PI * 90 * (1 - progress / 100)}\`}
+              transform="rotate(-90 100 100)"
+              style="transition: stroke-dashoffset 0.5s"
+            />
+          </svg>
+        </div>
+      </div>
+      
+      <div class="controls">
+        #if (!isRunning)
+          <button @click="start" :disabled={isComplete}>Start</button>
+        #else
+          <button @click="stop">Pause</button>
+        #/if
+        
+        <button @click="reset">Reset</button>
+      </div>
+      
+      <div class="adjust-controls">
+        <button @click="() => adjustTime(-1)" :disabled={isRunning || totalSeconds <= 60}>
+          -1 min
+        </button>
+        <button @click="() => adjustTime(1)" :disabled={isRunning}>
+          +1 min
+        </button>
+      </div>
+      
+      #if (isComplete)
+        <div class="complete-message">
+          ⏰ Time's up!
+        </div>
+      #/if
+    </div>
+  </template>
+  
+  <style>
+    .timer {
+      text-align: center;
+      padding: 30px;
+    }
+    
+    .display {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 30px;
+    }
+    
+    .time {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3em;
+      font-weight: bold;
+      font-family: monospace;
+    }
+    
+    .display.complete .time {
+      color: #f44336;
+      animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+      50% { opacity: 0.5; }
+    }
+    
+    .controls, .adjust-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+    }
+    
+    button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .complete-message {
+      font-size: 1.5em;
+      color: #f44336;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</component>`;
+            }
+            
+            generateSearch() {
+                return `<component>
+  <prop name="searchApi" type="string" default="/api/search" />
+  <prop name="placeholder" type="string" default="Search..." />
+  
+  <state>
+    let query = "";
+    let results = [];
+    let isLoading = false;
+    let error = null;
+    let searchHistory = [];
+    let showHistory = false;
+  </state>
+  
+  $: hasResults = results.length > 0;
+  $: hasQuery = query.trim().length > 0;
+  
+  // Debounced search
+  let searchTimeout;
+  const debouncedSearch = (value) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      if (value.trim()) {
+        performSearch(value);
+      } else {
+        results = [];
+      }
+    }, 300);
+  };
+  
+  const performSearch = async (searchQuery) => {
+    isLoading = true;
+    error = null;
+    
+    try {
+      // Simulated search
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Mock results
+      results = Array.from({ length: Math.floor(Math.random() * 10) + 1 }, (_, i) => ({
+        id: Date.now() + i,
+        title: \`Result \${i + 1} for "\${searchQuery}"\`,
+        description: \`This is a description for result \${i + 1}\`,
+        url: \`#result-\${i + 1}\`
+      }));
+      
+      // Add to history
+      if (!searchHistory.includes(searchQuery)) {
+        searchHistory = [searchQuery, ...searchHistory.slice(0, 4)];
+      }
+    } catch (err) {
+      error = "Search failed. Please try again.";
+      results = [];
+    } finally {
+      isLoading = false;
+    }
+  };
+  
+  const handleInput = (value) => {
+    query = value;
+    debouncedSearch(value);
+  };
+  
+  const selectFromHistory = (historyItem) => {
+    query = historyItem;
+    showHistory = false;
+    performSearch(historyItem);
+  };
+  
+  const clearSearch = () => {
+    query = "";
+    results = [];
+    error = null;
+  };
+  
+  <template>
+    <div class="search-container">
+      <div class="search-box">
+        <input
+          type="search"
+          value={query}
+          @input="(e) => handleInput(e.target.value)"
+          @focus="() => showHistory = true"
+          @blur="() => setTimeout(() => showHistory = false, 200)"
+          placeholder={placeholder}
+          aria-label="Search"
+          class="search-input"
+        />
+        
+        #if (hasQuery)
+          <button @click="clearSearch" class="clear-btn" aria-label="Clear search">
+            ×
+          </button>
+        #/if
+        
+        #if (isLoading)
+          <div class="spinner"></div>
+        #/if
+        
+        #if (showHistory && searchHistory.length > 0 && !hasQuery)
+          <div class="search-history">
+            <div class="history-header">Recent searches</div>
+            #each (searchHistory as item)
+              <button 
+                @click="() => selectFromHistory(item)"
+                class="history-item"
+              >
+                🔍 {item}
+              </button>
+            #/each
+          </div>
+        #/if
+      </div>
+      
+      #if (error)
+        <div class="error-message" role="alert">
+          {error}
+        </div>
+      #/if
+      
+      #if (hasResults)
+        <div class="results">
+          <div class="results-header">
+            Found {results.length} result{results.length !== 1 ? 's' : ''} for "{query}"
+          </div>
+          
+          <ul class="results-list" role="list">
+            #each (results as result)
+              <li key={result.id} class="result-item" role="listitem">
+                <a href={result.url} class="result-link">
+                  <h3>{result.title}</h3>
+                  <p>{result.description}</p>
+                </a>
+              </li>
+            #/each
+          </ul>
+        </div>
+      #elseif (hasQuery && !isLoading)
+        <div class="no-results">
+          No results found for "{query}"
+        </div>
+      #/if
+    </div>
+  </template>
+  
+  <style>
+    .search-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .search-box {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 24px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+      border-color: #007bff;
+    }
+    
+    .clear-btn {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+      padding: 0 8px;
+    }
+    
+    .spinner {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+    
+    .search-history {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-top: 4px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    
+    .history-header {
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #666;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .history-item {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      text-align: left;
+      border: none;
+      background: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .history-item:hover {
+      background: #f8f9fa;
+    }
+    
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .results-header {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+    
+    .results-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .result-item {
+      margin-bottom: 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: box-shadow 0.2s;
+    }
+    
+    .result-item:hover {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .result-link {
+      display: block;
+      padding: 16px;
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .result-link h3 {
+      margin: 0 0 8px 0;
+      color: #0066cc;
+    }
+    
+    .result-link p {
+      margin: 0;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .no-results {
+      text-align: center;
+      color: #666;
+      padding: 40px;
+    }
+  </style>
+</component>`;
+            }
+            
+            generateTabs() {
+                return `<component>
+  <prop name="tabs" type="array" default={[
+    { id: 'tab1', label: 'Tab 1', content: 'Content for tab 1' },
+    { id: 'tab2', label: 'Tab 2', content: 'Content for tab 2' },
+    { id: 'tab3', label: 'Tab 3', content: 'Content for tab 3' }
+  ]} />
+  
+  <state>
+    let activeTab = tabs[0]?.id || '';
+  </state>
+  
+  $: activeTabData = tabs.find(tab => tab.id === activeTab);
+  $: activeIndex = tabs.findIndex(tab => tab.id === activeTab);
+  
+  const selectTab = (tabId) => {
+    activeTab = tabId;
+  };
+  
+  const nextTab = () => {
+    const nextIndex = (activeIndex + 1) % tabs.length;
+    activeTab = tabs[nextIndex].id;
+  };
+  
+  const prevTab = () => {
+    const prevIndex = (activeIndex - 1 + tabs.length) % tabs.length;
+    activeTab = tabs[prevIndex].id;
+  };
+  
+  // Keyboard navigation
+  const handleKeydown = (e) => {
+    if (e.key === 'ArrowRight') {
+      nextTab();
+    } else if (e.key === 'ArrowLeft') {
+      prevTab();
+    }
+  };
+  
+  <template>
+    <div class="tabs-container">
+      <div 
+        class="tabs-header" 
+        role="tablist"
+        @keydown="handleKeydown"
+      >
+        #each (tabs as tab, index)
+          <button
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={\`panel-\${tab.id}\`}
+            id={\`tab-\${tab.id}\`}
+            tabindex={activeTab === tab.id ? 0 : -1}
+            class="tab-button"
+            class:active={activeTab === tab.id}
+            @click="() => selectTab(tab.id)"
+          >
+            {tab.label}
+          </button>
+        #/each
+      </div>
+      
+      <div class="tabs-content">
+        #each (tabs as tab)
+          <div
+            role="tabpanel"
+            id={\`panel-\${tab.id}\`}
+            aria-labelledby={\`tab-\${tab.id}\`}
+            hidden={activeTab !== tab.id}
+            class="tab-panel"
+            class:active={activeTab === tab.id}
+          >
+            {tab.content}
+          </div>
+        #/each
+      </div>
+      
+      <div class="tab-navigation">
+        <button @click="prevTab" aria-label="Previous tab">
+          ← Previous
+        </button>
+        <span>{activeIndex + 1} / {tabs.length}</span>
+        <button @click="nextTab" aria-label="Next tab">
+          Next →
+        </button>
+      </div>
+    </div>
+  </template>
+  
+  <style>
+    .tabs-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .tabs-header {
+      display: flex;
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 20px;
+    }
+    
+    .tab-button {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+      margin-bottom: -2px;
+    }
+    
+    .tab-button:hover {
+      background: #f8f9fa;
+    }
+    
+    .tab-button.active {
+      border-bottom-color: #007bff;
+      color: #007bff;
+      font-weight: 500;
+    }
+    
+    .tab-panel {
+      display: none;
+      padding: 20px;
+      animation: fadeIn 0.3s;
+    }
+    
+    .tab-panel.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .tab-navigation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    
+    .tab-navigation button {
+      padding: 8px 16px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .tab-navigation button:hover {
+      background: #e9ecef;
+    }
+  </style>
+</component>`;
+            }
+            
+            generateAccordion() {
+                return `<component>
+  <prop name="items" type="array" default={[
+    { id: 'item1', title: 'Section 1', content: 'Content for section 1' },
+    { id: 'item2', title: 'Section 2', content: 'Content for section 2' },
+    { id: 'item3', title: 'Section 3', content: 'Content for section 3' }
+  ]} />
+  <prop name="allowMultiple" type="boolean" default={false} />
+  
+  <state>
+    let openItems = new Set();
+  </state>
+  
+  const toggleItem = (itemId) => {
+    if (openItems.has(itemId)) {
+      openItems.delete(itemId);
+    } else {
+      if (!allowMultiple) {
+        openItems.clear();
+      }
+      openItems.add(itemId);
+    }
+    openItems = new Set(openItems); // Force reactivity
+  };
+  
+  const isOpen = (itemId) => openItems.has(itemId);
+  
+  const openAll = () => {
+    items.forEach(item => openItems.add(item.id));
+    openItems = new Set(openItems);
+  };
+  
+  const closeAll = () => {
+    openItems.clear();
+    openItems = new Set(openItems);
+  };
+  
+  <template>
+    <div class="accordion">
+      #if (allowMultiple)
+        <div class="accordion-controls">
+          <button @click="openAll">Open All</button>
+          <button @click="closeAll">Close All</button>
+        </div>
+      #/if
+      
+      #each (items as item)
+        <div class="accordion-item" class:open={isOpen(item.id)}>
+          <button
+            class="accordion-header"
+            @click="() => toggleItem(item.id)"
+            aria-expanded={isOpen(item.id)}
+            aria-controls={\`content-\${item.id}\`}
+          >
+            <span>{item.title}</span>
+            <span class="accordion-icon" aria-hidden="true">
+              {isOpen(item.id) ? '−' : '+'}
+            </span>
+          </button>
+          
+          <div
+            id={\`content-\${item.id}\`}
+            class="accordion-content"
+            hidden={!isOpen(item.id)}
+          >
+            <div class="accordion-body">
+              {item.content}
+            </div>
+          </div>
+        </div>
+      #/each
+    </div>
+  </template>
+  
+  <style>
+    .accordion {
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .accordion-controls {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .accordion-controls button {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .accordion-item {
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .accordion-item:last-child {
+      border-bottom: none;
+    }
+    
+    .accordion-header {
+      width: 100%;
+      padding: 16px 20px;
+      background: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    
+    .accordion-header:hover {
+      background: #f8f9fa;
+    }
+    
+    .accordion-item.open .accordion-header {
+      background: #e7f3ff;
+    }
+    
+    .accordion-icon {
+      font-size: 20px;
+      color: #007bff;
+    }
+    
+    .accordion-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .accordion-body {
+      padding: 16px 20px;
+      background: #fafafa;
+    }
+  </style>
+</component>`;
+            }
+        }
+        
+        // Image analysis (mock - would use vision API in real implementation)
+        function analyzeImage(imageData) {
+            // This would normally call a vision API
+            // For demo, we'll return mock analysis
+            return {
+                layout: { type: 'flex', direction: 'column' },
+                components: [
+                    { type: 'header', properties: { text: 'Detected Header', size: 'large' } },
+                    { type: 'input', properties: { placeholder: 'Detected input field' } },
+                    { type: 'button', properties: { text: 'Submit', variant: 'primary' } }
+                ],
+                styling: {
+                    colors: { primary: '#007bff', background: '#ffffff' },
+                    spacing: 'normal',
+                    rounded: true
+                },
+                semantics: { purpose: 'form', key_actions: ['submit'] }
+            };
+        }
+        
+        // Global generator instance
+        const generator = new EghactGenerator();
+        
+        // UI Functions
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            document.querySelector(`#${tab}Tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function generateFromText() {
+            const prompt = document.getElementById('prompt').value;
+            if (!prompt) return;
+            
+            const options = {
+                includeTests: document.getElementById('includeTests').checked,
+                includeA11y: document.getElementById('includeA11y').checked,
+                includeTypes: document.getElementById('includeTypes').checked
+            };
+            
+            const component = generator.generate(prompt, options);
+            displayComponent(component);
+        }
+        
+        function generateFromPattern() {
+            const pattern = document.getElementById('patternSelect').value;
+            if (!pattern) return;
+            
+            const options = {
+                includeTests: document.getElementById('includeTests').checked,
+                includeA11y: document.getElementById('includeA11y').checked,
+                includeTypes: document.getElementById('includeTypes').checked
+            };
+            
+            const component = generator.patterns[pattern].call(generator, {}, options);
+            displayComponent(component);
+        }
+        
+        function displayComponent(component) {
+            document.getElementById('output').textContent = component;
+            
+            // Simulate preview
+            const preview = document.getElementById('previewContent');
+            preview.innerHTML = '<p>Component preview would render here in a real Eghact environment</p>';
+            
+            // Extract component type for preview
+            if (component.includes('counter')) {
+                preview.innerHTML = '<div style="text-align:center"><h2>Counter: 0</h2><button>-</button> <button>+</button></div>';
+            } else if (component.includes('todo')) {
+                preview.innerHTML = '<div><h2>Todo List</h2><input placeholder="Add item"> <button>Add</button><ul><li>Sample todo item</li></ul></div>';
+            } else if (component.includes('button')) {
+                preview.innerHTML = '<button style="padding:10px 20px;background:#007bff;color:white;border:none;border-radius:4px">Click me</button>';
+            }
+        }
+        
+        function copyToClipboard() {
+            const code = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Component copied to clipboard!');
+            });
+        }
+        
+        function downloadComponent() {
+            const code = document.getElementById('output').textContent;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'component.egh';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Image handling
+        const dragArea = document.getElementById('dragArea');
+        const fileInput = document.getElementById('fileInput');
+        const canvas = document.getElementById('imageCanvas');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        
+        dragArea?.addEventListener('click', () => fileInput.click());
+        
+        dragArea?.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragArea.classList.add('drag-over');
+        });
+        
+        dragArea?.addEventListener('dragleave', () => {
+            dragArea.classList.remove('drag-over');
+        });
+        
+        dragArea?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragArea.classList.remove('drag-over');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImage(file);
+            }
+        });
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) handleImage(file);
+        }
+        
+        function handleImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Display image
+                    canvas.style.display = 'block';
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    analyzeBtn.style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function generateFromImage() {
+            // Mock image analysis
+            const analysis = analyzeImage(null);
+            
+            // Convert to prompt
+            let prompt = 'Create a ' + analysis.semantics.purpose + ' with ';
+            analysis.components.forEach((comp, i) => {
+                if (i > 0) prompt += ', ';
+                prompt += 'a ' + comp.type;
+                if (comp.properties.text) prompt += ' labeled "' + comp.properties.text + '"';
+            });
+            
+            const component = generator.generate(prompt, {
+                includeTests: document.getElementById('includeTests').checked,
+                includeA11y: document.getElementById('includeA11y').checked,
+                includeTypes: document.getElementById('includeTypes').checked
+            });
+            
+            displayComponent(component);
+        }
+    </script>
+</body>
+</html>
