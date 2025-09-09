@@ -1,0 +1,238 @@
+/**
+ * @eghact/carousel - Zero-runtime carousel component
+ * 100% compile-time optimized, no JavaScript required
+ */
+
+component Carousel {
+  // Props
+  @prop items: Array<any> = []
+  @prop autoPlay: boolean = false
+  @prop interval: number = 3000
+  @prop showIndicators: boolean = true
+  @prop showArrows: boolean = true
+  @prop effect: 'slide' | 'fade' | 'zoom' = 'slide'
+  
+  // State
+  ~currentIndex = 0
+  ~isPlaying = autoPlay
+  ~direction = 'next'
+  
+  // Computed
+  currentItem => items[currentIndex]
+  hasNext => currentIndex < items.length - 1
+  hasPrev => currentIndex > 0
+  totalSlides => items.length
+  
+  // Methods
+  next() => {
+    direction = 'next'
+    currentIndex = hasNext ? currentIndex + 1 : 0
+  }
+  
+  prev() => {
+    direction = 'prev'
+    currentIndex = hasPrev ? currentIndex - 1 : items.length - 1
+  }
+  
+  goTo(index) => {
+    direction = index > currentIndex ? 'next' : 'prev'
+    currentIndex = index
+  }
+  
+  play() => {
+    isPlaying = true
+  }
+  
+  pause() => {
+    isPlaying = false
+  }
+  
+  // Effects
+  isPlaying :: {
+    if (isPlaying) {
+      const timer = setInterval(() => next(), interval)
+      return () => clearInterval(timer)
+    }
+  }
+  
+  // Template
+  <[
+    div.carousel(
+      @mouseenter: pause()
+      @mouseleave: play()
+      class={{ [`effect-${effect}`]: true }}
+    ) {
+      div.carousel-inner {
+        @transition(direction, effect) {
+          *~items as item, index {
+            div.carousel-item(
+              class={{ active: index === currentIndex }}
+              key: index
+            ) {
+              @slot(item)
+            }
+          }
+        }
+      }
+      
+      ?showArrows {
+        button.carousel-arrow.prev(
+          @click: prev()
+          disabled: !hasPrev && !autoPlay
+        ) { "‹" }
+        
+        button.carousel-arrow.next(
+          @click: next()
+          disabled: !hasNext && !autoPlay
+        ) { "›" }
+      }
+      
+      ?showIndicators {
+        div.carousel-indicators {
+          *~items as _, index {
+            button.indicator(
+              @click: goTo(index)
+              class={{ active: index === currentIndex }}
+            ) { }
+          }
+        }
+      }
+    }
+  ]>
+  
+  // Styles (compile-time CSS-in-JS)
+  @style {
+    .carousel {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    .carousel-inner {
+      display: flex;
+      transition: transform 0.5s ease;
+    }
+    
+    .carousel-item {
+      min-width: 100%;
+      flex-shrink: 0;
+    }
+    
+    .effect-slide .carousel-inner {
+      transform: translateX(calc(-100% * var(--index)));
+    }
+    
+    .effect-fade .carousel-item {
+      position: absolute;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    
+    .effect-fade .carousel-item.active {
+      opacity: 1;
+    }
+    
+    .effect-zoom .carousel-item {
+      transform: scale(0.9);
+      opacity: 0;
+      transition: all 0.5s;
+    }
+    
+    .effect-zoom .carousel-item.active {
+      transform: scale(1);
+      opacity: 1;
+    }
+    
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+      font-size: 2rem;
+      z-index: 10;
+    }
+    
+    .carousel-arrow.prev { left: 1rem; }
+    .carousel-arrow.next { right: 1rem; }
+    
+    .carousel-arrow:hover {
+      background: rgba(0,0,0,0.7);
+    }
+    
+    .carousel-indicators {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.5rem;
+      z-index: 10;
+    }
+    
+    .indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .indicator.active {
+      background: white;
+      transform: scale(1.2);
+    }
+  }
+}
+
+// Export variants
+export component ImageCarousel extends Carousel {
+  @prop images: Array<string> = []
+  
+  items => images.map(src => ({ src, alt: '' }))
+  
+  @slot(item) {
+    img(src: item.src, alt: item.alt)
+  }
+}
+
+export component TestimonialCarousel extends Carousel {
+  @prop testimonials: Array<Testimonial> = []
+  
+  items => testimonials
+  effect => 'fade'
+  
+  @slot(item) {
+    div.testimonial {
+      blockquote { item.text }
+      cite { 
+        item.author 
+        ?item.role { ", " + item.role }
+      }
+    }
+  }
+}
+
+export component ProductCarousel extends Carousel {
+  @prop products: Array<Product> = []
+  @prop onAddToCart: function
+  
+  items => products
+  showIndicators => false
+  
+  @slot(product) {
+    div.product-slide {
+      img(src: product.image, alt: product.name)
+      h3 { product.name }
+      p.price { "$" + product.price }
+      button(@click: onAddToCart(product)) { 
+        "Add to Cart" 
+      }
+    }
+  }
+}

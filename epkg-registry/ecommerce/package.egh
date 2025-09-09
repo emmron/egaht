@@ -1,0 +1,378 @@
+/**
+ * @eghact/ecommerce - Complete e-commerce solution
+ * Zero-runtime, compile-time optimized shopping experience
+ */
+
+// Store Management
+store CartStore {
+  ~items = []
+  ~isOpen = false
+  
+  totalItems => items.reduce((sum, item) => sum + item.quantity, 0)
+  totalPrice => items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  
+  addItem(product, quantity = 1) {
+    const existing = items.find(i => i.id === product.id)
+    if (existing) {
+      existing.quantity += quantity
+    } else {
+      items = [...items, { ...product, quantity }]
+    }
+    isOpen = true
+  }
+  
+  removeItem(id) {
+    items = items.filter(i => i.id !== id)
+  }
+  
+  updateQuantity(id, quantity) {
+    const item = items.find(i => i.id === id)
+    if (item) {
+      item.quantity = Math.max(0, quantity)
+      if (item.quantity === 0) removeItem(id)
+    }
+  }
+  
+  clear() {
+    items = []
+  }
+  
+  checkout() {
+    // Process checkout
+    return {
+      items: [...items],
+      total: totalPrice,
+      timestamp: Date.now()
+    }
+  }
+}
+
+// Product Components
+component ProductCard {
+  @prop product: Product
+  @prop onAddToCart: function
+  @prop showQuickView: boolean = true
+  
+  ~isHovered = false
+  ~selectedVariant = product.variants?.[0]
+  
+  currentPrice => selectedVariant?.price || product.price
+  currentImage => selectedVariant?.image || product.image
+  isOnSale => product.originalPrice && product.price < product.originalPrice
+  discount => isOnSale ? Math.round((1 - product.price / product.originalPrice) * 100) : 0
+  
+  <[
+    div.product-card(
+      @mouseenter: isHovered = true
+      @mouseleave: isHovered = false
+    ) {
+      div.product-image {
+        ?isOnSale {
+          span.badge.sale { "-" + discount + "%" }
+        }
+        
+        img(
+          src: currentImage
+          alt: product.name
+          loading: "lazy"
+        )
+        
+        ?isHovered && showQuickView {
+          @animate(fade-in, 200ms) {
+            div.quick-actions {
+              button.quick-view { "Quick View" }
+              button.add-to-wishlist { "♥" }
+            }
+          }
+        }
+      }
+      
+      div.product-info {
+        h3.product-name { product.name }
+        
+        ?product.rating {
+          div.rating {
+            StarRating(value: product.rating, max: 5)
+            span.reviews { "(" + product.reviews + ")" }
+          }
+        }
+        
+        div.price {
+          ?isOnSale {
+            span.original-price { "$" + product.originalPrice }
+          }
+          span.current-price { "$" + currentPrice }
+        }
+        
+        ?product.variants {
+          div.variants {
+            *~product.variants as variant {
+              button.variant(
+                @click: selectedVariant = variant
+                class={{ active: selectedVariant === variant }}
+              ) {
+                variant.name
+              }
+            }
+          }
+        }
+        
+        button.add-to-cart(
+          @click: onAddToCart(product, 1)
+        ) {
+          "Add to Cart"
+        }
+      }
+    }
+  ]>
+}
+
+component ShoppingCart {
+  @inject cart: CartStore
+  
+  <[
+    div.shopping-cart(class={{ open: cart.isOpen }}) {
+      div.cart-header {
+        h2 { "Shopping Cart" }
+        button.close(@click: cart.isOpen = false) { "×" }
+      }
+      
+      div.cart-items {
+        ?cart.items.length === 0 {
+          p.empty { "Your cart is empty" }
+        } : {
+          *~cart.items as item {
+            CartItem(
+              item: item
+              onRemove: () => cart.removeItem(item.id)
+              onUpdateQuantity: (q) => cart.updateQuantity(item.id, q)
+            )
+          }
+        }
+      }
+      
+      ?cart.items.length > 0 {
+        div.cart-footer {
+          div.cart-total {
+            span { "Total:" }
+            span.total-price { "$" + cart.totalPrice.toFixed(2) }
+          }
+          
+          button.checkout(@click: handleCheckout) {
+            "Proceed to Checkout"
+          }
+        }
+      }
+    }
+  ]>
+}
+
+component CartItem {
+  @prop item: CartItem
+  @prop onRemove: function
+  @prop onUpdateQuantity: function
+  
+  <[
+    div.cart-item {
+      img(src: item.image, alt: item.name)
+      
+      div.item-details {
+        h4 { item.name }
+        p.price { "$" + item.price }
+      }
+      
+      div.quantity-controls {
+        button(@click: onUpdateQuantity(item.quantity - 1)) { "-" }
+        span.quantity { item.quantity }
+        button(@click: onUpdateQuantity(item.quantity + 1)) { "+" }
+      }
+      
+      div.item-total {
+        "$" + (item.price * item.quantity).toFixed(2)
+      }
+      
+      button.remove(@click: onRemove) { "Remove" }
+    }
+  ]>
+}
+
+component CheckoutForm {
+  @inject cart: CartStore
+  
+  ~formData = {
+    email: '',
+    shipping: {
+      firstName: '',
+      lastName: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: 'US'
+    },
+    payment: {
+      cardNumber: '',
+      expiry: '',
+      cvv: '',
+      name: ''
+    }
+  }
+  
+  ~currentStep = 'shipping'
+  ~isProcessing = false
+  
+  isValid => {
+    match currentStep {
+      'shipping' => formData.email && formData.shipping.address
+      'payment' => formData.payment.cardNumber && formData.payment.cvv
+      _ => false
+    }
+  }
+  
+  async processOrder() {
+    isProcessing = true
+    
+    const order = {
+      ...cart.checkout(),
+      customer: formData,
+      orderNumber: Date.now().toString(36).toUpperCase()
+    }
+    
+    // Simulate API call
+    await new Promise(r => setTimeout(r, 1000))
+    
+    cart.clear()
+    isProcessing = false
+    
+    return order
+  }
+  
+  <[
+    div.checkout-form {
+      div.steps {
+        div.step(class={{ active: currentStep === 'shipping' }}) {
+          "1. Shipping"
+        }
+        div.step(class={{ active: currentStep === 'payment' }}) {
+          "2. Payment"
+        }
+        div.step(class={{ active: currentStep === 'review' }}) {
+          "3. Review"
+        }
+      }
+      
+      @transition(currentStep, slide) {
+        match currentStep {
+          'shipping' => {
+            ShippingForm(
+              data: formData.shipping
+              email: formData.email
+              onNext: () => currentStep = 'payment'
+            )
+          }
+          'payment' => {
+            PaymentForm(
+              data: formData.payment
+              onBack: () => currentStep = 'shipping'
+              onNext: () => currentStep = 'review'
+            )
+          }
+          'review' => {
+            OrderReview(
+              cart: cart
+              shipping: formData.shipping
+              onBack: () => currentStep = 'payment'
+              onConfirm: processOrder
+              isProcessing: isProcessing
+            )
+          }
+        }
+      }
+    }
+  ]>
+}
+
+// Product filters and search
+component ProductFilters {
+  @prop categories: Array<string> = []
+  @prop priceRange: { min: number, max: number }
+  @prop onFilter: function
+  
+  ~selectedCategories = []
+  ~minPrice = priceRange.min
+  ~maxPrice = priceRange.max
+  ~sortBy = 'relevance'
+  
+  filters => {
+    categories: selectedCategories,
+    priceMin: minPrice,
+    priceMax: maxPrice,
+    sort: sortBy
+  }
+  
+  filters :: {
+    onFilter(filters)
+  }
+  
+  <[
+    div.product-filters {
+      div.filter-group {
+        h3 { "Categories" }
+        *~categories as category {
+          label.checkbox {
+            input(
+              type: "checkbox"
+              checked: selectedCategories.includes(category)
+              @change: toggleCategory(category)
+            )
+            span { category }
+          }
+        }
+      }
+      
+      div.filter-group {
+        h3 { "Price Range" }
+        div.price-inputs {
+          input(
+            type: "number"
+            <~> minPrice
+            min: priceRange.min
+            max: priceRange.max
+          )
+          span { "to" }
+          input(
+            type: "number"
+            <~> maxPrice
+            min: priceRange.min
+            max: priceRange.max
+          )
+        }
+      }
+      
+      div.filter-group {
+        h3 { "Sort By" }
+        select(<~> sortBy) {
+          option(value: "relevance") { "Relevance" }
+          option(value: "price-low") { "Price: Low to High" }
+          option(value: "price-high") { "Price: High to Low" }
+          option(value: "rating") { "Customer Rating" }
+          option(value: "newest") { "Newest" }
+        }
+      }
+      
+      button.clear-filters(@click: clearFilters) {
+        "Clear All"
+      }
+    }
+  ]>
+}
+
+// Export complete e-commerce solution
+export { 
+  CartStore,
+  ProductCard,
+  ShoppingCart,
+  CartItem,
+  CheckoutForm,
+  ProductFilters
+}

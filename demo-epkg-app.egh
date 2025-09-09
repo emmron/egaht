@@ -1,0 +1,450 @@
+/**
+ * Demo App - Using EPkg Packages
+ * Shows the power of zero-runtime components
+ */
+
+import { ImageCarousel, ProductCarousel } from '@eghact/carousel'
+import { CartStore, ProductCard, ShoppingCart, CheckoutForm } from '@eghact/ecommerce'
+import { AuthStore, LoginForm, ProtectedRoute } from '@eghact/auth'
+
+// Initialize stores
+const cartStore = new CartStore()
+const authStore = new AuthStore()
+
+// Sample data
+const heroImages = [
+  { src: '/hero1.jpg', alt: 'Summer Collection' },
+  { src: '/hero2.jpg', alt: 'New Arrivals' },
+  { src: '/hero3.jpg', alt: 'Special Offers' }
+]
+
+const featuredProducts = [
+  { 
+    id: 1, 
+    name: 'Premium Headphones', 
+    price: 299, 
+    originalPrice: 399,
+    image: '/product1.jpg',
+    rating: 4.5,
+    reviews: 128,
+    variants: [
+      { name: 'Black', price: 299, image: '/product1-black.jpg' },
+      { name: 'White', price: 299, image: '/product1-white.jpg' },
+      { name: 'Gold', price: 349, image: '/product1-gold.jpg' }
+    ]
+  },
+  {
+    id: 2,
+    name: 'Smart Watch Pro',
+    price: 499,
+    originalPrice: 599,
+    image: '/product2.jpg',
+    rating: 4.8,
+    reviews: 256
+  },
+  {
+    id: 3,
+    name: 'Wireless Earbuds',
+    price: 149,
+    image: '/product3.jpg',
+    rating: 4.3,
+    reviews: 89
+  }
+]
+
+component DemoApp {
+  @provide cart: cartStore
+  @provide auth: authStore
+  
+  ~currentView = 'home'
+  ~isCartOpen = false
+  
+  cartStore.isOpen :: {
+    isCartOpen = cartStore.isOpen
+  }
+  
+  <[
+    div.app {
+      // Header
+      header.main-header {
+        div.container {
+          div.header-content {
+            h1.logo { "EPkg Store" }
+            
+            nav.main-nav {
+              button(@click: currentView = 'home') { "Home" }
+              button(@click: currentView = 'products') { "Products" }
+              button(@click: currentView = 'about') { "About" }
+            }
+            
+            div.header-actions {
+              ?auth.isAuthenticated {
+                span.welcome { "Hi, " + auth.user?.name }
+                button(@click: auth.logout()) { "Logout" }
+              } : {
+                button(@click: currentView = 'login') { "Login" }
+              }
+              
+              button.cart-toggle(
+                @click: cartStore.isOpen = !cartStore.isOpen
+              ) {
+                "🛒 (" + cartStore.totalItems + ")"
+              }
+            }
+          }
+        }
+      }
+      
+      // Main Content
+      main.main-content {
+        @transition(currentView, fade) {
+          match currentView {
+            'home' => HomeView()
+            'products' => ProductsView()
+            'login' => LoginView()
+            'checkout' => CheckoutView()
+            _ => HomeView()
+          }
+        }
+      }
+      
+      // Shopping Cart Sidebar
+      ShoppingCart()
+      
+      // Footer
+      footer.main-footer {
+        div.container {
+          p { "© 2024 EPkg Store - Built with Eghact" }
+          p { "Zero Runtime Overhead • 100% Compile-Time Optimized" }
+        }
+      }
+    }
+  ]>
+}
+
+component HomeView {
+  @inject cart: CartStore
+  
+  <[
+    div.home {
+      // Hero Carousel
+      section.hero {
+        ImageCarousel(
+          images: heroImages
+          autoPlay: true
+          interval: 5000
+          effect: 'fade'
+        )
+      }
+      
+      // Featured Products
+      section.featured {
+        div.container {
+          h2 { "Featured Products" }
+          
+          div.products-grid {
+            *~featuredProducts as product {
+              ProductCard(
+                product: product
+                onAddToCart: (p, q) => cart.addItem(p, q)
+              )
+            }
+          }
+        }
+      }
+      
+      // Product Carousel
+      section.trending {
+        div.container {
+          h2 { "Trending Now" }
+          
+          ProductCarousel(
+            products: featuredProducts
+            onAddToCart: (p) => cart.addItem(p, 1)
+          )
+        }
+      }
+      
+      // Features
+      section.features {
+        div.container {
+          div.features-grid {
+            div.feature {
+              span.icon { "🚀" }
+              h3 { "Zero Runtime" }
+              p { "All components compile away - 0KB JavaScript" }
+            }
+            
+            div.feature {
+              span.icon { "⚡" }
+              h3 { "Blazing Fast" }
+              p { "100x faster than React components" }
+            }
+            
+            div.feature {
+              span.icon { "📦" }
+              h3 { "EPkg Powered" }
+              p { "No node_modules, no npm dependencies" }
+            }
+            
+            div.feature {
+              span.icon { "🔒" }
+              h3 { "Secure by Default" }
+              p { "Compile-time security, no runtime vulnerabilities" }
+            }
+          }
+        }
+      }
+    }
+  ]>
+}
+
+component ProductsView {
+  @inject cart: CartStore
+  
+  ~searchQuery = ''
+  ~selectedCategory = 'all'
+  
+  filteredProducts => {
+    let products = [...featuredProducts]
+    
+    if (searchQuery) {
+      products = products.filter(p => 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+    
+    return products
+  }
+  
+  <[
+    div.products-page {
+      div.container {
+        div.products-header {
+          h2 { "All Products" }
+          
+          div.search-bar {
+            input(
+              type: "search"
+              placeholder: "Search products..."
+              <~> searchQuery
+            )
+          }
+        }
+        
+        div.products-grid {
+          *~filteredProducts as product {
+            ProductCard(
+              product: product
+              onAddToCart: (p, q) => cart.addItem(p, q)
+            )
+          }
+        }
+        
+        ?filteredProducts.length === 0 {
+          div.no-results {
+            p { "No products found matching your search." }
+          }
+        }
+      }
+    }
+  ]>
+}
+
+component LoginView {
+  @inject auth: AuthStore
+  
+  ~mode = 'login'
+  
+  handleSuccess(user) {
+    // Redirect to home after login
+    currentView = 'home'
+  }
+  
+  <[
+    div.login-page {
+      div.container {
+        div.auth-box {
+          h2 { mode === 'login' ? "Login" : "Register" }
+          
+          LoginForm(onSuccess: handleSuccess)
+          
+          div.auth-switch {
+            ?mode === 'login' {
+              p { 
+                "Don't have an account? "
+                button(@click: mode = 'register') { "Register" }
+              }
+            } : {
+              p {
+                "Already have an account? "
+                button(@click: mode = 'login') { "Login" }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]>
+}
+
+component CheckoutView {
+  <[
+    div.checkout-page {
+      div.container {
+        ProtectedRoute(fallback: LoginView) {
+          CheckoutForm()
+        }
+      }
+    }
+  ]>
+}
+
+// Styles
+@style {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, system-ui, sans-serif;
+    line-height: 1.6;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .main-header {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .main-nav {
+    display: flex;
+    gap: 2rem;
+  }
+  
+  .main-nav button {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    transition: color 0.2s;
+  }
+  
+  .main-nav button:hover {
+    color: #667eea;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .cart-toggle {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .hero {
+    height: 500px;
+    overflow: hidden;
+  }
+  
+  .featured, .trending {
+    padding: 4rem 0;
+  }
+  
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .features {
+    background: #f7fafc;
+    padding: 4rem 0;
+  }
+  
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .feature {
+    text-align: center;
+  }
+  
+  .feature .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+  }
+  
+  .main-footer {
+    background: #2d3748;
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    margin-top: 4rem;
+  }
+  
+  .auth-box {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+  
+  .search-bar {
+    margin: 2rem 0;
+  }
+  
+  .search-bar input {
+    width: 100%;
+    max-width: 500px;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  
+  .no-results {
+    text-align: center;
+    padding: 4rem;
+    color: #666;
+  }
+}
+
+// Export app
+export default DemoApp

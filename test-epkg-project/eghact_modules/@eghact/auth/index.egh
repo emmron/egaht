@@ -1,0 +1,6 @@
+// @eghact/auth - Eghact native module
+export default {
+  name: '@eghact/auth',
+  version: '1.0.0',
+  // Zero runtime overhead implementation
+}

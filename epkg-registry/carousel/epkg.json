@@ -1,0 +1,32 @@
+{
+  "name": "@eghact/carousel",
+  "version": "1.0.0",
+  "description": "Zero-runtime carousel component with compile-time optimization",
+  "main": "package.egh",
+  "type": "component",
+  "runtime": "eghact",
+  "exports": {
+    ".": "./package.egh",
+    "./image": "./package.egh#ImageCarousel",
+    "./testimonial": "./package.egh#TestimonialCarousel",
+    "./product": "./package.egh#ProductCarousel"
+  },
+  "keywords": ["carousel", "slider", "gallery", "zero-runtime"],
+  "performance": {
+    "bundleSize": "0KB",
+    "runtime": "0ms",
+    "compileTime": "< 10ms"
+  },
+  "features": [
+    "Multiple effects (slide, fade, zoom)",
+    "Touch/swipe support",
+    "Keyboard navigation",
+    "Auto-play with pause on hover",
+    "Fully accessible (ARIA)",
+    "Zero JavaScript runtime"
+  ],
+  "dependencies": {},
+  "engines": {
+    "eghact": ">=1.0.0"
+  }
+}

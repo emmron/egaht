@@ -1,0 +1,7 @@
+{
+  "name": "@eghact/carousel",
+  "version": "1.0.0",
+  "main": "index.egh",
+  "compiled": true,
+  "wasm": false
+}

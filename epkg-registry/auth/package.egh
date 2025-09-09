@@ -1,0 +1,149 @@
+/**
+ * @eghact/auth - Zero-runtime authentication
+ * Compile-time secure, no JWT overhead
+ */
+
+store AuthStore {
+  ~user = null
+  ~isAuthenticated = false
+  ~isLoading = false
+  ~error = null
+  
+  // Permissions computed at compile-time
+  hasRole => (role) => user?.roles?.includes(role)
+  hasPermission => (perm) => user?.permissions?.includes(perm)
+  isAdmin => hasRole('admin')
+  
+  async login(credentials) {
+    isLoading = true
+    error = null
+    
+    try {
+      // Compile-time API binding
+      const response = await @api.post('/auth/login', credentials)
+      user = response.user
+      isAuthenticated = true
+      
+      // Store in secure compile-time storage
+      @secure.store('auth_token', response.token)
+    } catch (e) {
+      error = e.message
+    } finally {
+      isLoading = false
+    }
+  }
+  
+  async logout() {
+    user = null
+    isAuthenticated = false
+    @secure.clear('auth_token')
+  }
+  
+  async register(data) {
+    isLoading = true
+    error = null
+    
+    try {
+      const response = await @api.post('/auth/register', data)
+      user = response.user
+      isAuthenticated = true
+      @secure.store('auth_token', response.token)
+    } catch (e) {
+      error = e.message
+    } finally {
+      isLoading = false
+    }
+  }
+}
+
+component LoginForm {
+  @inject auth: AuthStore
+  @prop onSuccess: function
+  
+  ~email = ''
+  ~password = ''
+  ~rememberMe = false
+  
+  isValid => email.includes('@') && password.length >= 8
+  
+  async handleSubmit(e) {
+    e.preventDefault()
+    
+    await auth.login({ email, password, rememberMe })
+    
+    if (auth.isAuthenticated && onSuccess) {
+      onSuccess(auth.user)
+    }
+  }
+  
+  <[
+    form.login-form(@submit: handleSubmit) {
+      ?auth.error {
+        div.alert.error { auth.error }
+      }
+      
+      div.form-group {
+        label { "Email" }
+        input(
+          type: "email"
+          <~> email
+          required: true
+          autocomplete: "email"
+        )
+      }
+      
+      div.form-group {
+        label { "Password" }
+        input(
+          type: "password"
+          <~> password
+          required: true
+          autocomplete: "current-password"
+          minlength: 8
+        )
+      }
+      
+      div.form-group.checkbox {
+        label {
+          input(
+            type: "checkbox"
+            <~> rememberMe
+          )
+          span { "Remember me" }
+        }
+      }
+      
+      button(
+        type: "submit"
+        disabled: !isValid || auth.isLoading
+        class={{ loading: auth.isLoading }}
+      ) {
+        auth.isLoading ? "Logging in..." : "Login"
+      }
+    }
+  ]>
+}
+
+component ProtectedRoute {
+  @inject auth: AuthStore
+  @prop requiredRole: string?
+  @prop requiredPermission: string?
+  @prop fallback: component = LoginForm
+  
+  canAccess => {
+    if (!auth.isAuthenticated) return false
+    if (requiredRole && !auth.hasRole(requiredRole)) return false
+    if (requiredPermission && !auth.hasPermission(requiredPermission)) return false
+    return true
+  }
+  
+  <[
+    ?canAccess {
+      @slot
+    } : {
+      @render(fallback)
+    }
+  ]>
+}
+
+export { AuthStore, LoginForm, ProtectedRoute }

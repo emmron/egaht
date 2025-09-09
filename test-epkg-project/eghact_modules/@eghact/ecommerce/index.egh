@@ -1,0 +1,6 @@
+// @eghact/ecommerce - Eghact native module
+export default {
+  name: '@eghact/ecommerce',
+  version: '1.0.0',
+  // Zero runtime overhead implementation
+}

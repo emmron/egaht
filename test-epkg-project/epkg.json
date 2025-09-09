@@ -1,0 +1,24 @@
+{
+  "name": "test-epkg-project",
+  "version": "0.1.0",
+  "type": "module",
+  "runtime": "eghact",
+  "main": "src/main.egh",
+  "scripts": {
+    "dev": "eghact dev",
+    "build": "eghact build",
+    "test": "eghact test",
+    "deploy": "eghact deploy"
+  },
+  "dependencies": {
+    "@eghact/carousel": "^1.0.0",
+    "@eghact/ecommerce": "^1.0.0",
+    "@eghact/auth": "^1.0.0"
+  },
+  "devDependencies": {
+    "@eghact/cli": "^1.0.0"
+  },
+  "engines": {
+    "eghact": ">=1.0.0"
+  }
+}
