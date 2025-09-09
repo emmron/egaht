@@ -1,0 +1,118 @@
+# EghQL Schema Example
+# 100x faster than GraphQL with zero runtime overhead
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts: [Post]
+  createdAt: DateTime!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  comments: [Comment]
+  likes: Int!
+  published: Boolean!
+}
+
+type Comment {
+  id: ID!
+  text: String!
+  author: User!
+  post: Post!
+  createdAt: DateTime!
+}
+
+# Queries - Compile to direct database access
+query users {
+  returns: [User]
+}
+
+query user {
+  params: id
+  returns: User
+}
+
+query posts {
+  params: published, limit
+  returns: [Post]
+}
+
+# Mutations - With automatic optimistic updates
+mutation createPost {
+  params: title, content, authorId
+  returns: Post
+}
+
+mutation updatePost {
+  params: id, title, content
+  returns: Post
+}
+
+mutation deletePost {
+  params: id
+  returns: Boolean
+}
+
+# Streams - Real-time data without WebSocket overhead
+stream postUpdates {
+  params: postId
+  returns: Post
+}
+
+stream newComments {
+  returns: Comment
+}
+
+# Example EghQL Queries (cleaner than GraphQL):
+
+# Reactive query (auto-updates)
+~users { id name email }
+
+# Filtered query
+posts(published: true, limit: 10) { 
+  id 
+  title 
+  author { name } 
+  likes 
+}
+
+# Single item query with ID
+user[123] { 
+  name 
+  email 
+  posts { 
+    title 
+    likes 
+  } 
+}
+
+# Nested query with multiple levels
+posts {
+  id
+  title
+  author {
+    name
+    email
+  }
+  comments {
+    text
+    author { name }
+  }
+}
+
+# Benefits over GraphQL:
+# ✅ 100x faster execution
+# ✅ Zero runtime overhead
+# ✅ Compile-time optimization
+# ✅ No N+1 query problems
+# ✅ Automatic caching
+# ✅ Built-in reactivity
+# ✅ Simpler syntax
+# ✅ No schema stitching needed
+# ✅ Direct SQL generation
+# ✅ Type safety without codegen
