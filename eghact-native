@@ -1,0 +1,612 @@
+#!/usr/bin/env node
+
+/**
+ * Eghact Native Binary - Production Ready CLI
+ * The complete framework implementation
+ */
+
+import { spawn, execSync } from 'child_process';
+import { promises as fs, existsSync } from 'fs';
+import { join, dirname, basename, extname } from 'path';
+import { fileURLToPath } from 'url';
+import { createServer } from 'http';
+import { EghactCompiler } from './compiler/egh-compiler.js';
+import { EGHLoader } from './build-system/src/egh-loader.js';
+import EghactBuildSystem from './build-system/src/index.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const VERSION = '1.0.0';
+
+class EghactCLI {
+  constructor() {
+    this.compiler = new EghactCompiler();
+    this.loader = new EGHLoader();
+    this.buildSystem = null;
+  }
+
+  async run() {
+    const [,, command, ...args] = process.argv;
+    
+    switch (command) {
+      case 'create':
+        await this.create(args[0] || 'my-eghact-app');
+        break;
+      
+      case 'dev':
+        await this.dev(args);
+        break;
+      
+      case 'build':
+        await this.build(args);
+        break;
+      
+      case 'compile':
+        await this.compile(args[0], args[1]);
+        break;
+      
+      case 'serve':
+        await this.serve(args);
+        break;
+      
+      case 'version':
+      case '-v':
+      case '--version':
+        console.log(`Eghact v${VERSION}`);
+        break;
+      
+      case 'help':
+      case '--help':
+      case '-h':
+      default:
+        this.showHelp();
+    }
+  }
+
+  async create(appName) {
+    console.log(`🎨 Creating new Eghact app: ${appName}\n`);
+    
+    const targetDir = join(process.cwd(), appName);
+    
+    if (existsSync(targetDir)) {
+      console.error(`❌ Directory ${appName} already exists`);
+      process.exit(1);
+    }
+    
+    // Create project structure
+    await fs.mkdir(targetDir, { recursive: true });
+    await fs.mkdir(join(targetDir, 'src'), { recursive: true });
+    await fs.mkdir(join(targetDir, 'public'), { recursive: true });
+    
+    // Create package.json
+    const packageJson = {
+      name: appName,
+      version: '0.1.0',
+      type: 'module',
+      scripts: {
+        dev: 'eghact dev',
+        build: 'eghact build',
+        serve: 'eghact serve',
+        compile: 'eghact compile'
+      },
+      dependencies: {
+        eghact: `^${VERSION}`
+      },
+      devDependencies: {}
+    };
+    
+    await fs.writeFile(
+      join(targetDir, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+    
+    // Create eghact.config.js
+    const config = `// Eghact Configuration
+export default {
+  // Build options
+  build: {
+    target: 'es2022',
+    minify: true,
+    sourcemap: true,
+    outDir: 'dist'
+  },
+  
+  // Development server
+  dev: {
+    port: 3000,
+    host: 'localhost',
+    open: true
+  },
+  
+  // Compiler options
+  compiler: {
+    runtime: 'wasm', // 'wasm' or 'js'
+    optimize: true,
+    zeroOverhead: true
+  },
+  
+  // Security features
+  security: {
+    csp: true,
+    xss: true,
+    csrf: true
+  }
+};
+`;
+    
+    await fs.writeFile(join(targetDir, 'eghact.config.js'), config);
+    
+    // Create index.html
+    const indexHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${appName}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #root {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      min-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>`;
+    
+    await fs.writeFile(join(targetDir, 'index.html'), indexHtml);
+    
+    // Create main.js
+    const mainJs = `// Eghact Application Entry Point
+import { createApp } from 'eghact';
+import App from './App.js';
+
+// Initialize the application
+const app = await createApp(App, document.getElementById('root'));
+
+// Mount the app
+app.mount();
+
+console.log('⚡ Eghact app running with zero runtime overhead!');
+`;
+    
+    await fs.writeFile(join(targetDir, 'src/main.js'), mainJs);
+    
+    // Create App.egh with more complete example
+    const appEgh = `// Main Application Component
+component App {
+  // Reactive state with compile-time optimization
+  ~count = 0
+  ~message = "Welcome to Eghact!"
+  ~items = ["Build", "Deploy", "Scale"]
+  
+  // Computed properties (calculated at compile time when possible)
+  doubled => count * 2
+  tripled => count * 3
+  itemCount => items.length
+  
+  // Lifecycle effect
+  count :: {
+    console.log(\`Count updated: \${count}\`)
+    if (count > 10) {
+      console.log("Achievement unlocked! 🎉")
+    }
+  }
+  
+  // Methods
+  increment() => {
+    this.state.count++
+  }
+  
+  reset() => {
+    this.state.count = 0
+  }
+  
+  addItem(item) => {
+    this.state.items.push(item)
+  }
+  
+  // Template with zero-overhead rendering
+  <[
+    container {
+      $display: flex
+      $flexDirection: column
+      $gap: 1.5rem
+      $alignItems: center
+      
+      header {
+        h1 {
+          $color: #667eea
+          $fontSize: 2rem
+          $marginBottom: 0.5rem
+          message
+        }
+        
+        p {
+          $color: #718096
+          "The Native Web Framework with Zero Runtime Overhead"
+        }
+      }
+      
+      card {
+        $background: #f7fafc
+        $padding: 1.5rem
+        $borderRadius: 8px
+        $width: 100%
+        
+        h2 { "Counter Demo" }
+        
+        counterDisplay {
+          $fontSize: 3rem
+          $fontWeight: bold
+          $color: #764ba2
+          $textAlign: center
+          $margin: 1rem 0
+          count
+        }
+        
+        row {
+          $display: flex
+          $gap: 1rem
+          $justifyContent: center
+          
+          button(@click: increment) {
+            $padding: 0.75rem 1.5rem
+            $background: #667eea
+            $color: white
+            $border: none
+            $borderRadius: 6px
+            $cursor: pointer
+            $fontSize: 1rem
+            "Increment"
+          }
+          
+          button(@click: reset) {
+            $padding: 0.75rem 1.5rem
+            $background: #e53e3e
+            $color: white
+            $border: none
+            $borderRadius: 6px
+            $cursor: pointer
+            $fontSize: 1rem
+            "Reset"
+          }
+        }
+        
+        stats {
+          $display: flex
+          $justifyContent: space-around
+          $marginTop: 1rem
+          $padding: 1rem
+          $background: white
+          $borderRadius: 6px
+          
+          stat {
+            $textAlign: center
+            
+            label {
+              $fontSize: 0.875rem
+              $color: #718096
+              "Doubled"
+            }
+            value {
+              $fontSize: 1.5rem
+              $fontWeight: bold
+              $color: #667eea
+              doubled
+            }
+          }
+          
+          stat {
+            $textAlign: center
+            
+            label {
+              $fontSize: 0.875rem
+              $color: #718096
+              "Tripled"
+            }
+            value {
+              $fontSize: 1.5rem
+              $fontWeight: bold
+              $color: #764ba2
+              tripled
+            }
+          }
+        }
+      }
+      
+      ?count > 5 {
+        achievement {
+          $padding: 1rem
+          $background: linear-gradient(135deg, #667eea, #764ba2)
+          $color: white
+          $borderRadius: 8px
+          $textAlign: center
+          $animation: slideIn 0.3s ease-out
+          
+          "🎉 You're doing great! Keep going!"
+        }
+      }
+      
+      features {
+        $marginTop: 2rem
+        
+        h3 {
+          $marginBottom: 1rem
+          "Framework Features:"
+        }
+        
+        list {
+          $display: flex
+          $flexDirection: column
+          $gap: 0.5rem
+          
+          @each items as item {
+            listItem {
+              $padding: 0.5rem
+              $background: #edf2f7
+              $borderRadius: 4px
+              $display: flex
+              $alignItems: center
+              
+              "✅ " + item
+            }
+          }
+        }
+      }
+    }
+  ]>
+}`;
+    
+    await fs.writeFile(join(targetDir, 'src/App.egh'), appEgh);
+    
+    // Create .gitignore
+    const gitignore = `node_modules
+dist
+.DS_Store
+*.log
+.env
+.cache
+*.wasm
+*.map`;
+    
+    await fs.writeFile(join(targetDir, '.gitignore'), gitignore);
+    
+    // Create README.md
+    const readme = `# ${appName}
+
+Built with [Eghact](https://eghact.dev) - The Native Web Framework with Zero Runtime Overhead
+
+## Features
+
+- ⚡ **Zero Runtime Overhead** - All reactivity compiled away
+- 🦀 **WebAssembly Runtime** - Blazing fast DOM operations
+- 📦 **< 10KB Bundle** - Smaller than any major framework
+- 🔒 **Built-in Security** - XSS, CSRF protection out of the box
+- 🎨 **Elegant Syntax** - Clean, intuitive component model
+
+## Getting Started
+
+\`\`\`bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Serve production build
+npm run serve
+\`\`\`
+
+## Project Structure
+
+\`\`\`
+${appName}/
+├── src/
+│   ├── App.egh          # Main component
+│   └── main.js          # Entry point
+├── public/              # Static assets
+├── index.html           # HTML template
+├── eghact.config.js     # Configuration
+└── package.json         # Dependencies
+\`\`\`
+
+## Learn More
+
+- [Documentation](https://eghact.dev/docs)
+- [Examples](https://eghact.dev/examples)
+- [API Reference](https://eghact.dev/api)
+
+## License
+
+MIT`;
+    
+    await fs.writeFile(join(targetDir, 'README.md'), readme);
+    
+    console.log(`✅ Created ${appName} successfully!\n`);
+    console.log('Next steps:');
+    console.log(`  cd ${appName}`);
+    console.log('  npm install');
+    console.log('  npm run dev\n');
+    console.log('Happy coding! 🚀');
+  }
+
+  async dev(args) {
+    console.log('🚀 Starting Eghact development server...\n');
+    
+    const config = await this.loadConfig();
+    const port = config?.dev?.port || 3000;
+    
+    // Start dev server with hot reload
+    const serverPath = join(__dirname, 'dev-server/server.js');
+    const child = spawn('node', [serverPath, ...args], {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: { ...process.env, PORT: port }
+    });
+    
+    child.on('error', (err) => {
+      console.error('Failed to start dev server:', err);
+      process.exit(1);
+    });
+  }
+
+  async build(args) {
+    console.log('📦 Building Eghact app for production...\n');
+    
+    const config = await this.loadConfig();
+    this.buildSystem = new EghactBuildSystem(config?.build || {});
+    
+    try {
+      const result = await this.buildSystem.build();
+      console.log('\n✅ Build complete!');
+      console.log(`📁 Output: ${result.outDir || 'dist'}`);
+      
+      // Show bundle sizes
+      if (result.bundleSizes) {
+        console.log('\n📊 Bundle Sizes:');
+        for (const [file, size] of Object.entries(result.bundleSizes)) {
+          console.log(`  ${file}: ${(size / 1024).toFixed(1)}KB`);
+        }
+      }
+    } catch (error) {
+      console.error('\n❌ Build failed:', error.message);
+      process.exit(1);
+    }
+  }
+
+  async compile(input, output) {
+    if (!input) {
+      console.error('Usage: eghact compile <input.egh> [output.js]');
+      process.exit(1);
+    }
+    
+    output = output || input.replace('.egh', '.js');
+    
+    try {
+      const source = await fs.readFile(input, 'utf-8');
+      const result = await this.compiler.compile(source, basename(input));
+      await fs.writeFile(output, result.code);
+      
+      if (result.sourceMap) {
+        await fs.writeFile(output + '.map', JSON.stringify(result.sourceMap));
+      }
+      
+      console.log(`✅ Compiled ${input} -> ${output}`);
+    } catch (error) {
+      console.error('❌ Compilation failed:', error.message);
+      process.exit(1);
+    }
+  }
+
+  async serve(args) {
+    console.log('🌐 Serving production build...\n');
+    
+    const port = args[0] || 8080;
+    const distDir = join(process.cwd(), 'dist');
+    
+    if (!existsSync(distDir)) {
+      console.error('❌ No dist directory found. Run "eghact build" first.');
+      process.exit(1);
+    }
+    
+    const server = createServer(async (req, res) => {
+      let filePath = req.url === '/' ? '/index.html' : req.url;
+      filePath = join(distDir, filePath);
+      
+      try {
+        const content = await fs.readFile(filePath);
+        const ext = extname(filePath);
+        const contentType = {
+          '.html': 'text/html',
+          '.js': 'application/javascript',
+          '.css': 'text/css',
+          '.wasm': 'application/wasm'
+        }[ext] || 'text/plain';
+        
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(content);
+      } catch {
+        res.writeHead(404);
+        res.end('Not found');
+      }
+    });
+    
+    server.listen(port, () => {
+      console.log(`✅ Serving at http://localhost:${port}`);
+    });
+  }
+
+  async loadConfig() {
+    const configPath = join(process.cwd(), 'eghact.config.js');
+    if (existsSync(configPath)) {
+      const { default: config } = await import(configPath);
+      return config;
+    }
+    return null;
+  }
+
+  showHelp() {
+    console.log(`
+  ███████╗ ██████╗ ██╗  ██╗ █████╗  ██████╗████████╗
+  ██╔════╝██╔════╝ ██║  ██║██╔══██╗██╔════╝╚══██╔══╝
+  █████╗  ██║  ███╗███████║███████║██║        ██║   
+  ██╔══╝  ██║   ██║██╔══██║██╔══██║██║        ██║   
+  ███████╗╚██████╔╝██║  ██║██║  ██║╚██████╗   ██║   
+  ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝   ╚═╝   
+  
+  The Native Web Framework - Zero Runtime Overhead
+  Version ${VERSION}
+
+Usage: eghact <command> [options]
+
+Commands:
+  create <name>    Create a new Eghact project
+  dev              Start development server with hot reload
+  build            Build for production (< 10KB goal)
+  compile          Compile .egh files to JavaScript
+  serve            Serve production build
+  version          Show version
+  help             Show this help
+
+Examples:
+  eghact create my-app
+  eghact dev
+  eghact build
+  eghact compile App.egh App.js
+  eghact serve 8080
+
+Documentation: https://eghact.dev
+GitHub: https://github.com/eghact/framework
+`);
+  }
+}
+
+// Run CLI
+const cli = new EghactCLI();
+cli.run().catch(err => {
+  console.error('Error:', err);
+  process.exit(1);
+});
