@@ -342,26 +342,59 @@ component MobileApp {
 | React | 1,247 dependencies | High | XSS possible |
 | **Eghact** | **0 dependencies** | **None** | **Compile-time safe** |
 
-## 🛠️ CLI Commands
+## 🛠️ EGH CLI - Complete Command Reference
 
+### One Unified CLI for Everything
 ```bash
-# Eghact Production CLI
-./eghact-production create <name>    # Create new app
-./eghact-production dev              # Start dev server
-./eghact-production build            # Production build (< 10KB)
-./eghact-production benchmark        # Run performance tests
-./eghact-production migrate          # Migrate from React
-./eghact-production analyze          # Bundle size analysis
-./eghact-production deploy           # Deploy to edge networks
-./eghact-production doctor           # System health check
+# Install globally (one time)
+chmod +x egh
+sudo ln -s $(pwd)/egh /usr/local/bin/egh
 
-# EPkg Package Manager
-./epkg-manager init                  # Initialize project
-./epkg-manager add <packages>        # Add packages
-./epkg-manager remove <package>      # Remove package
-./epkg-manager list                  # List packages
-./epkg-manager audit                 # Security audit (always 0!)
-./epkg-manager migrate               # Migrate from npm
+# Now use anywhere!
+egh new my-app
+cd my-app
+egh dev
+```
+
+### 📦 Project Commands
+```bash
+egh new <name>      # Create new Eghact project
+egh dev            # Start dev server (hot reload)
+egh build          # Production build (< 10KB)
+egh test           # Run tests
+```
+
+### 📚 Package Management
+```bash
+egh install        # Install all dependencies (or: egh i)
+egh add <pkg>      # Add a package
+egh remove <pkg>   # Remove a package (or: egh rm)
+egh list          # List installed packages (or: egh ls)
+```
+
+### 🔍 Query Commands
+```bash
+egh query users              # Run EghQL query (or: egh q)
+egh query posts with comments # Natural language queries
+egh visual                   # Visual query builder (or: egh v)
+```
+
+### 🛠️ Utility Commands
+```bash
+egh help           # Show all commands (or: egh h)
+egh version        # Show version info
+egh migrate        # Migrate from React
+egh doctor         # System health check
+```
+
+### ⚡ Quick Shortcuts
+```bash
+egh i    = egh install
+egh q    = egh query
+egh v    = egh visual
+egh h    = egh help
+egh ls   = egh list
+egh rm   = egh remove
 ```
 
 ## 🔄 Migration Guides
