@@ -1,0 +1,701 @@
+/**
+ * Eghact Compiler - Pure Implementation
+ * Zero Node.js dependencies
+ * Compiles .egh files to optimized JavaScript/WebAssembly
+ */
+
+@compile-time
+@platform(native|deno|browser)
+export component EghactCompiler {
+  state options = {
+    target: "es2022",
+    module: "esm", 
+    optimize: true,
+    sourceMap: true,
+    runtime: "@eghact/runtime-pure",
+    compileTime: true,
+    zeroOverhead: true
+  }
+  
+  state cache = new Map()
+  state ast_cache = new Map()
+  
+  constructor(options = {}) {
+    this.options = { ...this.options, ...options }
+  }
+  
+  // Main compile function
+  async compile(source, filename = "component.egh") {
+    // Check cache
+    const hash = await this.hash(source)
+    if (this.cache.has(hash)) {
+      return this.cache.get(hash)
+    }
+    
+    // Parse source to AST
+    const ast = this.parse(source)
+    
+    // Optimize AST
+    const optimized = this.optimize(ast)
+    
+    // Generate code
+    const js = this.generate(optimized)
+    
+    // Generate source map if requested
+    const sourceMap = this.options.sourceMap 
+      ? this.generateSourceMap(source, js, filename)
+      : null
+    
+    const result = {
+      code: js,
+      ast: optimized,
+      sourceMap,
+      hash
+    }
+    
+    // Cache result
+    this.cache.set(hash, result)
+    
+    return result
+  }
+  
+  // Parse .egh source to AST
+  parse(source) {
+    const lines = source.split('\n')
+    const component = {
+      type: "Component",
+      imports: [],
+      name: null,
+      props: [],
+      state: [],
+      computed: [],
+      effects: [],
+      methods: [],
+      template: null,
+      styles: {},
+      decorators: [],
+      platform: null
+    }
+    
+    let currentSection = null
+    let templateBuffer = []
+    let styleBuffer = []
+    let inTemplate = false
+    let inStyle = false
+    let braceDepth = 0
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const trimmed = line.trim()
+      
+      // Handle decorators
+      if (trimmed.startsWith('@')) {
+        const decorator = this.parseDecorator(trimmed)
+        component.decorators.push(decorator)
+        continue
+      }
+      
+      // Handle imports
+      if (trimmed.startsWith('import ')) {
+        component.imports.push(this.parseImport(trimmed))
+        continue
+      }
+      
+      // Component declaration
+      if (trimmed.startsWith('export component ') || trimmed.startsWith('component ')) {
+        const match = trimmed.match(/component\s+(\w+)/)
+        component.name = match?.[1]
+        continue
+      }
+      
+      // State declaration
+      if (trimmed.startsWith('state ')) {
+        const state = this.parseState(trimmed)
+        component.state.push(state)
+        continue
+      }
+      
+      // Props declaration
+      if (trimmed.startsWith('props ')) {
+        const props = this.parseProps(trimmed)
+        component.props.push(...props)
+        continue
+      }
+      
+      // Computed values
+      if (trimmed.includes(' => ') && !inTemplate) {
+        const computed = this.parseComputed(trimmed)
+        if (computed) component.computed.push(computed)
+        continue
+      }
+      
+      // Effects
+      if (trimmed.startsWith('effect => ')) {
+        const effect = this.parseEffect(lines, i)
+        component.effects.push(effect)
+        i = effect.endLine
+        continue
+      }
+      
+      // Methods
+      if (trimmed.match(/^(\w+)\s*\([^)]*\)\s*{/)) {
+        const method = this.parseMethod(lines, i)
+        component.methods.push(method)
+        i = method.endLine
+        continue
+      }
+      
+      // Template start
+      if (trimmed.startsWith('<') && !inStyle) {
+        inTemplate = true
+        templateBuffer = []
+      }
+      
+      // Style block
+      if (trimmed.startsWith('<style')) {
+        inStyle = true
+        styleBuffer = []
+        continue
+      }
+      
+      if (trimmed.startsWith('</style>')) {
+        inStyle = false
+        component.styles = this.parseStyles(styleBuffer.join('\n'))
+        continue
+      }
+      
+      // Collect template lines
+      if (inTemplate && !inStyle) {
+        templateBuffer.push(line)
+        
+        // Track braces to find template end
+        for (const char of line) {
+          if (char === '<') braceDepth++
+          if (char === '>') braceDepth--
+        }
+        
+        // Check for self-closing tags
+        if (trimmed.endsWith('/>')) {
+          braceDepth = 0
+        }
+        
+        // Template complete
+        if (braceDepth === 0 && templateBuffer.length > 0 && trimmed.endsWith('>')) {
+          component.template = this.parseTemplate(templateBuffer.join('\n'))
+          inTemplate = false
+        }
+      }
+      
+      // Collect style lines
+      if (inStyle) {
+        styleBuffer.push(line)
+      }
+    }
+    
+    return component
+  }
+  
+  // Optimize AST
+  optimize(ast) {
+    if (!this.options.optimize) return ast
+    
+    // Dead code elimination
+    ast = this.eliminateDeadCode(ast)
+    
+    // Inline simple computeds
+    ast = this.inlineComputeds(ast)
+    
+    // Optimize template
+    if (ast.template) {
+      ast.template = this.optimizeTemplate(ast.template)
+    }
+    
+    // Compile-time evaluation
+    if (this.options.compileTime) {
+      ast = this.evaluateCompileTime(ast)
+    }
+    
+    return ast
+  }
+  
+  // Generate JavaScript code
+  generate(ast) {
+    const imports = this.generateImports(ast)
+    const component = this.generateComponent(ast)
+    const exports = `export default ${ast.name};`
+    
+    return [imports, component, exports].filter(Boolean).join('\n\n')
+  }
+  
+  // Generate imports
+  generateImports(ast) {
+    const imports = []
+    
+    // Add runtime import
+    if (this.options.runtime) {
+      imports.push(`import { h, Component, createApp, reactive } from '${this.options.runtime}';`)
+    }
+    
+    // Add user imports
+    for (const imp of ast.imports) {
+      imports.push(this.generateImport(imp))
+    }
+    
+    return imports.join('\n')
+  }
+  
+  // Generate component class
+  generateComponent(ast) {
+    const lines = []
+    
+    // Class declaration
+    lines.push(`class ${ast.name} extends Component {`)
+    
+    // Constructor
+    lines.push('  constructor(props) {')
+    lines.push('    super(props);')
+    
+    // Initialize state
+    if (ast.state.length > 0) {
+      lines.push('    this.state = reactive({')
+      for (const s of ast.state) {
+        lines.push(`      ${s.name}: ${this.generateValue(s.value)},`)
+      }
+      lines.push('    });')
+    }
+    
+    // Bind methods
+    for (const method of ast.methods) {
+      lines.push(`    this.${method.name} = this.${method.name}.bind(this);`)
+    }
+    
+    lines.push('  }')
+    
+    // Lifecycle methods
+    if (ast.effects.length > 0) {
+      lines.push('')
+      lines.push('  mounted() {')
+      for (const effect of ast.effects) {
+        lines.push(`    ${this.generateEffect(effect)}`)
+      }
+      lines.push('  }')
+    }
+    
+    // Computed getters
+    for (const computed of ast.computed) {
+      lines.push('')
+      lines.push(`  get ${computed.name}() {`)
+      lines.push(`    return ${computed.expression};`)
+      lines.push('  }')
+    }
+    
+    // Methods
+    for (const method of ast.methods) {
+      lines.push('')
+      lines.push(`  ${method.name}(${method.params.join(', ')}) {`)
+      lines.push(method.body)
+      lines.push('  }')
+    }
+    
+    // Render method
+    lines.push('')
+    lines.push('  render() {')
+    lines.push(`    return ${this.generateTemplate(ast.template)};`)
+    lines.push('  }')
+    
+    // Close class
+    lines.push('}')
+    
+    return lines.join('\n')
+  }
+  
+  // Generate template to h() calls
+  generateTemplate(template) {
+    if (!template) return 'null'
+    
+    return this.nodeToH(template)
+  }
+  
+  // Convert template node to h() function call
+  nodeToH(node) {
+    if (node.type === 'text') {
+      return `'${node.value.replace(/'/g, "\\'")}'`
+    }
+    
+    if (node.type === 'expression') {
+      return `this.${node.value}`
+    }
+    
+    if (node.type === 'element') {
+      const tag = `'${node.tag}'`
+      const props = this.generateProps(node.props)
+      const children = node.children.map(c => this.nodeToH(c)).join(', ')
+      
+      if (children) {
+        return `h(${tag}, ${props}, ${children})`
+      } else {
+        return `h(${tag}, ${props})`
+      }
+    }
+    
+    return 'null'
+  }
+  
+  // Generate props object
+  generateProps(props) {
+    if (!props || Object.keys(props).length === 0) {
+      return '{}'
+    }
+    
+    const entries = []
+    for (const [key, value] of Object.entries(props)) {
+      if (key.startsWith('@')) {
+        // Event handler
+        const event = key.slice(1)
+        entries.push(`on${event[0].toUpperCase()}${event.slice(1)}: this.${value}`)
+      } else if (key.startsWith(':')) {
+        // Bound attribute
+        const attr = key.slice(1)
+        entries.push(`${attr}: this.${value}`)
+      } else {
+        // Static attribute
+        entries.push(`${key}: '${value}'`)
+      }
+    }
+    
+    return `{ ${entries.join(', ')} }`
+  }
+  
+  // Parse helpers
+  parseDecorator(line) {
+    const match = line.match(/@(\w+)(?:\((.*?)\))?/)
+    return {
+      name: match?.[1],
+      args: match?.[2]?.split(',').map(a => a.trim()) || []
+    }
+  }
+  
+  parseImport(line) {
+    const match = line.match(/import\s+(.+?)\s+from\s+['"](.+?)['"]/)
+    return {
+      specifiers: match?.[1],
+      source: match?.[2]
+    }
+  }
+  
+  parseState(line) {
+    const match = line.match(/state\s+(\w+)\s*=\s*(.+)/)
+    return {
+      name: match?.[1],
+      value: match?.[2]
+    }
+  }
+  
+  parseProps(line) {
+    const match = line.match(/props\s*{([^}]+)}/)
+    const propsStr = match?.[1]
+    if (!propsStr) return []
+    
+    return propsStr.split(',').map(p => {
+      const [name, type] = p.trim().split(':').map(s => s.trim())
+      return { name, type: type || 'any' }
+    })
+  }
+  
+  parseComputed(line) {
+    const match = line.match(/(\w+)\s*=>\s*(.+)/)
+    if (!match) return null
+    
+    return {
+      name: match[1],
+      expression: match[2]
+    }
+  }
+  
+  parseEffect(lines, startLine) {
+    const body = []
+    let braceDepth = 0
+    let endLine = startLine
+    
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i]
+      
+      if (line.includes('{')) braceDepth++
+      if (line.includes('}')) braceDepth--
+      
+      body.push(line)
+      
+      if (braceDepth === 0 && line.includes('}')) {
+        endLine = i
+        break
+      }
+    }
+    
+    return {
+      body: body.join('\n'),
+      endLine
+    }
+  }
+  
+  parseMethod(lines, startLine) {
+    const firstLine = lines[startLine].trim()
+    const match = firstLine.match(/^(\w+)\s*\(([^)]*)\)/)
+    
+    const body = []
+    let braceDepth = 0
+    let endLine = startLine
+    
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i]
+      
+      if (line.includes('{')) braceDepth++
+      if (line.includes('}')) braceDepth--
+      
+      if (i > startLine) {
+        body.push(line)
+      }
+      
+      if (braceDepth === 0 && i > startLine) {
+        endLine = i
+        break
+      }
+    }
+    
+    return {
+      name: match?.[1],
+      params: match?.[2]?.split(',').map(p => p.trim()).filter(Boolean) || [],
+      body: body.slice(0, -1).join('\n'),
+      endLine
+    }
+  }
+  
+  parseTemplate(templateStr) {
+    // Simple template parser - would be more complex in production
+    const stack = []
+    const root = { type: 'fragment', children: [] }
+    let current = root
+    
+    // This is simplified - real implementation would handle all cases
+    const lines = templateStr.split('\n')
+    const firstLine = lines[0].trim()
+    
+    if (firstLine.startsWith('<')) {
+      const tagMatch = firstLine.match(/<(\w+)([^>]*)>/)
+      if (tagMatch) {
+        const node = {
+          type: 'element',
+          tag: tagMatch[1],
+          props: this.parseTemplateProps(tagMatch[2]),
+          children: []
+        }
+        
+        // Parse children (simplified)
+        const content = lines.slice(1, -1).join('\n').trim()
+        if (content) {
+          if (content.includes('{')) {
+            // Has expressions
+            const parts = content.split(/({[^}]+})/)
+            for (const part of parts) {
+              if (part.startsWith('{') && part.endsWith('}')) {
+                node.children.push({
+                  type: 'expression',
+                  value: part.slice(1, -1)
+                })
+              } else if (part) {
+                node.children.push({
+                  type: 'text',
+                  value: part
+                })
+              }
+            }
+          } else {
+            node.children.push({
+              type: 'text',
+              value: content
+            })
+          }
+        }
+        
+        return node
+      }
+    }
+    
+    return root
+  }
+  
+  parseTemplateProps(propsStr) {
+    const props = {}
+    if (!propsStr) return props
+    
+    // Simple prop parser
+    const matches = propsStr.matchAll(/(\S+?)=["']([^"']+)["']|(@\w+)={([^}]+)}|(:?\w+)={([^}]+)}/g)
+    
+    for (const match of matches) {
+      if (match[1] && match[2]) {
+        // Static prop
+        props[match[1]] = match[2]
+      } else if (match[3] && match[4]) {
+        // Event handler
+        props[match[3]] = match[4]
+      } else if (match[5] && match[6]) {
+        // Bound prop
+        props[match[5]] = match[6]
+      }
+    }
+    
+    return props
+  }
+  
+  parseStyles(styleStr) {
+    // Parse CSS - simplified
+    return {
+      css: styleStr,
+      scoped: styleStr.includes('scoped')
+    }
+  }
+  
+  // Optimization helpers
+  eliminateDeadCode(ast) {
+    // Remove unused state/methods
+    const used = new Set()
+    
+    // Find all references in template and methods
+    this.findReferences(ast.template, used)
+    for (const method of ast.methods) {
+      this.findReferences(method.body, used)
+    }
+    
+    // Filter unused
+    ast.state = ast.state.filter(s => used.has(s.name))
+    ast.methods = ast.methods.filter(m => used.has(m.name))
+    
+    return ast
+  }
+  
+  findReferences(node, used) {
+    if (!node) return
+    
+    if (typeof node === 'string') {
+      // Extract identifiers from code
+      const identifiers = node.match(/this\.(\w+)/g)
+      if (identifiers) {
+        for (const id of identifiers) {
+          used.add(id.replace('this.', ''))
+        }
+      }
+    } else if (node.children) {
+      for (const child of node.children) {
+        this.findReferences(child, used)
+      }
+    }
+  }
+  
+  inlineComputeds(ast) {
+    // Inline simple computed values
+    for (const computed of ast.computed) {
+      if (this.isSimpleExpression(computed.expression)) {
+        // Replace references with inlined expression
+        ast.template = this.inlineInTemplate(ast.template, computed.name, computed.expression)
+      }
+    }
+    return ast
+  }
+  
+  isSimpleExpression(expr) {
+    // Check if expression is simple enough to inline
+    return !expr.includes('(') && !expr.includes('[') && expr.length < 50
+  }
+  
+  inlineInTemplate(template, name, expression) {
+    // Replace computed references with expression
+    // Simplified implementation
+    return template
+  }
+  
+  optimizeTemplate(template) {
+    // Template optimizations
+    // - Static hoisting
+    // - Dead branch elimination
+    // - Expression simplification
+    return template
+  }
+  
+  evaluateCompileTime(ast) {
+    // Evaluate compile-time expressions
+    for (const decorator of ast.decorators) {
+      if (decorator.name === 'compile-time') {
+        // Mark for compile-time evaluation
+        ast.compileTime = true
+      }
+      
+      if (decorator.name === 'platform') {
+        // Platform-specific compilation
+        ast.platform = decorator.args[0]
+      }
+    }
+    
+    return ast
+  }
+  
+  // Utility functions
+  generateValue(value) {
+    if (value === 'true' || value === 'false') return value
+    if (!isNaN(value)) return value
+    if (value.startsWith('[') || value.startsWith('{')) return value
+    if (value.startsWith('new ')) return value
+    return `'${value}'`
+  }
+  
+  generateEffect(effect) {
+    // Generate effect code
+    return effect.body
+  }
+  
+  generateImport(imp) {
+    return `import ${imp.specifiers} from '${imp.source}';`
+  }
+  
+  generateSourceMap(source, output, filename) {
+    // Generate source map
+    return {
+      version: 3,
+      file: filename,
+      sources: [filename],
+      sourcesContent: [source],
+      mappings: '' // Simplified - would generate real mappings
+    }
+  }
+  
+  async hash(content) {
+    if (@platform === "deno") {
+      const encoder = new TextEncoder()
+      const data = encoder.encode(content)
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("")
+    } else {
+      // Use WebAssembly crypto
+      return await @wasm.crypto.sha256(content)
+    }
+  }
+}
+
+// Export for use
+export default EghactCompiler
+
+// CLI interface
+@entry
+if (@platform === "deno" && import.meta.main) {
+  const compiler = new EghactCompiler()
+  const file = Deno.args[0]
+  
+  if (!file) {
+    console.error("Usage: egh-compiler <file.egh>")
+    Deno.exit(1)
+  }
+  
+  const source = await Deno.readTextFile(file)
+  const result = await compiler.compile(source, file)
+  
+  console.log(result.code)
+}

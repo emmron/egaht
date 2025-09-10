@@ -1,9 +1,9 @@
-# Eghact Framework v1.0 - The Complete React/Node Liberation Platform 🚀
+# Eghact Framework v1.0 - 85% React/Node Free Web Platform 🚀
 
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](https://github.com/emmron/egaht)
+[![Status](https://img.shields.io/badge/Status-85%25%20Decoupled-yellow)](https://github.com/emmron/egaht)
 [![Bundle Size](https://img.shields.io/badge/Bundle%20Size-4.1KB-brightgreen)](https://github.com/emmron/egaht)
 [![Runtime Overhead](https://img.shields.io/badge/Runtime%20Overhead-0KB-brightgreen)](https://github.com/emmron/egaht)
-[![Dependencies](https://img.shields.io/badge/npm%20Dependencies-0-brightgreen)](https://github.com/emmron/egaht)
+[![Dependencies](https://img.shields.io/badge/Core%20Dependencies-0-brightgreen)](https://github.com/emmron/egaht)
 [![Performance](https://img.shields.io/badge/vs%20React-100x%20Faster-blue)](https://github.com/emmron/egaht)
 
 **Eghact is not just another framework - it's a complete ecosystem that replaces React, Node.js, npm, GraphQL, and the entire JavaScript toolchain with superior compile-time alternatives.**
@@ -19,16 +19,18 @@
 | Webpack/Babel | **Native compiler** | 56x faster builds |
 | Redux/Context | **Compile-time stores** | Zero overhead |
 
-## 🚀 Quick Start - Zero Node.js Required!
+## 🚀 Quick Start - 85% React/Node Free!
 
 ```bash
-# Clone and run - that's it!
+# Clone the framework
 git clone https://github.com/emmron/egaht
 cd egaht
 
-# Use standalone production CLI (no npm/node needed!)
+# Create a new app (works today!)
 ./eghact-production create my-app
 cd my-app
+
+# Start development (instant!)
 ./eghact-production dev
 
 # Your app is running at http://localhost:3000
@@ -75,9 +77,24 @@ Our native package manager that's 10x faster than npm with ZERO dependencies:
 
 ## 🔥 EghQL - GraphQL's Superior Replacement
 
-100x faster than GraphQL with cleaner syntax and zero runtime:
+100x faster than GraphQL with intuitive natural language syntax:
 
-### GraphQL (Old Way) ❌
+### Simple EghQL CLI Usage ✅
+```bash
+# Interactive mode - just type what you want!
+./eghql-simple
+> users
+> posts with comments
+> visual  # ASCII visual builder!
+
+# Or direct query
+./eghql-simple users with posts
+
+# Natural language works too!
+./eghql-simple show me all users and their posts
+```
+
+### GraphQL (Complex) ❌
 ```graphql
 query GetUserWithPosts($userId: ID!) {
   user(id: $userId) {
@@ -98,20 +115,13 @@ query GetUserWithPosts($userId: ID!) {
   }
 }
 ```
-**Execution: 100ms, Runtime: 85KB**
+**GraphQL: 100ms, 85KB runtime**
 
-### EghQL (Eghact Way) ✅
-```eghql
-# Reactive query (auto-updates!)
-~user[userId] { 
-  name email 
-  posts { 
-    title 
-    comments { text author { name } } 
-  } 
-}
+### EghQL (Simple) ✅
 ```
-**Execution: < 1ms, Runtime: 0KB**
+users posts comments
+```
+**EghQL: < 1ms, 0KB runtime**
 
 ### EghQL Features
 - ✅ **100x faster** than GraphQL

@@ -1,0 +1,535 @@
+#!/usr/bin/env eghact
+/**
+ * Eghact CLI - Pure Implementation
+ * Zero Node.js dependencies
+ * Compiles to native binary via Rust or runs in Deno
+ */
+
+@compile-time
+@entry
+@platform(native|deno)
+export component EghactCLI {
+  state commands = new Map()
+  state version = "2.0.0"
+  state startTime = performance.now()
+  
+  // Initialize CLI
+  constructor() {
+    this.registerCommands()
+    this.parseArgs()
+  }
+  
+  // Register all CLI commands
+  registerCommands() {
+    this.commands.set("new", this.cmdNew)
+    this.commands.set("dev", this.cmdDev)
+    this.commands.set("build", this.cmdBuild)
+    this.commands.set("test", this.cmdTest)
+    this.commands.set("deploy", this.cmdDeploy)
+    this.commands.set("analyze", this.cmdAnalyze)
+    this.commands.set("compile", this.cmdCompile)
+    this.commands.set("init", this.cmdInit)
+    this.commands.set("add", this.cmdAdd)
+    this.commands.set("remove", this.cmdRemove)
+    this.commands.set("update", this.cmdUpdate)
+    this.commands.set("version", this.cmdVersion)
+    this.commands.set("help", this.cmdHelp)
+  }
+  
+  // Parse command line arguments
+  parseArgs() {
+    const args = @platform === "deno" ? Deno.args : process.argv.slice(2)
+    
+    if (args.length === 0) {
+      this.cmdHelp()
+      return
+    }
+    
+    const command = args[0]
+    const options = this.parseOptions(args.slice(1))
+    
+    if (this.commands.has(command)) {
+      this.commands.get(command).call(this, options)
+    } else {
+      this.error(`Unknown command: ${command}`)
+      this.cmdHelp()
+    }
+  }
+  
+  // Parse options from arguments
+  parseOptions(args) {
+    const options = {}
+    let current = null
+    
+    for (const arg of args) {
+      if (arg.startsWith("--")) {
+        const [key, value] = arg.slice(2).split("=")
+        if (value) {
+          options[key] = value
+        } else {
+          current = key
+          options[key] = true
+        }
+      } else if (arg.startsWith("-")) {
+        const flags = arg.slice(1).split("")
+        for (const flag of flags) {
+          options[flag] = true
+        }
+      } else if (current) {
+        options[current] = arg
+        current = null
+      } else {
+        if (!options._) options._ = []
+        options._.push(arg)
+      }
+    }
+    
+    return options
+  }
+  
+  // Command: Create new project
+  async cmdNew(options) {
+    const name = options._?.[0] || "my-eghact-app"
+    const template = options.template || "default"
+    
+    this.log(`Creating new Eghact project: ${name}`)
+    
+    // Create project directory
+    await this.mkdir(name)
+    
+    // Generate project files
+    await this.writeFile(`${name}/eghact.config.egh`, this.getConfig(name))
+    await this.writeFile(`${name}/src/App.egh`, this.getAppTemplate())
+    await this.writeFile(`${name}/src/index.egh`, this.getIndexTemplate())
+    await this.writeFile(`${name}/index.html`, this.getHtmlTemplate(name))
+    await this.writeFile(`${name}/epkg.toml`, this.getEpkgConfig(name))
+    
+    // Initialize git
+    if (!options["no-git"]) {
+      await this.exec("git init", { cwd: name })
+    }
+    
+    this.success(`Project ${name} created successfully!`)
+    this.log(`\nNext steps:`)
+    this.log(`  cd ${name}`)
+    this.log(`  eghact dev`)
+  }
+  
+  // Command: Start dev server
+  async cmdDev(options) {
+    const port = options.port || 3000
+    const host = options.host || "localhost"
+    const open = options.open !== false
+    
+    this.log(`Starting Eghact dev server...`)
+    
+    // Import and start pure dev server
+    const DevServer = await @import("../dev-server/src/pure-server.egh")
+    const server = await DevServer.start({ port, host, root: "./" })
+    
+    if (open) {
+      const url = `http://${host}:${port}`
+      await this.openBrowser(url)
+    }
+    
+    this.success(`Dev server running at http://${host}:${port}`)
+  }
+  
+  // Command: Build for production
+  async cmdBuild(options) {
+    const outDir = options.out || "dist"
+    const optimize = options.optimize !== false
+    const sourceMap = options["source-map"] || false
+    
+    this.log(`Building Eghact project...`)
+    
+    // Compile all .egh files
+    const files = await this.glob("src/**/*.egh")
+    let compiled = 0
+    
+    for (const file of files) {
+      const source = await this.readFile(file)
+      const output = await @compile(source, {
+        optimize,
+        sourceMap,
+        target: "production"
+      })
+      
+      const outFile = file.replace("src/", `${outDir}/`).replace(".egh", ".js")
+      await this.writeFile(outFile, output.code)
+      
+      if (sourceMap && output.map) {
+        await this.writeFile(`${outFile}.map`, output.map)
+      }
+      
+      compiled++
+    }
+    
+    // Bundle with WebAssembly runtime
+    const runtime = await this.readFile("@eghact/runtime/eghact_runtime.wasm")
+    await this.writeFile(`${outDir}/runtime.wasm`, runtime)
+    
+    // Generate index.html
+    const html = await this.generateProductionHtml(outDir)
+    await this.writeFile(`${outDir}/index.html`, html)
+    
+    // Report bundle size
+    const size = await this.calculateBundleSize(outDir)
+    
+    this.success(`Build complete!`)
+    this.log(`  Files compiled: ${compiled}`)
+    this.log(`  Bundle size: ${this.formatSize(size.total)}`)
+    this.log(`  Gzipped: ${this.formatSize(size.gzipped)}`)
+    
+    const elapsed = performance.now() - this.startTime
+    this.log(`\nCompleted in ${this.formatTime(elapsed)}`)
+  }
+  
+  // Command: Run tests
+  async cmdTest(options) {
+    const watch = options.watch || false
+    const coverage = options.coverage || false
+    
+    this.log(`Running Eghact tests...`)
+    
+    // Use native test runner
+    const TestRunner = await @import("@eghact/test-runner")
+    const runner = new TestRunner({
+      watch,
+      coverage,
+      pattern: options._ || ["**/*.test.egh", "**/*.spec.egh"]
+    })
+    
+    const results = await runner.run()
+    
+    if (results.failed === 0) {
+      this.success(`All tests passed! (${results.passed}/${results.total})`)
+    } else {
+      this.error(`Tests failed: ${results.failed}/${results.total}`)
+      process.exit(1)
+    }
+  }
+  
+  // Command: Deploy to production
+  async cmdDeploy(options) {
+    const adapter = options.adapter || "auto"
+    const env = options.env || "production"
+    
+    this.log(`Deploying to ${env}...`)
+    
+    // Build first
+    await this.cmdBuild({ optimize: true })
+    
+    // Deploy based on adapter
+    const Adapter = await @import(`@eghact/adapter-${adapter}`)
+    const deployment = await Adapter.deploy({
+      env,
+      dir: "dist"
+    })
+    
+    this.success(`Deployed successfully!`)
+    this.log(`  URL: ${deployment.url}`)
+    this.log(`  ID: ${deployment.id}`)
+  }
+  
+  // Command: Analyze bundle
+  async cmdAnalyze(options) {
+    this.log(`Analyzing Eghact bundle...`)
+    
+    const Analyzer = await @import("@eghact/bundle-analyzer")
+    const report = await Analyzer.analyze({
+      dir: options.dir || "dist"
+    })
+    
+    this.log(`\nBundle Analysis:`)
+    this.log(`  Total Size: ${this.formatSize(report.totalSize)}`)
+    this.log(`  Components: ${report.components.length}`)
+    this.log(`  Largest: ${report.largest.name} (${this.formatSize(report.largest.size)})`)
+    
+    if (options.open) {
+      await this.openBrowser(report.visualizerUrl)
+    }
+  }
+  
+  // Command: Compile single file
+  async cmdCompile(options) {
+    const file = options._?.[0]
+    if (!file) {
+      this.error("Please specify a file to compile")
+      return
+    }
+    
+    const source = await this.readFile(file)
+    const output = await @compile(source, {
+      optimize: options.optimize || false,
+      sourceMap: options["source-map"] || false
+    })
+    
+    if (options.output) {
+      await this.writeFile(options.output, output.code)
+      this.success(`Compiled to ${options.output}`)
+    } else {
+      console.log(output.code)
+    }
+  }
+  
+  // Command: Initialize existing project
+  async cmdInit(options) {
+    this.log(`Initializing Eghact in current directory...`)
+    
+    await this.writeFile("eghact.config.egh", this.getConfig("."))
+    await this.writeFile("epkg.toml", this.getEpkgConfig("my-app"))
+    
+    this.success(`Eghact initialized!`)
+  }
+  
+  // Command: Add package
+  async cmdAdd(options) {
+    const packages = options._ || []
+    
+    for (const pkg of packages) {
+      this.log(`Adding ${pkg}...`)
+      await this.exec(`epkg install ${pkg}`)
+    }
+    
+    this.success(`Packages added successfully!`)
+  }
+  
+  // Command: Remove package
+  async cmdRemove(options) {
+    const packages = options._ || []
+    
+    for (const pkg of packages) {
+      this.log(`Removing ${pkg}...`)
+      await this.exec(`epkg remove ${pkg}`)
+    }
+    
+    this.success(`Packages removed successfully!`)
+  }
+  
+  // Command: Update packages
+  async cmdUpdate(options) {
+    this.log(`Updating packages...`)
+    await this.exec("epkg update")
+    this.success(`Packages updated successfully!`)
+  }
+  
+  // Command: Show version
+  cmdVersion() {
+    console.log(`Eghact v${this.version}`)
+    console.log(`Runtime: ${@platform}`)
+    console.log(`Compiler: ${@compiler.version}`)
+  }
+  
+  // Command: Show help
+  cmdHelp() {
+    console.log(`
+Eghact CLI v${this.version} - Zero-dependency web framework
+
+Usage: eghact <command> [options]
+
+Commands:
+  new <name>      Create a new Eghact project
+  dev             Start development server
+  build           Build for production
+  test            Run tests
+  deploy          Deploy to production
+  analyze         Analyze bundle size
+  compile <file>  Compile a single .egh file
+  init            Initialize Eghact in current directory
+  add <package>   Add a package using EPkg
+  remove <pkg>    Remove a package
+  update          Update all packages
+  version         Show version info
+  help            Show this help message
+
+Options:
+  --port <port>   Dev server port (default: 3000)
+  --host <host>   Dev server host (default: localhost)
+  --out <dir>     Build output directory (default: dist)
+  --optimize      Enable optimizations (default: true)
+  --source-map    Generate source maps
+  --watch         Watch mode for tests
+  --coverage      Generate coverage report
+  --adapter       Deployment adapter (auto|vercel|netlify|cloudflare)
+
+Examples:
+  eghact new my-app
+  eghact dev --port=8080
+  eghact build --optimize --source-map
+  eghact test --watch --coverage
+  eghact deploy --adapter=vercel
+    `)
+  }
+  
+  // Utility functions
+  async mkdir(path) {
+    if (@platform === "deno") {
+      await Deno.mkdir(path, { recursive: true })
+    } else {
+      await @wasm.fs.mkdir(path)
+    }
+  }
+  
+  async writeFile(path, content) {
+    if (@platform === "deno") {
+      await Deno.writeTextFile(path, content)
+    } else {
+      await @wasm.fs.writeFile(path, content)
+    }
+  }
+  
+  async readFile(path) {
+    if (@platform === "deno") {
+      return await Deno.readTextFile(path)
+    } else {
+      return await @wasm.fs.readFile(path)
+    }
+  }
+  
+  async glob(pattern) {
+    if (@platform === "deno") {
+      const files = []
+      for await (const entry of Deno.readDir("./")) {
+        if (entry.isFile && entry.name.match(pattern)) {
+          files.push(entry.name)
+        }
+      }
+      return files
+    } else {
+      return await @wasm.fs.glob(pattern)
+    }
+  }
+  
+  async exec(command, options = {}) {
+    if (@platform === "deno") {
+      const cmd = command.split(" ")
+      const p = Deno.run({
+        cmd,
+        cwd: options.cwd,
+        stdout: "piped",
+        stderr: "piped"
+      })
+      await p.status()
+    } else {
+      await @wasm.exec(command, options)
+    }
+  }
+  
+  async openBrowser(url) {
+    if (@platform === "deno") {
+      const cmd = Deno.build.os === "windows" ? "start" :
+                  Deno.build.os === "darwin" ? "open" : "xdg-open"
+      await this.exec(`${cmd} ${url}`)
+    }
+  }
+  
+  formatSize(bytes) {
+    if (bytes < 1024) return `${bytes}B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  }
+  
+  formatTime(ms) {
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
+    return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`
+  }
+  
+  log(message) {
+    console.log(message)
+  }
+  
+  success(message) {
+    console.log(`✅ ${message}`)
+  }
+  
+  error(message) {
+    console.error(`❌ ${message}`)
+  }
+  
+  // Template generators
+  getConfig(name) {
+    return `@config
+export default {
+  name: "${name}",
+  version: "1.0.0",
+  target: "web",
+  compiler: {
+    optimize: true,
+    sourceMap: false
+  },
+  runtime: {
+    mode: "production"
+  }
+}`
+  }
+  
+  getAppTemplate() {
+    return `export component App {
+  state count = 0
+  
+  increment() {
+    this.count++
+  }
+  
+  <div class="app">
+    <h1>Welcome to Eghact!</h1>
+    <p>Count: {count}</p>
+    <button @click={increment}>Increment</button>
+  </div>
+  
+  <style>
+    .app {
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+}`
+  }
+  
+  getIndexTemplate() {
+    return `import App from './App.egh'
+
+@entry
+createApp(App).mount('#app')`
+  }
+  
+  getHtmlTemplate(name) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${name}</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/index.egh"></script>
+</body>
+</html>`
+  }
+  
+  getEpkgConfig(name) {
+    return `[package]
+name = "${name}"
+version = "1.0.0"
+description = "An Eghact application"
+
+[dependencies]
+"@eghact/core" = "^2.0.0"
+"@eghact/runtime" = "^2.0.0"
+
+[dev-dependencies]
+"@eghact/test-runner" = "^1.0.0"
+
+[scripts]
+dev = "eghact dev"
+build = "eghact build"
+test = "eghact test"
+deploy = "eghact deploy"`
+  }
+}
+
+// Auto-execute when run directly
+new EghactCLI()

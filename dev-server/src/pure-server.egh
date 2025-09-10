@@ -1,0 +1,218 @@
+/**
+ * Pure Eghact Development Server
+ * Zero Node.js dependencies - runs in Deno or compiled to WebAssembly
+ * This replaces the Express.js based server
+ */
+
+@compile-time
+@platform(deno|browser)
+export component DevServer {
+  // Server configuration
+  state port = 3000
+  state host = "0.0.0.0"
+  state root = "./"
+  state clients = []
+  
+  // File watcher state
+  state watchers = new Map()
+  state fileCache = new Map()
+  
+  // Initialize server
+  effect => {
+    if (@platform === "deno") {
+      this.startDenoServer()
+    } else {
+      this.startWasmServer()
+    }
+  }
+  
+  // Deno native server (no Node.js)
+  async startDenoServer() {
+    const server = Deno.listen({ port: this.port, hostname: this.host })
+    console.log(`Eghact dev server running at http://${this.host}:${this.port}`)
+    
+    for await (const conn of server) {
+      this.handleConnection(conn)
+    }
+  }
+  
+  // WebAssembly server for browser environments
+  async startWasmServer() {
+    // Use service worker for local development
+    if ('serviceWorker' in navigator) {
+      const sw = await navigator.serviceWorker.register('/eghact-dev-sw.js')
+      sw.postMessage({
+        type: 'init',
+        port: this.port,
+        root: this.root
+      })
+    }
+  }
+  
+  // Handle HTTP connections
+  async handleConnection(conn) {
+    const httpConn = Deno.serveHttp(conn)
+    
+    for await (const event of httpConn) {
+      const url = new URL(event.request.url)
+      const path = url.pathname
+      
+      // WebSocket upgrade for HMR
+      if (event.request.headers.get("upgrade") === "websocket") {
+        this.handleWebSocket(event)
+        continue
+      }
+      
+      // Serve static files
+      this.serveFile(event, path)
+    }
+  }
+  
+  // WebSocket for Hot Module Replacement
+  handleWebSocket(event) {
+    const { socket, response } = Deno.upgradeWebSocket(event.request)
+    
+    socket.onopen = () => {
+      this.clients.push(socket)
+      console.log("HMR client connected")
+    }
+    
+    socket.onclose = () => {
+      this.clients = this.clients.filter(c => c !== socket)
+      console.log("HMR client disconnected")
+    }
+    
+    event.respondWith(response)
+  }
+  
+  // Serve static files with .egh compilation
+  async serveFile(event, path) {
+    try {
+      let filePath = this.root + path
+      
+      // Default to index.html
+      if (path === "/") {
+        filePath = this.root + "/index.html"
+      }
+      
+      // Compile .egh files on the fly
+      if (filePath.endsWith(".egh")) {
+        const compiled = await this.compileEgh(filePath)
+        event.respondWith(new Response(compiled, {
+          headers: { "content-type": "application/javascript" }
+        }))
+        return
+      }
+      
+      // Serve regular files
+      const file = await Deno.readFile(filePath)
+      const contentType = this.getContentType(filePath)
+      
+      event.respondWith(new Response(file, {
+        headers: { "content-type": contentType }
+      }))
+      
+      // Watch file for changes
+      this.watchFile(filePath)
+      
+    } catch (error) {
+      event.respondWith(new Response("404 Not Found", { status: 404 }))
+    }
+  }
+  
+  // Compile .egh files to JavaScript
+  async compileEgh(filePath) {
+    // Check cache
+    if (this.fileCache.has(filePath)) {
+      const cached = this.fileCache.get(filePath)
+      const stats = await Deno.stat(filePath)
+      
+      if (cached.mtime >= stats.mtime) {
+        return cached.compiled
+      }
+    }
+    
+    // Read and compile
+    const source = await Deno.readTextFile(filePath)
+    const compiled = @compile(source) // Compile-time transformation
+    
+    // Cache result
+    const stats = await Deno.stat(filePath)
+    this.fileCache.set(filePath, {
+      compiled,
+      mtime: stats.mtime
+    })
+    
+    return compiled
+  }
+  
+  // File watcher for HMR
+  async watchFile(filePath) {
+    if (this.watchers.has(filePath)) return
+    
+    const watcher = Deno.watchFs(filePath)
+    this.watchers.set(filePath, watcher)
+    
+    for await (const event of watcher) {
+      if (event.kind === "modify") {
+        this.broadcastReload(filePath)
+      }
+    }
+  }
+  
+  // Broadcast reload to all clients
+  broadcastReload(filePath) {
+    const message = JSON.stringify({
+      type: "reload",
+      path: filePath,
+      timestamp: Date.now()
+    })
+    
+    for (const client of this.clients) {
+      if (client.readyState === 1) {
+        client.send(message)
+      }
+    }
+  }
+  
+  // Get MIME type
+  getContentType(filePath) {
+    const ext = filePath.split('.').pop()
+    const types = {
+      html: "text/html",
+      css: "text/css", 
+      js: "application/javascript",
+      egh: "application/javascript",
+      json: "application/json",
+      png: "image/png",
+      jpg: "image/jpeg",
+      svg: "image/svg+xml",
+      wasm: "application/wasm"
+    }
+    return types[ext] || "text/plain"
+  }
+  
+  // CLI interface
+  static async start(options = {}) {
+    const server = new DevServer()
+    server.port = options.port || 3000
+    server.host = options.host || "0.0.0.0"
+    server.root = options.root || "./"
+    
+    return server
+  }
+}
+
+// Export for CLI usage
+export default DevServer
+
+// Compile-time entry point
+@entry
+if (@platform === "deno" && import.meta.main) {
+  const args = Deno.args
+  const port = args.find(a => a.startsWith("--port="))?.split("=")[1] || 3000
+  const host = args.find(a => a.startsWith("--host="))?.split("=")[1] || "0.0.0.0"
+  const root = args.find(a => a.startsWith("--root="))?.split("=")[1] || "./"
+  
+  DevServer.start({ port, host, root })
+}
