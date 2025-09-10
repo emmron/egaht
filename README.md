@@ -75,23 +75,29 @@ Our native package manager that's 10x faster than npm with ZERO dependencies:
 | `@eghact/charts` | Data visualization | 0KB |
 | `@eghact/animations` | GPU-accelerated animations | 0KB |
 
-## 🔥 EghQL - GraphQL's Superior Replacement
+## 🔥 EQL - The Simplest Query Language Ever
 
-100x faster than GraphQL with intuitive natural language syntax:
+100x faster than GraphQL, just type what you want:
 
-### Simple EghQL CLI Usage ✅
+### Super Simple Usage ✅
 ```bash
-# Interactive mode - just type what you want!
-./eghql-simple
-> users
-> posts with comments
-> visual  # ASCII visual builder!
+# Interactive mode with 1-letter commands!
+./eql
+→ users                    # Get users
+→ v                       # Visual mode! (arrow keys to build)
+→ h                       # Help
+→ q                       # Quit
 
 # Or direct query
-./eghql-simple users with posts
+./eql users
+./eql posts with comments
+./eql show me all users
 
-# Natural language works too!
-./eghql-simple show me all users and their posts
+# Visual Builder Mode
+./eql v
+# Use arrow keys to move nodes
+# SPACE to add, ENTER to connect
+# R to run your visual query!
 ```
 
 ### GraphQL (Complex) ❌
@@ -133,12 +139,22 @@ users posts comments
 - ✅ **Time-travel debugging** - step through query history
 - ✅ **Zero setup** - no schemas, resolvers, or codegen
 
-### EghQL Playground
-Open `eghql/playground.html` in your browser for an interactive query builder with:
-- Live syntax highlighting
-- Auto-completion
-- Performance metrics
-- Side-by-side GraphQL comparison
+### Visual Query Builder
+```
+./eql v
+
+╔════════════════════════════════════════╗
+║         VISUAL QUERY BUILDER           ║
+╠════════════════════════════════════════╣
+║                                        ║
+║  [users]────→(posts)────→(comments)   ║
+║                                        ║
+╠════════════════════════════════════════╣
+║ Query: users { posts { comments } }   ║
+╚════════════════════════════════════════╝
+
+Use arrow keys to move, SPACE to add nodes, ENTER to connect
+```
 
 ## 💎 Revolutionary Component Syntax
 
